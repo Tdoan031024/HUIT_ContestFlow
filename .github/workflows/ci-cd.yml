@@ -1,0 +1,145 @@
+name: HUIT ContestFlow CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy the verified main branch to cPanel
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contestflow-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Validate and build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: mysql://ci:ci@127.0.0.1:3306/contestflow_ci
+      ADMIN_SETUP_KEY: ci-only-placeholder
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Package cPanel release
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy)
+        run: tar -czf hcf-cpanel-release.tar.gz .next public package.json package-lock.json prisma prisma.config.ts next.config.ts src/generated/prisma
+
+      - name: Upload cPanel release artifact
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy)
+        uses: actions/upload-artifact@v7
+        with:
+          name: hcf-cpanel-release
+          path: hcf-cpanel-release.tar.gz
+          if-no-files-found: error
+          retention-days: 2
+
+  deploy:
+    name: Deploy to cPanel
+    needs: verify
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CPANEL_DEPLOY_ENABLED == 'true') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy)
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    env:
+      CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+      CPANEL_USER: ${{ secrets.CPANEL_USER }}
+      CPANEL_SSH_PORT: ${{ secrets.CPANEL_SSH_PORT || '22' }}
+      CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+      CPANEL_KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
+      CPANEL_APP_PATH: ${{ vars.CPANEL_APP_PATH }}
+      CPANEL_NODE_BIN: ${{ vars.CPANEL_NODE_BIN || '/opt/alt/alt-nodejs22/root/usr/bin' }}
+      CPANEL_AUTO_MIGRATE: ${{ vars.CPANEL_AUTO_MIGRATE || 'false' }}
+    steps:
+      - name: Download verified release
+        uses: actions/download-artifact@v8
+        with:
+          name: hcf-cpanel-release
+          path: release-artifact
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${CPANEL_HOST:?Add the CPANEL_HOST repository secret}"
+          : "${CPANEL_USER:?Add the CPANEL_USER repository secret}"
+          : "${CPANEL_SSH_KEY:?Add the CPANEL_SSH_KEY repository secret}"
+          : "${CPANEL_KNOWN_HOSTS:?Add the CPANEL_KNOWN_HOSTS repository secret}"
+          : "${CPANEL_APP_PATH:?Add the CPANEL_APP_PATH repository variable}"
+          [[ "$CPANEL_APP_PATH" =~ ^/home/[A-Za-z0-9._/-]+$ && "$CPANEL_APP_PATH" != *..* ]]
+          [[ "$CPANEL_SSH_PORT" =~ ^[0-9]+$ ]]
+          [[ "$CPANEL_NODE_BIN" =~ ^/[A-Za-z0-9._/-]+$ && "$CPANEL_NODE_BIN" != *..* ]]
+          [[ "$CPANEL_AUTO_MIGRATE" == 'true' || "$CPANEL_AUTO_MIGRATE" == 'false' ]]
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$CPANEL_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$CPANEL_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
+
+      - name: Upload release to cPanel
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote="$CPANEL_USER@$CPANEL_HOST"
+          ssh -p "$CPANEL_SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$remote" "test -d '$CPANEL_APP_PATH' && mkdir -p '$CPANEL_APP_PATH/.deploy'"
+          scp -P "$CPANEL_SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes release-artifact/hcf-cpanel-release.tar.gz "$remote:$CPANEL_APP_PATH/.deploy/hcf-$GITHUB_SHA.tar.gz"
+
+      - name: Install release and restart Node.js app
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote="$CPANEL_USER@$CPANEL_HOST"
+          ssh -p "$CPANEL_SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$remote" "bash -s -- '$CPANEL_APP_PATH' '$GITHUB_SHA' '$CPANEL_AUTO_MIGRATE' '$CPANEL_NODE_BIN'" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+          app_path="$1"
+          commit_sha="$2"
+          auto_migrate="$3"
+          node_bin="$4"
+          [[ "$app_path" =~ ^/home/[A-Za-z0-9._/-]+$ && "$app_path" != *..* ]]
+          [[ "$node_bin" =~ ^/[A-Za-z0-9._/-]+$ && "$node_bin" != *..* ]]
+          export PATH="$node_bin:$PATH"
+          node_major="$(node --version | sed -E 's/^v([0-9]+).*/\1/')"
+          [[ "$node_major" == '22' ]]
+          archive="$app_path/.deploy/hcf-$commit_sha.tar.gz"
+          test -f "$archive"
+          tar -xzf "$archive" -C "$app_path"
+          rm -f "$archive"
+          cd "$app_path"
+          if [[ "$auto_migrate" == 'true' ]]; then
+            npm ci --include=dev --no-audit --no-fund
+            npm run db:deploy
+            npm prune --omit=dev --no-audit --no-fund
+          else
+            npm ci --omit=dev --no-audit --no-fund
+          fi
+          mkdir -p tmp
+          touch tmp/restart.txt
+          REMOTE_SCRIPT
