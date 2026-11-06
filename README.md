@@ -45,11 +45,11 @@ The application database user must have the required permissions on the target. 
 
 ## Deployment
 
-Deploy this repository as one Node.js app using the host's Node.js application manager. Set `DATABASE_URL` and a strong, one-time `ADMIN_SETUP_KEY` in the host's environment, run `npm run db:deploy`, build with `npm run build`, then start with `npm start`. Once the first Admin is created, remove `ADMIN_SETUP_KEY` from the production environment to disable bootstrap. Apply committed migrations before each release and keep a database backup before deployment.
+Deploy this repository as one Node.js app using the host's Node.js application manager. For cPanel Passenger, set the application startup file to `app.cjs`; it starts the built Next.js server using Passenger's assigned port. Set `DATABASE_URL` and a strong, one-time `ADMIN_SETUP_KEY` in the host's environment, run `npm run db:deploy`, build with `npm run build`, then start with `npm start`. Once the first Admin is created, remove `ADMIN_SETUP_KEY` from the production environment to disable bootstrap. Apply committed migrations before each release and keep a database backup before deployment.
 
 ### GitHub Actions CI/CD
 
-`.github/workflows/ci-cd.yml` validates the Prisma schema and builds with Node.js 22 on pull requests and pushes to `main`. A successful `main` build also creates a short-lived cPanel release artifact. Automatic deployment is disabled until the cPanel target is configured; then set the repository variable `CPANEL_DEPLOY_ENABLED=true`. The job also supports an explicit deploy through the workflow's `workflow_dispatch` input.
+`.github/workflows/ci-cd.yml` validates the Prisma schema and builds with Node.js 22 on pull requests and pushes to `main`. A successful `main` build also creates a short-lived cPanel release artifact that includes the `app.cjs` startup file. Automatic deployment is disabled until the cPanel target is configured; then set the repository variable `CPANEL_DEPLOY_ENABLED=true`. The job also supports an explicit deploy through the workflow's `workflow_dispatch` input.
 
 Configure these repository secrets: `CPANEL_HOST`, `CPANEL_USER`, `CPANEL_SSH_KEY`, `CPANEL_SSH_PORT`, and `CPANEL_KNOWN_HOSTS`. Configure repository variables: `CPANEL_APP_PATH` (the existing cPanel Node.js application root) and optionally `CPANEL_NODE_BIN` (defaults to the cPanel Node.js 22 path). Keep the production `.env` on the server; the uploaded artifact does not contain it. Set `CPANEL_AUTO_MIGRATE=true` only after reviewing migrations and confirming the production backup/restore process. The cPanel application must already use Node.js 22 and restart on `tmp/restart.txt`.
 

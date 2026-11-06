@@ -49,7 +49,7 @@ jobs:
 
       - name: Package cPanel release
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy)
-        run: tar -czf hcf-cpanel-release.tar.gz .next public package.json package-lock.json prisma prisma.config.ts next.config.ts src/generated/prisma
+        run: tar -czf hcf-cpanel-release.tar.gz app.cjs .next public package.json package-lock.json prisma prisma.config.ts next.config.ts src/generated/prisma
 
       - name: Upload cPanel release artifact
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy)
