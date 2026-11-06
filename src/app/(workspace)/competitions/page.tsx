@@ -1,0 +1,23 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { EmptyState, Loading, Notice, PageHeader, StatusPill, formatDate } from '@/components/ui';
+
+type Competition = { id: string; name: string; description: string | null; status: string; startsAt: string | null; endsAt: string | null; _count: { contestants: number; rounds: number; scoreSheets: number }; rounds: { id: string; name: string; _count: { entries: number; scoreSheets: number } }[] };
+
+export default function CompetitionsPage() {
+  const [items, setItems] = useState<Competition[] | null>(null);
+  const [query, setQuery] = useState('');
+  const [error, setError] = useState('');
+  useEffect(() => { fetch('/api/competitions', { cache: 'no-store' }).then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error); setItems(body.competitions); }).catch((reason) => setError(reason.message)); }, []);
+  const filtered = useMemo(() => items?.filter((item) => item.name.toLowerCase().includes(query.trim().toLowerCase())) ?? [], [items, query]);
+  return <>
+    <PageHeader eyebrow="WORKSPACE" title="Cuộc thi" description="Tạo cuộc thi, cấu hình vòng thi và theo dõi vận hành." action={<Link className="button primary-button" href="/competitions/new">＋ Tạo cuộc thi</Link>} />
+    {error && <Notice tone="error">{error}</Notice>}
+    {!items ? <Loading /> : <section className="surface-card">
+      <div className="toolbar"><div><strong>{items.length} cuộc thi</strong><span className="field-help"> · Lưu trữ cuộc thi cũ để giữ nguyên lịch sử</span></div><input className="filter-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm theo tên cuộc thi…" /></div>
+      {filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>TÊN CUỘC THI</th><th>TRẠNG THÁI</th><th>THỜI GIAN</th><th>VÒNG THI</th><th>THÍ SINH</th><th></th></tr></thead><tbody>{filtered.map((item) => <tr key={item.id}><td><strong>{item.name}</strong><div className="field-help">{item.description || 'Chưa có mô tả'}</div></td><td><StatusPill value={item.status} /></td><td>{formatDate(item.startsAt)}{item.endsAt ? ` – ${formatDate(item.endsAt)}` : ''}</td><td>{item._count.rounds}</td><td>{item._count.contestants}</td><td><Link className="button secondary-button small-button" href={`/competitions/${item.id}`}>Mở →</Link></td></tr>)}</tbody></table></div> : <EmptyState title={query ? 'Không tìm thấy cuộc thi' : 'Chưa có cuộc thi'} description={query ? 'Thử tìm với tên khác.' : 'Tạo cuộc thi đầu tiên để bắt đầu cấu hình.'} action={!query && <Link className="button primary-button" href="/competitions/new">Tạo cuộc thi</Link>} />}
+    </section>}
+  </>;
+}

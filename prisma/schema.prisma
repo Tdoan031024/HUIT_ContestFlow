@@ -1,0 +1,357 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum SystemRole {
+  ADMIN
+  JUDGE
+}
+
+enum CompetitionStatus {
+  DRAFT
+  REGISTRATION
+  READY
+  LIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum CompetitionModality {
+  ONSITE
+  ONLINE
+  HYBRID
+}
+
+enum RoundStatus {
+  DRAFT
+  READY
+  LIVE
+  COMPLETED
+}
+
+enum ContestantStatus {
+  ACTIVE
+  WITHDRAWN
+  DISQUALIFIED
+}
+
+enum EntryStatus {
+  ACTIVE
+  WITHDRAWN
+  DISQUALIFIED
+  ADVANCED
+  ELIMINATED
+}
+
+enum SessionState {
+  IDLE
+  LIVE
+  PAUSED
+  COMPLETED
+}
+
+enum ScoreSheetStatus {
+  DRAFT
+  SUBMITTED
+  REOPENED
+}
+
+model User {
+  id           String              @id @default(uuid()) @db.Char(36)
+  username     String?             @unique @db.VarChar(80)
+  email        String?             @unique @db.VarChar(255)
+  passwordHash String              @map("password_hash") @db.VarChar(255)
+  fullName     String              @map("full_name") @db.VarChar(160)
+  systemRole   SystemRole          @default(JUDGE) @map("system_role")
+  isActive     Boolean             @default(true) @map("is_active")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+  memberships  CompetitionMember[]
+  sessions     Session[]
+  assignments  JudgeAssignment[]
+  scoreSheets  ScoreSheet[]
+  auditEvents  AuditEvent[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Char(36)
+  tokenHash String   @unique @map("token_hash") @db.Char(64)
+  userId    String   @map("user_id") @db.Char(36)
+  expiresAt DateTime @map("expires_at") @db.DateTime(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("sessions")
+}
+
+model Competition {
+  id             String               @id @default(uuid()) @db.Char(36)
+  name           String               @db.VarChar(180)
+  slug           String               @unique @db.VarChar(180)
+  description    String?              @db.Text
+  organizingUnit String?              @map("organizing_unit") @db.VarChar(180)
+  location       String?              @db.VarChar(240)
+  modality       CompetitionModality   @default(ONSITE)
+  status         CompetitionStatus    @default(DRAFT)
+  startsAt       DateTime?             @map("starts_at") @db.DateTime(3)
+  endsAt         DateTime?             @map("ends_at") @db.DateTime(3)
+  createdAt      DateTime              @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.DateTime(3)
+  members     CompetitionMember[]
+  rounds      CompetitionRound[]
+  contestants Contestant[]
+  entries     CompetitionEntry[]
+  assignments JudgeAssignment[]
+  rubrics     Rubric[]
+  scoreSheets ScoreSheet[]
+  snapshots   ResultSnapshot[]
+  auditEvents AuditEvent[]
+
+  @@index([status, startsAt])
+  @@map("competitions")
+}
+
+model CompetitionMember {
+  id            String          @id @default(uuid()) @db.Char(36)
+  competitionId String          @map("competition_id") @db.Char(36)
+  userId        String          @map("user_id") @db.Char(36)
+  createdAt     DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  competition   Competition     @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([competitionId, userId])
+  @@index([userId])
+  @@map("competition_members")
+}
+
+model CompetitionRound {
+  id                    String              @id @default(uuid()) @db.Char(36)
+  competitionId         String              @map("competition_id") @db.Char(36)
+  name                  String              @db.VarChar(160)
+  sequence              Int
+  status                RoundStatus         @default(DRAFT)
+  anonymous             Boolean             @default(false)
+  requiredJudgeCount    Int                 @default(1) @map("required_judge_count")
+  allowAdvanceWithGaps  Boolean             @default(false) @map("allow_advance_with_gaps")
+  publishScores         Boolean             @default(false) @map("publish_scores")
+  aggregateMethod       String              @default("AVERAGE") @map("aggregate_method") @db.VarChar(24)
+  tieBreakMethod        String              @default("TOTAL_SCORE") @map("tie_break_method") @db.VarChar(32)
+  activeRubricVersionId String?             @map("active_rubric_version_id") @db.Char(36)
+  createdAt             DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+  competition           Competition         @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  entries               CompetitionEntry[]
+  assignments           JudgeAssignment[]
+  rubrics               Rubric[]
+  activeRubricVersion   RubricVersion?      @relation("ActiveRubricVersion", fields: [activeRubricVersionId], references: [id], onDelete: SetNull)
+  session               CompetitionSession?
+  scoreSheets           ScoreSheet[]
+  snapshots             ResultSnapshot[]
+
+  @@unique([competitionId, sequence])
+  @@index([competitionId, status])
+  @@map("competition_rounds")
+}
+
+model Contestant {
+  id            String             @id @default(uuid()) @db.Char(36)
+  competitionId String             @map("competition_id") @db.Char(36)
+  displayName   String             @map("display_name") @db.VarChar(180)
+  organization  String?            @db.VarChar(180)
+  email         String?            @db.VarChar(255)
+  phone         String?            @db.VarChar(32)
+  notes         String?            @db.Text
+  status        ContestantStatus   @default(ACTIVE)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.DateTime(3)
+  competition   Competition        @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  entries       CompetitionEntry[]
+
+  @@index([competitionId, displayName])
+  @@map("contestants")
+}
+
+model CompetitionEntry {
+  id            String               @id @default(uuid()) @db.Char(36)
+  competitionId String               @map("competition_id") @db.Char(36)
+  roundId       String               @map("round_id") @db.Char(36)
+  contestantId  String               @map("contestant_id") @db.Char(36)
+  entryCode     String               @map("entry_code") @db.VarChar(32)
+  sequence      Int
+  status        EntryStatus          @default(ACTIVE)
+  title         String?              @db.VarChar(180)
+  createdAt     DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+  competition   Competition          @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  round         CompetitionRound     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  contestant    Contestant           @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+  assignments   JudgeAssignment[]
+  scoreSheets   ScoreSheet[]
+  liveSessions  CompetitionSession[]
+
+  @@unique([roundId, entryCode])
+  @@unique([roundId, sequence])
+  @@unique([roundId, contestantId])
+  @@index([competitionId, roundId, status])
+  @@map("competition_entries")
+}
+
+model JudgeAssignment {
+  id            String            @id @default(uuid()) @db.Char(36)
+  competitionId String            @map("competition_id") @db.Char(36)
+  roundId       String            @map("round_id") @db.Char(36)
+  entryId       String?           @map("entry_id") @db.Char(36)
+  userId        String            @map("user_id") @db.Char(36)
+  assignedAt    DateTime          @default(now()) @map("assigned_at") @db.DateTime(3)
+  competition   Competition       @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  round         CompetitionRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  entry         CompetitionEntry? @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([competitionId, roundId, userId])
+  @@index([entryId, userId])
+  @@map("judge_assignments")
+}
+
+model Rubric {
+  id            String           @id @default(uuid()) @db.Char(36)
+  competitionId String           @map("competition_id") @db.Char(36)
+  roundId       String           @map("round_id") @db.Char(36)
+  name          String           @db.VarChar(160)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+  competition   Competition      @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  round         CompetitionRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  versions      RubricVersion[]
+
+  @@index([competitionId, roundId])
+  @@map("rubrics")
+}
+
+model RubricVersion {
+  id          String             @id @default(uuid()) @db.Char(36)
+  rubricId    String             @map("rubric_id") @db.Char(36)
+  version     Int
+  name        String             @db.VarChar(160)
+  description String?            @db.Text
+  createdAt   DateTime           @default(now()) @map("created_at") @db.DateTime(3)
+  rubric      Rubric             @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  criteria    RubricCriterion[]
+  activeFor   CompetitionRound[] @relation("ActiveRubricVersion")
+  scoreSheets ScoreSheet[]
+
+  @@unique([rubricId, version])
+  @@map("rubric_versions")
+}
+
+model RubricCriterion {
+  id              String        @id @default(uuid()) @db.Char(36)
+  rubricVersionId String        @map("rubric_version_id") @db.Char(36)
+  name            String        @db.VarChar(160)
+  description     String?       @db.Text
+  minimum         Decimal       @default(0) @db.Decimal(8, 2)
+  maximum         Decimal       @default(10) @db.Decimal(8, 2)
+  step            Decimal       @default(1) @db.Decimal(8, 2)
+  weight          Decimal       @default(1) @db.Decimal(8, 4)
+  commentRequired Boolean       @default(false) @map("comment_required")
+  sequence        Int
+  rubricVersion   RubricVersion @relation(fields: [rubricVersionId], references: [id], onDelete: Cascade)
+  scoreDetails    ScoreDetail[]
+
+  @@unique([rubricVersionId, sequence])
+  @@map("rubric_criteria")
+}
+
+model CompetitionSession {
+  id             String            @id @default(uuid()) @db.Char(36)
+  roundId        String            @map("round_id") @db.Char(36)
+  currentEntryId String?           @map("current_entry_id") @db.Char(36)
+  state          SessionState      @default(IDLE)
+  version        Int               @default(0)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.DateTime(3)
+  round          CompetitionRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  currentEntry   CompetitionEntry? @relation(fields: [currentEntryId], references: [id], onDelete: SetNull)
+
+  @@unique([roundId])
+  @@map("competition_sessions")
+}
+
+model ScoreSheet {
+  id              String           @id @default(uuid()) @db.Char(36)
+  competitionId   String           @map("competition_id") @db.Char(36)
+  roundId         String           @map("round_id") @db.Char(36)
+  entryId         String           @map("entry_id") @db.Char(36)
+  judgeId         String           @map("judge_id") @db.Char(36)
+  rubricVersionId String           @map("rubric_version_id") @db.Char(36)
+  status          ScoreSheetStatus @default(DRAFT)
+  totalScore      Decimal?         @map("total_score") @db.Decimal(10, 4)
+  submittedAt     DateTime?        @map("submitted_at") @db.DateTime(3)
+  reopenedReason  String?          @map("reopened_reason") @db.Text
+  createdAt       DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+  competition     Competition      @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  round           CompetitionRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  entry           CompetitionEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  judge           User             @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+  rubricVersion   RubricVersion    @relation(fields: [rubricVersionId], references: [id], onDelete: Restrict)
+  details         ScoreDetail[]
+
+  @@unique([entryId, judgeId])
+  @@index([competitionId, roundId, status])
+  @@map("score_sheets")
+}
+
+model ScoreDetail {
+  id           String          @id @default(uuid()) @db.Char(36)
+  scoreSheetId String          @map("score_sheet_id") @db.Char(36)
+  criterionId  String          @map("criterion_id") @db.Char(36)
+  score        Decimal         @db.Decimal(8, 2)
+  comment      String?         @db.Text
+  scoreSheet   ScoreSheet      @relation(fields: [scoreSheetId], references: [id], onDelete: Cascade)
+  criterion    RubricCriterion @relation(fields: [criterionId], references: [id], onDelete: Restrict)
+
+  @@unique([scoreSheetId, criterionId])
+  @@map("score_details")
+}
+
+model ResultSnapshot {
+  id            String           @id @default(uuid()) @db.Char(36)
+  competitionId String           @map("competition_id") @db.Char(36)
+  roundId       String           @map("round_id") @db.Char(36)
+  version       Int
+  published     Boolean          @default(false)
+  lockedAt      DateTime         @default(now()) @map("locked_at") @db.DateTime(3)
+  lockedBy      String           @map("locked_by") @db.Char(36)
+  data          Json
+  competition   Competition      @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  round         CompetitionRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@unique([roundId, version])
+  @@index([competitionId, published, lockedAt])
+  @@map("result_snapshots")
+}
+
+model AuditEvent {
+  id            String       @id @default(uuid()) @db.Char(36)
+  competitionId String?      @map("competition_id") @db.Char(36)
+  actorId       String?      @map("actor_id") @db.Char(36)
+  action        String       @db.VarChar(100)
+  entityType    String       @map("entity_type") @db.VarChar(100)
+  entityId      String?      @map("entity_id") @db.VarChar(100)
+  details       Json?
+  createdAt     DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+  competition   Competition? @relation(fields: [competitionId], references: [id], onDelete: SetNull)
+  actor         User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([competitionId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("audit_events")
+}
