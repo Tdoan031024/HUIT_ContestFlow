@@ -45,10 +45,27 @@ export async function POST(request: Request, context: Context) {
       return Response.json({ error: `Khoảng điểm hoặc bước điểm của “${criterion.name}” không hợp lệ.` }, { status: 400 });
     }
   }
-  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true } });
+  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true, status: true, activeRubricVersionId: true, session: { select: { state: true } } } });
   if (!round) return Response.json({ error: 'Vòng thi không thuộc cuộc thi này.' }, { status: 400 });
+  const snapshotCount = await prisma.resultSnapshot.count({ where: { roundId: round.id } });
+  if (round.status === 'LIVE' || round.status === 'COMPLETED' || (round.session && round.session.state !== 'IDLE') || snapshotCount > 0) {
+    return Response.json({ error: 'Không thể đổi rubric sau khi đã bắt đầu điều phối hoặc khóa kết quả của vòng.' }, { status: 409 });
+  }
   const scores = await prisma.scoreSheet.count({ where: { roundId: round.id } });
-  if (scores) return Response.json({ error: 'Vòng này đã có phiếu điểm. Hãy giữ phiên bản rubric hiện tại để bảo toàn tính nhất quán của kết quả.' }, { status: 409 });
+  let currentVersion: { id: string; version: number; criteria: { name: string; description: string | null; minimum: unknown; maximum: unknown; step: unknown; weight: unknown; commentRequired: boolean }[] } | null = null;
+  if (scores && round.activeRubricVersionId) {
+    const current = await prisma.rubricVersion.findUnique({ where: { id: round.activeRubricVersionId }, include: { criteria: { orderBy: { sequence: 'asc' } } } });
+    if (!current) return Response.json({ error: 'Không tìm thấy phiên bản rubric hiện tại.' }, { status: 409 });
+    const scoringShape = (items: typeof current.criteria | typeof parsed.data.criteria) => items.map((item) => [
+      item.name.trim(), item.description?.trim() || '', Number(item.minimum), Number(item.maximum), Number(item.step), Number(item.weight), item.commentRequired,
+    ]);
+    if (JSON.stringify(scoringShape(current.criteria)) !== JSON.stringify(scoringShape(parsed.data.criteria))) {
+      return Response.json({ error: 'Vòng đã có phiếu chấm. Phiên bản mới phải giữ nguyên thứ tự, tên, hướng dẫn, thang điểm, bước điểm, trọng số và yêu cầu nhận xét của mọi tiêu chí.' }, { status: 409 });
+    }
+    currentVersion = current;
+  } else if (scores) {
+    return Response.json({ error: 'Không thể đổi rubric vì vòng đã có phiếu nhưng chưa xác định được phiên bản đang dùng.' }, { status: 409 });
+  }
 
   const activeRubric = await prisma.rubric.findFirst({ where: { competitionId: id, roundId: round.id }, orderBy: { createdAt: 'asc' } });
   const rubric = activeRubric ?? await prisma.rubric.create({ data: { competitionId: id, roundId: round.id, name: parsed.data.name } });
@@ -63,7 +80,7 @@ export async function POST(request: Request, context: Context) {
       })) },
     } });
     await tx.competitionRound.update({ where: { id: round.id }, data: { activeRubricVersionId: created.id } });
-    await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'RUBRIC_VERSION_ACTIVATED', entityType: 'RubricVersion', entityId: created.id, details: { version: nextVersion + 1, criteriaCount: parsed.data.criteria.length } } });
+    await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'RUBRIC_VERSION_ACTIVATED', entityType: 'RubricVersion', entityId: created.id, details: { version: nextVersion + 1, previousVersion: currentVersion?.version ?? null, criteriaCount: parsed.data.criteria.length, existingSheets: scores } } });
     return tx.rubricVersion.findUniqueOrThrow({ where: { id: created.id }, include: { criteria: { orderBy: { sequence: 'asc' } } } });
   });
   return Response.json({ version }, { status: 201 });

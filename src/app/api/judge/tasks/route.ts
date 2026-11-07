@@ -26,14 +26,18 @@ export async function GET() {
     if (!entry || entry.status !== 'ACTIVE') continue;
     const key = `${assignment.roundId}:${entry.id}`;
     if (uniqueTasks.has(key)) continue;
-    const scoreSheet = await prisma.scoreSheet.findUnique({ where: { entryId_judgeId: { entryId: entry.id, judgeId: user.id } }, select: { id: true, status: true, totalScore: true, submittedAt: true } });
+    const scoreSheet = await prisma.scoreSheet.findUnique({ where: { entryId_judgeId: { entryId: entry.id, judgeId: user.id } }, select: { id: true, status: true, totalScore: true, submittedAt: true, rubricVersionId: true } });
+    const pinnedSheet = scoreSheet ?? await prisma.scoreSheet.findFirst({ where: { entryId: entry.id }, orderBy: { createdAt: 'asc' }, select: { rubricVersionId: true } });
+    const rubric = pinnedSheet?.rubricVersionId
+      ? await prisma.rubricVersion.findUnique({ where: { id: pinnedSheet.rubricVersionId }, include: { criteria: { orderBy: { sequence: 'asc' } } } })
+      : assignment.round.activeRubricVersion;
     const hidden = assignment.round.anonymous;
     uniqueTasks.set(key, {
       competition: assignment.competition,
-      round: { id: assignment.round.id, name: assignment.round.name, sequence: assignment.round.sequence, status: assignment.round.status, anonymous: hidden, sessionState: assignment.round.session?.state ?? 'IDLE' },
+      round: { id: assignment.round.id, name: assignment.round.name, sequence: assignment.round.sequence, status: assignment.round.status, anonymous: hidden, sessionState: assignment.round.session?.state ?? 'IDLE', roundingPrecision: assignment.round.roundingPrecision },
       entry: { id: entry.id, code: entry.entryCode, title: entry.title, displayName: hidden ? 'Danh tính được ẩn' : entry.contestant.displayName, organization: hidden ? null : entry.contestant.organization },
-      rubric: assignment.round.activeRubricVersion,
-      scoreSheet,
+      rubric,
+      scoreSheet: scoreSheet ? { id: scoreSheet.id, status: scoreSheet.status, totalScore: scoreSheet.totalScore, submittedAt: scoreSheet.submittedAt } : null,
     });
   }
   return Response.json({ tasks: [...uniqueTasks.values()] });

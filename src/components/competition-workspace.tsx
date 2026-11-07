@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { EmptyState, Loading, Notice, PageHeader, SectionCard, StatusPill, formatDate, formatDateTime } from '@/components/ui';
+import { auditActionLabel, auditDetailRows, auditEntityLabel } from '@/lib/audit-labels';
 
-type Round = { id: string; name: string; sequence: number; status: string; anonymous: boolean; requiredJudgeCount: number; allowAdvanceWithGaps: boolean; publishScores: boolean; aggregateMethod: string; activeRubricVersionId: string | null; activeRubricVersion?: { id: string; name: string; criteria: Criterion[] } | null; _count: { entries: number; assignments: number; scoreSheets: number } };
+type Round = { id: string; name: string; sequence: number; status: string; session?: { state: string } | null; anonymous: boolean; requiredJudgeCount: number; allowAdvanceWithGaps: boolean; publishScores: boolean; aggregateMethod: string; tieBreakMethod: string; roundingPrecision: number; activeRubricVersionId: string | null; activeRubricVersion?: { id: string; name: string; criteria: Criterion[] } | null; _count: { entries: number; assignments: number; scoreSheets: number; snapshots: number } };
 type Criterion = { id?: string; name: string; description: string | null; minimum: number | string; maximum: number | string; step: number | string; weight: number | string; commentRequired: boolean; sequence?: number };
 type Competition = { id: string; name: string; slug: string; description: string | null; organizingUnit: string | null; location: string | null; modality: 'ONSITE' | 'ONLINE' | 'HYBRID'; status: string; startsAt: string | null; endsAt: string | null; rounds: Round[]; _count: { contestants: number; members: number } };
 type ApiOptions = { method?: string; body?: unknown };
@@ -147,16 +148,20 @@ function MiniStat({ value, label, icon, tone = '' }: { value: number; label: str
 function RoundSettings({ competitionId, round, onSaved }: { competitionId: string; round: Round; onSaved: () => void }) {
   const [requiredJudgeCount, setRequiredJudgeCount] = useState(round.requiredJudgeCount);
   const [aggregateMethod, setAggregateMethod] = useState(round.aggregateMethod);
+  const [tieBreakMethod, setTieBreakMethod] = useState(round.tieBreakMethod);
+  const [roundingPrecision, setRoundingPrecision] = useState(round.roundingPrecision);
   const [anonymous, setAnonymous] = useState(round.anonymous);
   const [allowAdvanceWithGaps, setAllowAdvanceWithGaps] = useState(round.allowAdvanceWithGaps);
   const [publishScores, setPublishScores] = useState(round.publishScores);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const sessionStarted = round.session !== null && round.session !== undefined && round.session.state !== 'IDLE';
+  const scoringPolicyLocked = round._count.scoreSheets > 0 || round._count.snapshots > 0 || round.status === 'LIVE' || round.status === 'COMPLETED' || sessionStarted;
   async function save(event: FormEvent) {
     event.preventDefault(); setError(''); setMessage(''); setBusy(true);
     try {
-      await api(`/api/competitions/${competitionId}/rounds/${round.id}`, { method: 'PATCH', body: { requiredJudgeCount: Number(requiredJudgeCount), aggregateMethod, anonymous, allowAdvanceWithGaps, publishScores } });
+      await api(`/api/competitions/${competitionId}/rounds/${round.id}`, { method: 'PATCH', body: { requiredJudgeCount: Number(requiredJudgeCount), aggregateMethod, tieBreakMethod, roundingPrecision: Number(roundingPrecision), anonymous, allowAdvanceWithGaps, publishScores } });
       setMessage('Đã lưu quy tắc.'); onSaved();
     } catch (reason) { setError(errorText(reason)); }
     finally { setBusy(false); }
@@ -164,10 +169,14 @@ function RoundSettings({ competitionId, round, onSaved }: { competitionId: strin
   return <details style={{ marginTop: 12 }}><summary className="text-button" style={{ cursor: 'pointer' }}>Quy tắc vòng thi</summary>
     <form className="form-stack" style={{ marginTop: 12 }} onSubmit={save}>
       {error && <Notice tone="error">{error}</Notice>}{message && <Notice tone="success">{message}</Notice>}
+      {scoringPolicyLocked && <Notice tone="info">Cách tổng hợp, làm tròn và xử lý đồng điểm đã khóa để giữ cùng một quy chế cho toàn bộ phiếu trong vòng.</Notice>}
       <div className="form-grid">
         <label className="field-label">Số phiếu yêu cầu / lượt<input className="field-input" type="number" min="1" max="30" value={requiredJudgeCount} onChange={(event) => setRequiredJudgeCount(Number(event.target.value))} /></label>
-        <label className="field-label">Cách tổng hợp<select className="field-select" value={aggregateMethod} onChange={(event) => setAggregateMethod(event.target.value)}><option value="AVERAGE">Trung bình cộng</option><option value="MEDIAN">Trung vị</option></select></label>
+        <label className="field-label">Cách tổng hợp<select className="field-select" disabled={scoringPolicyLocked} value={aggregateMethod} onChange={(event) => setAggregateMethod(event.target.value)}><option value="AVERAGE">Trung bình cộng</option><option value="MEDIAN">Trung vị</option></select></label>
+        <label className="field-label">Làm tròn điểm tổng<select className="field-select" disabled={scoringPolicyLocked} value={roundingPrecision} onChange={(event) => setRoundingPrecision(Number(event.target.value))}>{[0, 1, 2, 3, 4].map((precision) => <option key={precision} value={precision}>{precision} chữ số thập phân</option>)}</select></label>
+        <label className="field-label">Xử lý đồng điểm<select className="field-select" disabled={scoringPolicyLocked} value={tieBreakMethod} onChange={(event) => setTieBreakMethod(event.target.value)}><option value="TOTAL_SCORE">Đồng hạng khi bằng điểm tổng</option><option value="CRITERIA_PRIORITY">So tiêu chí theo thứ tự ưu tiên</option></select></label>
       </div>
+      <p className="field-help">Nếu chọn ưu tiên tiêu chí, hệ thống so lần lượt theo thứ tự rubric; nếu vẫn bằng nhau, các thí sinh đồng hạng.</p>
       <label className="pill-row field-help"><input type="checkbox" checked={anonymous} onChange={(event) => setAnonymous(event.target.checked)} /> Ẩn danh thí sinh với giám khảo</label>
       <label className="pill-row field-help"><input type="checkbox" checked={allowAdvanceWithGaps} onChange={(event) => setAllowAdvanceWithGaps(event.target.checked)} /> Cho phép khóa kết quả khi còn thiếu phiếu</label>
       <label className="pill-row field-help"><input type="checkbox" checked={publishScores} onChange={(event) => setPublishScores(event.target.checked)} /> Công khai điểm từng giám khảo khi công bố kết quả</label>
@@ -189,7 +198,9 @@ function SectionContent({ id, round, section, reload }: { id: string; round: Rou
   }
 }
 
-type ContestantItem = { id: string; displayName: string; organization: string | null; email: string | null; phone: string | null; entries: { id: string; entryCode: string; title: string | null; status: string; sequence: number; _count: { scoreSheets: number } }[] };
+type EntryRow = { id: string; entryCode: string; title: string | null; status: string; sequence: number; _count: { scoreSheets: number } };
+type ContestantItem = { id: string; displayName: string; organization: string | null; email: string | null; phone: string | null; entries: EntryRow[] };
+type CsvPreview = { rows: { rowNumber: number; displayName: string; organization: string; email: string; phone: string; title: string }[]; issues: { rowNumber: number | null; message: string }[]; totalRows: number };
 
 function Contestants({ id, round }: { id: string; round: Round }) {
   const [items, setItems] = useState<ContestantItem[] | null>(null);
@@ -197,9 +208,15 @@ function Contestants({ id, round }: { id: string; round: Round }) {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const [editing, setEditing] = useState<ContestantItem | null>(null);
   const [existingId, setExistingId] = useState('');
-  async function load() { try { const result = await api<{ contestants: ContestantItem[] }>(`/api/competitions/${id}/contestants?roundId=${round.id}`); setItems(result.contestants); } catch (reason) { setError(errorText(reason)); } }
+  const [csvPreview, setCsvPreview] = useState<CsvPreview | null>(null);
+  const [pendingCsv, setPendingCsv] = useState('');
+  async function load() {
+    try { const result = await api<{ contestants: ContestantItem[] }>(`/api/competitions/${id}/contestants?roundId=${round.id}`); setItems(result.contestants); }
+    catch (reason) { setError(errorText(reason)); }
+  }
   useEffect(() => { setItems(null); void load(); }, [id, round.id]);
   async function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setNotice(''); setBusy(true);
@@ -213,8 +230,7 @@ function Contestants({ id, round }: { id: string; round: Round }) {
         event.currentTarget.reset(); setNotice('Đã thêm thí sinh vào vòng thi.');
       }
       await load();
-    }
-    catch (reason) { setError(errorText(reason)); } finally { setBusy(false); }
+    } catch (reason) { setError(errorText(reason)); } finally { setBusy(false); }
   }
   async function registerExisting(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setNotice('');
@@ -226,18 +242,47 @@ function Contestants({ id, round }: { id: string; round: Round }) {
     setError(''); setNotice(''); setImporting(true);
     try {
       const csv = await file.text();
-      const result = await api<{ imported: number }>(`/api/competitions/${id}/contestants/import`, { method: 'POST', body: { roundId: round.id, csv } });
-      setNotice(`Đã nhập ${result.imported} thí sinh.`); await load();
+      const result = await api<{ preview: CsvPreview }>(`/api/competitions/${id}/contestants/import`, { method: 'POST', body: { roundId: round.id, csv, confirm: false } });
+      setPendingCsv(csv); setCsvPreview(result.preview);
     } catch (reason) { setError(errorText(reason)); }
     finally { setImporting(false); }
   }
+  async function confirmImport() {
+    if (!pendingCsv || !csvPreview || csvPreview.issues.length) return;
+    setError(''); setImporting(true);
+    try {
+      const result = await api<{ imported: number }>(`/api/competitions/${id}/contestants/import`, { method: 'POST', body: { roundId: round.id, csv: pendingCsv, confirm: true } });
+      setNotice(`Đã nhập ${result.imported} thí sinh sau khi xác nhận.`); setCsvPreview(null); setPendingCsv(''); await load();
+    } catch (reason) { setError(errorText(reason)); }
+    finally { setImporting(false); }
+  }
+  async function moveEntry(entryId: string, direction: -1 | 1) {
+    const ordered = [...(items ?? []).flatMap((item) => item.entries)].sort((a, b) => a.sequence - b.sequence);
+    const index = ordered.findIndex((entry) => entry.id === entryId);
+    const destination = index + direction;
+    if (index < 0 || destination < 0 || destination >= ordered.length) return;
+    const entryIds = ordered.map((entry) => entry.id);
+    [entryIds[index], entryIds[destination]] = [entryIds[destination], entryIds[index]];
+    setError(''); setNotice(''); setReordering(true);
+    try { await api(`/api/competitions/${id}/entries`, { method: 'PATCH', body: { roundId: round.id, entryIds } }); setNotice('Đã cập nhật thứ tự thi và ghi nhận vào nhật ký.'); await load(); }
+    catch (reason) { setError(errorText(reason)); }
+    finally { setReordering(false); }
+  }
+  const orderedEntries = [...(items ?? []).flatMap((item) => item.entries)].sort((a, b) => a.sequence - b.sequence);
+  const contestantByEntry = new Map((items ?? []).flatMap((item) => item.entries.map((entry) => [entry.id, item] as const)));
   return <div className="card-grid two-columns">
-    <SectionCard title="Danh sách thí sinh" subtitle="Thông tin cá nhân chỉ hiển thị cho người có quyền quản lý." action={<label className="button secondary-button small-button">{importing ? 'Đang nhập…' : '↑ Nhập CSV'}<input type="file" accept=".csv,text/csv" disabled={importing} style={{ display: 'none' }} onChange={(event) => { void importFile(event.target.files?.[0]); event.target.value = ''; }} /></label>}>
-      {error && <Notice tone="error">{error}</Notice>}
-      {!items ? <Loading /> : items.some((item) => item.entries.length) ? <div className="table-wrap"><table className="data-table"><thead><tr><th>MÃ</th><th>THÍ SINH / ĐỘI</th><th>ĐƠN VỊ</th><th>TRẠNG THÁI</th><th>PHIẾU</th><th></th></tr></thead><tbody>{items.filter((item) => item.entries.length).map((item) => { const entry = item.entries[0]; return <tr key={item.id}><td><strong>{entry.entryCode}</strong></td><td><strong>{item.displayName}</strong>{entry.title && <div className="field-help">{entry.title}</div>}</td><td>{item.organization || '—'}</td><td><StatusPill value={entry.status} /></td><td>{entry._count.scoreSheets}</td><td><div className="table-actions"><button className="button secondary-button small-button" onClick={() => setEditing(item)}>Sửa</button><button className="button danger-button small-button" onClick={async () => { if (!window.confirm(`Rút ${item.displayName} khỏi cuộc thi? Lịch sử điểm được giữ lại.`)) return; try { await api(`/api/competitions/${id}/contestants/${item.id}`, { method: 'DELETE' }); setNotice('Đã rút thí sinh; lịch sử điểm được giữ lại.'); await load(); } catch (reason) { setError(errorText(reason)); } }}>Rút</button></div></td></tr>; })}</tbody></table></div> : <EmptyState title="Chưa có thí sinh trong vòng này" description="Thêm thí sinh bằng biểu mẫu hoặc nhập danh sách CSV." />}
+    <SectionCard title="Danh sách thí sinh" subtitle="Thông tin hồ sơ chỉ hiển thị cho Admin." action={<label className="button secondary-button small-button">{importing ? 'Đang đọc…' : '↑ Nhập CSV'}<input type="file" accept=".csv,text/csv" disabled={importing} style={{ display: 'none' }} onChange={(event) => { void importFile(event.target.files?.[0]); event.target.value = ''; }} /></label>}>
+      {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
+      {csvPreview && <div className="csv-preview">
+        <div className="surface-heading"><div><h2>Xem trước danh sách nhập</h2><p>{csvPreview.totalRows} dòng · kiểm tra tên, email và dữ liệu trùng trước khi lưu</p></div><button className="text-button" type="button" onClick={() => { setCsvPreview(null); setPendingCsv(''); }}>Hủy</button></div>
+        {csvPreview.issues.length > 0 && <div className="csv-preview-errors" role="alert"><strong>Cần sửa {csvPreview.issues.length} lỗi trước khi nhập</strong><ul>{csvPreview.issues.map((issue, index) => <li key={`${issue.rowNumber}-${index}`}>{issue.rowNumber ? `Dòng ${issue.rowNumber}: ` : ''}{issue.message}</li>)}</ul></div>}
+        <div className="table-wrap csv-preview-table"><table className="data-table"><thead><tr><th>DÒNG</th><th>TÊN</th><th>ĐƠN VỊ</th><th>EMAIL</th><th>ĐIỆN THOẠI</th><th>ĐỀ TÀI</th></tr></thead><tbody>{csvPreview.rows.map((row) => <tr key={row.rowNumber}><td>{row.rowNumber}</td><td>{row.displayName || '—'}</td><td>{row.organization || '—'}</td><td>{row.email || '—'}</td><td>{row.phone || '—'}</td><td>{row.title || '—'}</td></tr>)}</tbody></table></div>
+        <div className="form-actions"><button className="button secondary-button" type="button" onClick={() => { setCsvPreview(null); setPendingCsv(''); }}>Hủy nhập</button><button className="button primary-button" type="button" disabled={importing || csvPreview.issues.length > 0} onClick={() => void confirmImport()}>{importing ? 'Đang nhập…' : `Xác nhận nhập ${csvPreview.totalRows} thí sinh`}</button></div>
+      </div>}
+      {(round.status === 'LIVE' || round.status === 'COMPLETED' || round._count.scoreSheets > 0 || Boolean(round.session && round.session.state !== 'IDLE')) && <Notice tone="warning">Thứ tự thi bị khóa sau khi điều phối hoặc chấm điểm bắt đầu.</Notice>}
+      {!items ? <Loading /> : orderedEntries.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>THỨ TỰ</th><th>MÃ</th><th>THÍ SINH / ĐỘI</th><th>ĐƠN VỊ</th><th>TRẠNG THÁI</th><th>PHIẾU</th><th>THAO TÁC</th></tr></thead><tbody>{orderedEntries.map((entry, index) => { const item = contestantByEntry.get(entry.id)!; const orderLocked = round.status === 'LIVE' || round.status === 'COMPLETED' || round._count.scoreSheets > 0 || Boolean(round.session && round.session.state !== 'IDLE'); return <tr key={entry.id}><td>{entry.sequence}</td><td><strong>{entry.entryCode}</strong></td><td><strong>{item.displayName}</strong>{entry.title && <div className="field-help">{entry.title}</div>}</td><td>{item.organization || '—'}</td><td><StatusPill value={entry.status} /></td><td>{entry._count.scoreSheets}</td><td><div className="table-actions"><button className="button secondary-button small-button" type="button" onClick={() => setEditing(item)}>Sửa</button><button className="button secondary-button small-button" type="button" aria-label={`Đưa ${item.displayName} lên trên`} title="Đưa lên một vị trí" disabled={reordering || orderLocked || index === 0} onClick={() => void moveEntry(entry.id, -1)}>↑</button><button className="button secondary-button small-button" type="button" aria-label={`Đưa ${item.displayName} xuống dưới`} title="Đưa xuống một vị trí" disabled={reordering || orderLocked || index === orderedEntries.length - 1} onClick={() => void moveEntry(entry.id, 1)}>↓</button><button className="button danger-button small-button" type="button" onClick={async () => { if (!window.confirm(`Rút ${item.displayName} khỏi cuộc thi? Lịch sử điểm được giữ lại.`)) return; try { await api(`/api/competitions/${id}/contestants/${item.id}`, { method: 'DELETE' }); setNotice('Đã rút thí sinh; lịch sử điểm được giữ lại.'); await load(); } catch (reason) { setError(errorText(reason)); } }}>Rút</button></div></td></tr>; })}</tbody></table></div> : <EmptyState title="Chưa có thí sinh trong vòng này" description="Thêm thí sinh bằng biểu mẫu hoặc nhập danh sách CSV." />}
     </SectionCard>
     <SectionCard title={editing ? 'Chỉnh sửa hồ sơ' : 'Thêm thí sinh'} subtitle={editing ? 'Cập nhật thông tin liên hệ và đơn vị.' : `Lượt thi mới sẽ được tạo trong vòng “${round.name}”.`}>
-      {notice && <Notice tone="success">{notice}</Notice>}{error && <Notice tone="error">{error}</Notice>}
       <form className="form-stack" key={editing?.id ?? 'new'} onSubmit={add}>
         <label className="field-label">Tên thí sinh hoặc đội *<input className="field-input" name="displayName" required minLength={2} maxLength={180} defaultValue={editing?.displayName ?? ''} placeholder="Nguyễn Văn A / Đội Innovate" /></label>
         {!editing && <label className="field-label">Tên đề tài / sản phẩm<input className="field-input" name="title" maxLength={180} placeholder="Tên đề tài dự thi" /></label>}
@@ -245,7 +290,7 @@ function Contestants({ id, round }: { id: string; round: Round }) {
         <div className="form-grid"><label className="field-label">Email<input className="field-input" name="email" type="email" defaultValue={editing?.email ?? ''} /></label><label className="field-label">Điện thoại<input className="field-input" name="phone" inputMode="tel" maxLength={32} defaultValue={editing?.phone ?? ''} /></label></div>
         <div className="table-actions">{editing && <button type="button" className="button secondary-button" onClick={() => setEditing(null)}>Hủy sửa</button>}<button className="button primary-button" disabled={busy}>{busy ? 'Đang lưu…' : editing ? 'Lưu hồ sơ' : '＋ Thêm vào vòng thi'}</button></div>
       </form>
-      <div className="notice notice-info">Mã dự thi và thứ tự sẽ được cấp tự động. CSV dùng các cột: Tên, Đơn vị, Email, Điện thoại, Tên đề tài. Tối đa 500 dòng mỗi lần nhập.</div>
+      <div className="notice notice-info">Mã dự thi tự cấp; có thể đổi thứ tự trước khi bắt đầu vòng. CSV dùng các cột: Tên, Đơn vị, Email, Điện thoại, Tên đề tài. Tối đa 500 dòng.</div>
       {items?.some((item) => !item.entries.length) && <form className="form-stack" style={{ marginTop: 14 }} onSubmit={registerExisting}><label className="field-label">Thêm hồ sơ cũ vào vòng này<select className="field-select" value={existingId} onChange={(event) => setExistingId(event.target.value)} required><option value="">Chọn thí sinh…</option>{items.filter((item) => !item.entries.length).map((item) => <option key={item.id} value={item.id}>{item.displayName}</option>)}</select></label><button className="button secondary-button" type="submit">Đăng ký vào vòng</button></form>}
     </SectionCard>
   </div>;
@@ -321,10 +366,13 @@ function RubricEditor({ id, round }: { id: string; round: Round }) {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
+  const sessionStarted = round.session !== null && round.session !== undefined && round.session.state !== 'IDLE';
+  const criterionEditingLocked = round._count.scoreSheets > 0 || round._count.snapshots > 0 || round.status === 'LIVE' || round.status === 'COMPLETED' || sessionStarted;
+  const versionCreationLocked = round._count.snapshots > 0 || round.status === 'LIVE' || round.status === 'COMPLETED' || sessionStarted;
   useEffect(() => {
     setError(''); setCriteria([]); setVersion(null);
-    api<{ rubrics: { name: string; versions: { version: number; name: string; criteria: Criterion[] }[] }[]; activeRubricVersionId: string | null }>(`/api/competitions/${id}/rubric?roundId=${round.id}`).then((result) => {
-      const active = result.rubrics.flatMap((rubric) => rubric.versions).find((item) => item.criteria[0]?.id && item.criteria.some((criterion) => criterion.id === (round.activeRubricVersion?.criteria[0]?.id)));
+    api<{ rubrics: { name: string; versions: { id: string; version: number; name: string; criteria: Criterion[] }[] }[]; activeRubricVersionId: string | null }>(`/api/competitions/${id}/rubric?roundId=${round.id}`).then((result) => {
+      const active = result.rubrics.flatMap((rubric) => rubric.versions).find((item) => item.id === result.activeRubricVersionId);
       const selected = active ?? result.rubrics.flatMap((rubric) => rubric.versions).find((item) => item.version === 1) ?? null;
       if (selected) { setCriteria(selected.criteria); setName(selected.name); setVersion(selected.version); }
       else if (round.activeRubricVersion?.criteria) setCriteria(round.activeRubricVersion.criteria);
@@ -334,6 +382,14 @@ function RubricEditor({ id, round }: { id: string; round: Round }) {
     setCriteria((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item));
   }
   function addCriterion() { setCriteria((items) => [...items, { name: '', description: '', minimum: 0, maximum: 10, step: 0.5, weight: 1, commentRequired: false }]); }
+  function moveCriterion(index: number, direction: -1 | 1) {
+    setCriteria((items) => {
+      const next = [...items]; const target = index + direction;
+      if (target < 0 || target >= next.length) return items;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
   const weightTotal = criteria.reduce((sum, item) => sum + (Number(item.weight) > 0 ? Number(item.weight) : 0), 0);
   const previewRows = criteria.map((item) => {
     const minimum = Number(item.minimum); const maximum = Number(item.maximum); const step = Number(item.step);
@@ -351,26 +407,26 @@ function RubricEditor({ id, round }: { id: string; round: Round }) {
     } catch (reason) { setError(errorText(reason)); } finally { setBusy(false); }
   }
   return <div className="page-section">
-    {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
-    {round._count.scoreSheets > 0 && <Notice tone="warning">Vòng đã có phiếu điểm; rubric được khóa để giữ cùng một thang điểm cho mọi giám khảo.</Notice>}
+      {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
+    {criterionEditingLocked && <Notice tone="warning">Rubric đã khóa khi vòng bắt đầu điều phối hoặc có phiếu chấm. Có thể tạo phiên bản mới để đổi tên rubric, nhưng nội dung và thứ tự tiêu chí phải giữ nguyên; các lượt đã chấm tiếp tục dùng đúng phiên bản ban đầu.</Notice>}
     <SectionCard title="Rubric chấm điểm" subtitle={`Phiên bản đang xem: ${version ? `v${version}` : 'chưa lưu'} · Tổng trọng số được chuẩn hóa khi tính điểm.`}>
       <form className="form-stack" onSubmit={save}>
         <label className="field-label">Tên rubric<input className="field-input" value={name} onChange={(event) => setName(event.target.value)} required maxLength={160} /></label>
         {criteria.map((criterion, index) => <div className="round-card" key={criterion.id ?? index}>
-          <div className="round-card-head"><strong>Tiêu chí {index + 1}</strong><button className="text-button" type="button" onClick={() => setCriteria((items) => items.filter((_, itemIndex) => itemIndex !== index))}>Xóa</button></div>
+          <div className="round-card-head"><strong>Tiêu chí {index + 1}</strong><div className="table-actions"><button className="button secondary-button small-button" type="button" aria-label={`Đưa tiêu chí ${index + 1} lên trước`} title="Ưu tiên cao hơn" disabled={criterionEditingLocked || index === 0} onClick={() => moveCriterion(index, -1)}>↑</button><button className="button secondary-button small-button" type="button" aria-label={`Đưa tiêu chí ${index + 1} xuống sau`} title="Ưu tiên thấp hơn" disabled={criterionEditingLocked || index === criteria.length - 1} onClick={() => moveCriterion(index, 1)}>↓</button><button className="text-button" type="button" disabled={criterionEditingLocked} onClick={() => setCriteria((items) => items.filter((_, itemIndex) => itemIndex !== index))}>Xóa</button></div></div>
           <div className="form-grid" style={{ marginTop: 12 }}>
-            <label className="field-label">Tên tiêu chí<input className="field-input" value={criterion.name} onChange={(event) => update(index, 'name', event.target.value)} minLength={2} maxLength={160} required /></label>
-            <label className="field-label">Trọng số<input className="field-input" type="number" min="0.01" step="0.01" value={criterion.weight} onChange={(event) => update(index, 'weight', event.target.value)} required /></label>
-            <label className="field-label">Điểm tối thiểu<input className="field-input" type="number" step="0.01" value={criterion.minimum} onChange={(event) => update(index, 'minimum', event.target.value)} required /></label>
-            <label className="field-label">Điểm tối đa<input className="field-input" type="number" step="0.01" value={criterion.maximum} onChange={(event) => update(index, 'maximum', event.target.value)} required /></label>
-            <label className="field-label">Bước điểm<input className="field-input" type="number" min="0.01" step="0.01" value={criterion.step} onChange={(event) => update(index, 'step', event.target.value)} required /></label>
-            <label className="field-label">Mô tả<input className="field-input" value={criterion.description ?? ''} onChange={(event) => update(index, 'description', event.target.value)} maxLength={2000} /></label>
-            <label className="field-label"><span>Nhận xét</span><span className="pill-row"><input type="checkbox" checked={criterion.commentRequired} onChange={(event) => update(index, 'commentRequired', event.target.checked)} /> Bắt buộc nhận xét</span></label>
+            <label className="field-label">Tên tiêu chí<input className="field-input" value={criterion.name} onChange={(event) => update(index, 'name', event.target.value)} minLength={2} maxLength={160} required disabled={criterionEditingLocked} /></label>
+            <label className="field-label">Trọng số<input className="field-input" type="number" min="0.01" step="0.01" value={criterion.weight} onChange={(event) => update(index, 'weight', event.target.value)} required disabled={criterionEditingLocked} /></label>
+            <label className="field-label">Điểm tối thiểu<input className="field-input" type="number" step="0.01" value={criterion.minimum} onChange={(event) => update(index, 'minimum', event.target.value)} required disabled={criterionEditingLocked} /></label>
+            <label className="field-label">Điểm tối đa<input className="field-input" type="number" step="0.01" value={criterion.maximum} onChange={(event) => update(index, 'maximum', event.target.value)} required disabled={criterionEditingLocked} /></label>
+            <label className="field-label">Bước điểm<input className="field-input" type="number" min="0.01" step="0.01" value={criterion.step} onChange={(event) => update(index, 'step', event.target.value)} required disabled={criterionEditingLocked} /></label>
+            <label className="field-label">Mô tả<input className="field-input" value={criterion.description ?? ''} onChange={(event) => update(index, 'description', event.target.value)} maxLength={2000} disabled={criterionEditingLocked} /></label>
+            <label className="field-label"><span>Nhận xét</span><span className="pill-row"><input type="checkbox" checked={criterion.commentRequired} onChange={(event) => update(index, 'commentRequired', event.target.checked)} disabled={criterionEditingLocked} /> Bắt buộc nhận xét</span></label>
           </div>
         </div>)}
-        <div className="toolbar"><button type="button" className="button secondary-button" onClick={addCriterion}>＋ Thêm tiêu chí</button><span className="field-help">Điểm tiêu chí: Σ(điểm × trọng số) / Σ(trọng số)</span></div>
+        <div className="toolbar"><button type="button" className="button secondary-button" onClick={addCriterion} disabled={criterionEditingLocked}>＋ Thêm tiêu chí</button><span className="field-help">Điểm tiêu chí: Σ(điểm × trọng số) / Σ(trọng số)</span></div>
         {weightTotal <= 0 && <Notice tone="error">Tổng trọng số phải lớn hơn 0.</Notice>}
-        <div className="form-actions"><button type="button" className="button secondary-button" onClick={() => setPreviewVisible((value) => !value)}>{previewVisible ? 'Ẩn xem trước' : 'Xem trước phiếu'}</button><button className="button primary-button" disabled={busy || round._count.scoreSheets > 0 || criteria.length === 0 || weightTotal <= 0}>{busy ? 'Đang lưu…' : 'Lưu và kích hoạt phiên bản mới'}</button></div>
+        <div className="form-actions"><button type="button" className="button secondary-button" onClick={() => setPreviewVisible((value) => !value)}>{previewVisible ? 'Ẩn xem trước' : 'Xem trước phiếu'}</button><button className="button primary-button" disabled={busy || versionCreationLocked || criteria.length === 0 || weightTotal <= 0}>{busy ? 'Đang lưu…' : 'Lưu và kích hoạt phiên bản mới'}</button></div>
       </form>
     </SectionCard>
     {previewVisible && <SectionCard title="Xem trước phiếu chấm" subtitle={`Ví dụ minh họa bằng điểm gần 75% thang cho từng tiêu chí. Tổng trọng số hiện tại: ${weightTotal.toFixed(2)}.`}>
@@ -391,9 +447,10 @@ function LiveControl({ id, round }: { id: string; round: Round }) {
     try {
       const [live, contestantResult] = await Promise.all([
         api<{ session: NonNullable<typeof session> }>(`/api/competitions/${id}/rounds/${round.id}/session`),
-        api<{ contestants: { entries: EntryOption[] }[] }>(`/api/competitions/${id}/contestants?roundId=${round.id}`),
+        api<{ contestants: { displayName: string; organization: string | null; entries: Omit<EntryOption, 'contestant'>[] }[] }>(`/api/competitions/${id}/contestants?roundId=${round.id}`),
       ]);
-      setSession(live.session); setEntries(contestantResult.contestants.flatMap((item) => item.entries));
+      setSession(live.session);
+      setEntries(contestantResult.contestants.flatMap((item) => item.entries.map((entry) => ({ ...entry, contestant: { displayName: item.displayName, organization: item.organization } }))));
       setSelectedEntry(live.session.currentEntry?.id ?? '');
     } catch (reason) { setError(errorText(reason)); }
   }
@@ -446,7 +503,7 @@ function ScoreStatus({ id, round }: { id: string; round: Round }) {
     {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
     {rows === null ? <Loading /> : <>
       <div className="pill-row" style={{ marginBottom: 15 }}><span className="metric-chip">Đã nộp {totalSubmitted}/{totalNeeded} phiếu yêu cầu</span><span className="metric-chip">Còn thiếu {Math.max(0, totalNeeded - totalSubmitted)}</span></div>
-      {rows.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>LƯỢT THI</th><th>GIÁM KHẢO</th><th>TRẠNG THÁI</th><th>ĐIỂM</th><th>THAO TÁC</th></tr></thead><tbody>{rows.flatMap((row) => row.judges.length ? row.judges.map((judge) => <tr key={`${row.entry.id}-${judge.id}`}><td><strong>{row.entry.code}</strong><div className="field-help">{row.entry.name}</div></td><td>{judge.name}</td><td><StatusPill value={judge.status === 'MISSING' ? 'DRAFT' : judge.status} />{judge.status === 'MISSING' && <span className="field-help"> Chưa có phiếu</span>}</td><td>{judge.totalScore === null ? '—' : judge.totalScore.toFixed(2)}</td><td>{judge.status === 'SUBMITTED' && judge.scoreSheetId ? <button className="button secondary-button small-button" onClick={() => void reopen(row, judge.name, judge.scoreSheetId!)}>Mở lại</button> : '—'}</td></tr>) : [<tr key={`${row.entry.id}-empty`}><td><strong>{row.entry.code}</strong><div className="field-help">{row.entry.name}</div></td><td colSpan={4} className="field-help">Chưa phân công giám khảo</td></tr>])}</tbody></table></div> : <EmptyState title="Chưa có lượt thi" description="Thêm thí sinh và giám khảo trước khi theo dõi phiếu chấm." />}
+      {rows.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>LƯỢT THI</th><th>GIÁM KHẢO</th><th>TRẠNG THÁI</th><th>ĐIỂM</th><th>THAO TÁC</th></tr></thead><tbody>{rows.flatMap((row) => row.judges.length ? row.judges.map((judge) => <tr key={`${row.entry.id}-${judge.id}`}><td><strong>{row.entry.code}</strong><div className="field-help">{row.entry.name}</div></td><td>{judge.name}</td><td><StatusPill value={judge.status === 'MISSING' ? 'DRAFT' : judge.status} />{judge.status === 'MISSING' && <span className="field-help"> Chưa có phiếu</span>}</td><td>{judge.totalScore === null ? '—' : judge.totalScore.toFixed(round.roundingPrecision)}</td><td>{judge.status === 'SUBMITTED' && judge.scoreSheetId ? <button className="button secondary-button small-button" onClick={() => void reopen(row, judge.name, judge.scoreSheetId!)}>Mở lại</button> : '—'}</td></tr>) : [<tr key={`${row.entry.id}-empty`}><td><strong>{row.entry.code}</strong><div className="field-help">{row.entry.name}</div></td><td colSpan={4} className="field-help">Chưa phân công giám khảo</td></tr>])}</tbody></table></div> : <EmptyState title="Chưa có lượt thi" description="Thêm thí sinh và giám khảo trước khi theo dõi phiếu chấm." />}
     </>}
   </SectionCard>;
 }
@@ -473,11 +530,11 @@ function Results({ id, round, reload }: { id: string; round: Round; reload: () =
   }
   return <div className="page-section">
     {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
-    <SectionCard title={`Kết quả · ${round.name}`} subtitle="Điểm tổng được tính từ các phiếu đã nộp theo công thức của vòng thi." action={rows?.length ? <a className="button secondary-button small-button" href={`/api/competitions/${id}/results?roundId=${round.id}&format=csv`}>↓ Tải CSV</a> : undefined}>
+    <SectionCard title={`Kết quả · ${round.name}`} subtitle={`Tổng hợp ${round.aggregateMethod === 'MEDIAN' ? 'trung vị' : 'trung bình cộng'} · làm tròn ${round.roundingPrecision} chữ số · ${round.tieBreakMethod === 'CRITERIA_PRIORITY' ? 'so tiêu chí theo thứ tự ưu tiên khi đồng điểm' : 'đồng hạng khi bằng điểm tổng'}.`} action={rows?.length ? <a className="button secondary-button small-button" href={`/api/competitions/${id}/results?roundId=${round.id}&format=csv`}>↓ Tải CSV</a> : undefined}>
       {rows === null ? <Loading /> : <>
-        <div className="toolbar"><div className="pill-row"><span className="metric-chip">{rows.length} lượt thi</span>{snapshot && <span className="metric-chip">Snapshot v{snapshot.version} · khóa {formatDateTime(snapshot.lockedAt)}</span>}<span className="metric-chip">{snapshot?.published ? 'Đã công bố' : snapshot ? 'Chưa công bố' : 'Chưa khóa'}</span></div><div className="toolbar-right">{snapshot ? !snapshot.published && <button className="button primary-button small-button" disabled={busy} onClick={() => void action('publish')}>{busy ? 'Đang xử lý…' : 'Công bố kết quả'}</button> : <button className="button primary-button small-button" disabled={busy || rows.length === 0} onClick={() => void action('lock')}>{busy ? 'Đang khóa…' : 'Khóa kết quả'}</button>}</div></div>
+        <div className="toolbar"><div className="pill-row"><span className="metric-chip">{rows.length} lượt thi</span>{snapshot && <span className="metric-chip">Snapshot v{snapshot.version} · khóa {formatDateTime(snapshot.lockedAt)}</span>}<span className="metric-chip">{snapshot?.published ? 'Đã công bố' : snapshot ? 'Chưa công bố' : 'Chưa khóa'}</span></div><div className="toolbar-right">{snapshot ? !snapshot.published && <button className="button primary-button small-button" disabled={busy} onClick={() => void action('publish')}>{busy ? 'Đang xử lý…' : 'Công bố kết quả'}</button> : <button className="button primary-button small-button" disabled={busy || rows.length === 0 || (missing.length > 0 && !round.allowAdvanceWithGaps)} onClick={() => void action('lock')}>{busy ? 'Đang khóa…' : 'Khóa kết quả'}</button>}</div></div>
         {missing.length > 0 && <Notice tone="warning">{missing.length} lượt thi chưa đủ phiếu chấm yêu cầu.</Notice>}
-        {rows.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>HẠNG</th><th>MÃ</th><th>THÍ SINH / ĐỘI</th><th>ĐIỂM TỔNG</th><th>PHIẾU</th><th>CHI TIẾT GIÁM KHẢO</th></tr></thead><tbody>{rows.map((row) => <tr key={row.entryId}><td><span className="result-rank">{row.rank ?? '—'}</span></td><td><strong>{row.entryCode}</strong></td><td><strong>{row.contestant}</strong><div className="field-help">{row.title || row.organization || ''}</div></td><td><strong>{row.totalScore === null ? '—' : row.totalScore.toFixed(2)}</strong></td><td>{row.submittedCount}/{row.requiredCount}</td><td>{row.judges.map((judge) => `${judge.judge}: ${judge.score?.toFixed(2) ?? '—'}`).join(' · ') || '—'}</td></tr>)}</tbody></table></div> : <EmptyState title="Chưa có kết quả" description="Cần thêm lượt thi và phiếu chấm trước khi tổng hợp." />}
+        {rows.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>HẠNG</th><th>MÃ</th><th>THÍ SINH / ĐỘI</th><th>ĐIỂM TỔNG</th><th>PHIẾU</th><th>CHI TIẾT GIÁM KHẢO</th></tr></thead><tbody>{rows.map((row) => <tr key={row.entryId}><td><span className="result-rank">{row.rank ?? '—'}</span></td><td><strong>{row.entryCode}</strong></td><td><strong>{row.contestant}</strong><div className="field-help">{row.title || row.organization || ''}</div></td><td><strong>{row.totalScore === null ? '—' : row.totalScore.toFixed(round.roundingPrecision)}</strong></td><td>{row.submittedCount}/{row.requiredCount}</td><td>{row.judges.map((judge) => `${judge.judge}: ${judge.score?.toFixed(round.roundingPrecision) ?? '—'}`).join(' · ') || '—'}</td></tr>)}</tbody></table></div> : <EmptyState title="Chưa có kết quả" description="Cần thêm lượt thi và phiếu chấm trước khi tổng hợp." />}
       </>}
     </SectionCard>
   </div>;
@@ -489,7 +546,7 @@ function CompetitionActivity({ id }: { id: string }) {
   useEffect(() => { api<{ events: NonNullable<typeof events> }>(`/api/competitions/${id}/audit`).then((result) => setEvents(result.events)).catch((reason) => { setError(errorText(reason)); setEvents([]); }); }, [id]);
   return <SectionCard title="Nhật ký hoạt động" subtitle="Lịch sử phân công, điều phối, chấm điểm, khóa và công bố.">
     {error && <Notice tone="error">{error}</Notice>}
-    {events === null ? <Loading /> : events.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>THỜI ĐIỂM</th><th>NGƯỜI THỰC HIỆN</th><th>HÀNH ĐỘNG</th><th>ĐỐI TƯỢNG</th><th>CHI TIẾT</th></tr></thead><tbody>{events.map((event) => <tr key={event.id}><td>{formatDateTime(event.createdAt)}</td><td>{event.actor?.fullName ?? 'Hệ thống'}</td><td><strong>{event.action}</strong></td><td>{event.entityType}{event.entityId ? ` · ${event.entityId.slice(0, 8)}` : ''}</td><td className="field-help">{event.details ? JSON.stringify(event.details) : '—'}</td></tr>)}</tbody></table></div> : <EmptyState title="Chưa có nhật ký" description="Các hoạt động sẽ xuất hiện sau khi có thay đổi trong cuộc thi." />}
+    {events === null ? <Loading /> : events.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>THỜI ĐIỂM</th><th>NGƯỜI THỰC HIỆN</th><th>HÀNH ĐỘNG</th><th>ĐỐI TƯỢNG</th><th>CHI TIẾT</th></tr></thead><tbody>{events.map((event) => { const details = auditDetailRows(event.action, event.details); return <tr key={event.id}><td>{formatDateTime(event.createdAt)}</td><td><strong>{event.actor?.fullName ?? 'Hệ thống'}</strong>{event.actor?.email && <div className="field-help">{event.actor.email}</div>}</td><td><strong>{auditActionLabel(event.action)}</strong></td><td>{auditEntityLabel(event.entityType)}{event.entityId ? ` · ${event.entityId.slice(0, 8)}` : ''}</td><td>{details.length ? <ul className="audit-detail-list">{details.map((detail) => <li key={detail.label}><span>{detail.label}</span><strong>{detail.value}</strong></li>)}</ul> : '—'}</td></tr>; })}</tbody></table></div> : <EmptyState title="Chưa có nhật ký" description="Các hoạt động sẽ xuất hiện sau khi có thay đổi trong cuộc thi." />}
   </SectionCard>;
 }
 

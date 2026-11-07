@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, canViewCompetition, unauthorized } from '@/lib/api';
-import { aggregateJudgeScores } from '@/lib/scoring';
+import { aggregateJudgeScores, roundScore } from '@/lib/scoring';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
@@ -14,6 +14,7 @@ const actionSchema = z.discriminatedUnion('action', [
 type Context = { params: Promise<{ id: string }> };
 type JudgeResult = { judge: string; score: number | null; details?: { criterionId: string; criterion: string; score: number }[] };
 type ResultRow = { entryId: string; entryCode: string; title: string | null; contestant: string; organization: string | null; totalScore: number | null; rank: number | null; submittedCount: number; requiredCount: number; judges: JudgeResult[] };
+type RankableResult = ResultRow & { tieBreakScores: number[] };
 
 export async function GET(request: Request, context: Context) {
   const user = await getCurrentUser();
@@ -33,38 +34,34 @@ export async function GET(request: Request, context: Context) {
     const snapshotRows = snapshot.data as ResultRow[];
     const rows = manager ? snapshotRows : snapshotRows.map((row) => ({ ...row, judges: round.publishScores ? row.judges.map(({ judge, score }) => ({ judge, score })) : [] }));
     if (new URL(request.url).searchParams.get('format') === 'csv') return csvResponse(rows, round.name);
-    return Response.json({ round: { id: round.id, name: round.name, status: round.status }, snapshot: { ...snapshot, data: rows }, missing: [] });
+    return Response.json({ round: { id: round.id, name: round.name, status: round.status, aggregateMethod: round.aggregateMethod, tieBreakMethod: round.tieBreakMethod, roundingPrecision: round.roundingPrecision }, snapshot: { ...snapshot, data: rows }, missing: [] });
   }
   if (!manager) return Response.json({ error: 'Kết quả chưa được công bố.' }, { status: 404 });
 
   const sheets = await prisma.scoreSheet.findMany({
     where: { roundId, status: 'SUBMITTED' },
-    include: { judge: { select: { fullName: true } }, details: { orderBy: { criterion: { sequence: 'asc' } }, include: { criterion: { select: { id: true, name: true } } } } },
+    include: { judge: { select: { fullName: true } }, details: { orderBy: { criterion: { sequence: 'asc' } }, include: { criterion: { select: { id: true, name: true, sequence: true } } } } },
   });
   const requiredCount = round.requiredJudgeCount;
   const missing = round.entries.map((entry) => ({ entryId: entry.id, entryCode: entry.entryCode, displayName: entry.contestant.displayName, submittedCount: sheets.filter((sheet) => sheet.entryId === entry.id).length, requiredCount }))
     .filter((entry) => entry.submittedCount < requiredCount);
-  const rows: ResultRow[] = round.entries.map((entry) => {
+  const rankable: RankableResult[] = round.entries.map((entry) => {
     const entrySheets = sheets.filter((sheet) => sheet.entryId === entry.id);
     const values = entrySheets.map((sheet) => Number(sheet.totalScore ?? 0));
+    const totalScore = aggregateJudgeScores(values, round.aggregateMethod as 'AVERAGE' | 'MEDIAN');
     return {
       entryId: entry.id, entryCode: entry.entryCode, title: entry.title,
       contestant: round.anonymous ? 'Danh tính được ẩn' : entry.contestant.displayName,
       organization: round.anonymous ? null : entry.contestant.organization,
-      totalScore: aggregateJudgeScores(values, round.aggregateMethod as 'AVERAGE' | 'MEDIAN'), rank: null,
+      totalScore: totalScore === null ? null : roundScore(totalScore, round.roundingPrecision), rank: null,
       submittedCount: entrySheets.length, requiredCount,
       judges: entrySheets.map((sheet) => ({ judge: sheet.judge.fullName, score: sheet.totalScore === null ? null : Number(sheet.totalScore), details: sheet.details.map((detail) => ({ criterionId: detail.criterion.id, criterion: detail.criterion.name, score: Number(detail.score) })) })),
+      tieBreakScores: collectTieBreakScores(entrySheets, round.aggregateMethod as 'AVERAGE' | 'MEDIAN'),
     };
   });
-  rows.sort((a, b) => (b.totalScore ?? -1) - (a.totalScore ?? -1) || a.entryCode.localeCompare(b.entryCode, 'vi'));
-  let priorScore: number | null = null;
-  let priorRank = 0;
-  rows.forEach((row, index) => {
-    if (row.totalScore === priorScore) row.rank = priorRank;
-    else { row.rank = index + 1; priorRank = row.rank; priorScore = row.totalScore; }
-  });
+  const rows = applyRanks(rankable, round.tieBreakMethod);
   if (new URL(request.url).searchParams.get('format') === 'csv') return csvResponse(rows, round.name);
-  return Response.json({ round: { id: round.id, name: round.name, status: round.status, requiredJudgeCount: requiredCount, allowAdvanceWithGaps: round.allowAdvanceWithGaps }, rows, missing, snapshot: null });
+  return Response.json({ round: { id: round.id, name: round.name, status: round.status, requiredJudgeCount: requiredCount, allowAdvanceWithGaps: round.allowAdvanceWithGaps, tieBreakMethod: round.tieBreakMethod, roundingPrecision: round.roundingPrecision }, rows, missing, snapshot: null });
 }
 
 export async function POST(request: Request, context: Context) {
@@ -102,28 +99,24 @@ export async function POST(request: Request, context: Context) {
   if (round.status === 'COMPLETED' && await prisma.resultSnapshot.findFirst({ where: { roundId: round.id } })) return Response.json({ error: 'Kết quả đã khóa. Mở lại phiếu bằng lý do trước khi chốt phiên bản mới.' }, { status: 409 });
   const entries = await prisma.competitionEntry.findMany({ where: { roundId: round.id, status: 'ACTIVE' }, orderBy: { sequence: 'asc' }, include: { contestant: true } });
   if (!entries.length) return Response.json({ error: 'Vòng thi chưa có thí sinh.' }, { status: 409 });
-  const sheets = await prisma.scoreSheet.findMany({ where: { roundId: round.id, status: 'SUBMITTED' }, include: { judge: { select: { fullName: true } }, details: { orderBy: { criterion: { sequence: 'asc' } }, include: { criterion: { select: { id: true, name: true } } } } } });
+  const sheets = await prisma.scoreSheet.findMany({ where: { roundId: round.id, status: 'SUBMITTED' }, include: { judge: { select: { fullName: true } }, details: { orderBy: { criterion: { sequence: 'asc' } }, include: { criterion: { select: { id: true, name: true, sequence: true } } } } } });
   const missing = entries.filter((entry) => sheets.filter((sheet) => sheet.entryId === entry.id).length < round.requiredJudgeCount);
   if (missing.length && !round.allowAdvanceWithGaps) return Response.json({ error: `Còn ${missing.length} lượt thi thiếu phiếu điểm.`, missing: missing.map((entry) => entry.entryCode) }, { status: 409 });
 
-  const rows: ResultRow[] = entries.map((entry) => {
+  const rankable: RankableResult[] = entries.map((entry) => {
     const entrySheets = sheets.filter((sheet) => sheet.entryId === entry.id);
+    const totalScore = aggregateJudgeScores(entrySheets.map((sheet) => Number(sheet.totalScore ?? 0)), round.aggregateMethod as 'AVERAGE' | 'MEDIAN');
     return {
       entryId: entry.id, entryCode: entry.entryCode, title: entry.title,
       contestant: round.anonymous ? 'Danh tính được ẩn' : entry.contestant.displayName,
       organization: round.anonymous ? null : entry.contestant.organization,
-      totalScore: aggregateJudgeScores(entrySheets.map((sheet) => Number(sheet.totalScore ?? 0)), round.aggregateMethod as 'AVERAGE' | 'MEDIAN'), rank: null,
+      totalScore: totalScore === null ? null : roundScore(totalScore, round.roundingPrecision), rank: null,
       submittedCount: entrySheets.length, requiredCount: round.requiredJudgeCount,
       judges: entrySheets.map((sheet) => ({ judge: sheet.judge.fullName, score: sheet.totalScore === null ? null : Number(sheet.totalScore), details: sheet.details.map((detail) => ({ criterionId: detail.criterion.id, criterion: detail.criterion.name, score: Number(detail.score) })) })),
+      tieBreakScores: collectTieBreakScores(entrySheets, round.aggregateMethod as 'AVERAGE' | 'MEDIAN'),
     };
   });
-  rows.sort((a, b) => (b.totalScore ?? -1) - (a.totalScore ?? -1) || a.entryCode.localeCompare(b.entryCode, 'vi'));
-  let previous: number | null = null;
-  let rank = 0;
-  rows.forEach((row, index) => {
-    if (row.totalScore !== previous) { rank = index + 1; previous = row.totalScore; }
-    row.rank = rank;
-  });
+  const rows = applyRanks(rankable, round.tieBreakMethod);
   const version = (await prisma.resultSnapshot.aggregate({ where: { roundId: round.id }, _max: { version: true } }))._max.version ?? 0;
   const snapshot = await prisma.$transaction(async (tx) => {
     const created = await tx.resultSnapshot.create({ data: {
@@ -131,10 +124,55 @@ export async function POST(request: Request, context: Context) {
     } });
     await tx.competitionRound.update({ where: { id: round.id }, data: { status: 'COMPLETED' } });
     await tx.competitionSession.updateMany({ where: { roundId: round.id }, data: { currentEntryId: null, state: 'COMPLETED', version: { increment: 1 } } });
-    await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'RESULTS_LOCKED', entityType: 'ResultSnapshot', entityId: created.id, details: { version: version + 1, entryCount: rows.length, missingCount: missing.length } } });
+      await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'RESULTS_LOCKED', entityType: 'ResultSnapshot', entityId: created.id, details: { version: version + 1, entryCount: rows.length, missingCount: missing.length, aggregateMethod: round.aggregateMethod, tieBreakMethod: round.tieBreakMethod, roundingPrecision: round.roundingPrecision } } });
     return created;
   });
   return Response.json({ snapshot }, { status: 201 });
+}
+
+function collectTieBreakScores(
+  sheets: { details: { score: unknown; criterion: { sequence: number } }[] }[],
+  method: 'AVERAGE' | 'MEDIAN',
+) {
+  const bySequence = new Map<number, number[]>();
+  for (const sheet of sheets) for (const detail of sheet.details) {
+    const scores = bySequence.get(detail.criterion.sequence) ?? [];
+    scores.push(Number(detail.score));
+    bySequence.set(detail.criterion.sequence, scores);
+  }
+  return [...bySequence.entries()].sort(([a], [b]) => a - b).map(([, scores]) => {
+    const value = aggregateJudgeScores(scores, method);
+    return value ?? Number.NEGATIVE_INFINITY;
+  });
+}
+
+function applyRanks(rows: RankableResult[], tieBreakMethod: string): ResultRow[] {
+  rows.sort((a, b) => {
+    if (a.totalScore === null || b.totalScore === null) {
+      if (a.totalScore === b.totalScore) return a.entryCode.localeCompare(b.entryCode, 'vi');
+      return a.totalScore === null ? 1 : -1;
+    }
+    if (a.totalScore !== b.totalScore) return b.totalScore - a.totalScore;
+    if (tieBreakMethod === 'CRITERIA_PRIORITY') {
+      const count = Math.max(a.tieBreakScores.length, b.tieBreakScores.length);
+      for (let index = 0; index < count; index += 1) {
+        const difference = (b.tieBreakScores[index] ?? Number.NEGATIVE_INFINITY) - (a.tieBreakScores[index] ?? Number.NEGATIVE_INFINITY);
+        if (difference) return difference;
+      }
+    }
+    return a.entryCode.localeCompare(b.entryCode, 'vi');
+  });
+  let previous: RankableResult | null = null;
+  let rank = 0;
+  rows.forEach((row, index) => {
+    if (row.totalScore === null) { row.rank = null; return; }
+    const tiedOnTotal = previous?.totalScore === row.totalScore;
+    const tiedOnCriteria = tieBreakMethod !== 'CRITERIA_PRIORITY' || (previous?.tieBreakScores.length === row.tieBreakScores.length && previous.tieBreakScores.every((score, scoreIndex) => score === row.tieBreakScores[scoreIndex]));
+    if (!tiedOnTotal || !tiedOnCriteria) rank = index + 1;
+    row.rank = rank;
+    previous = row;
+  });
+  return rows.map(({ tieBreakScores: _tieBreakScores, ...row }) => row);
 }
 
 function csvResponse(rows: ResultRow[], roundName: string) {

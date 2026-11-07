@@ -26,7 +26,7 @@ export async function GET(_request: Request, context: Context) {
   const competition = await prisma.competition.findUnique({
     where: { id },
     include: {
-      rounds: { orderBy: { sequence: 'asc' }, include: { activeRubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } }, _count: { select: { entries: true, assignments: true, scoreSheets: true } } } },
+      rounds: { orderBy: { sequence: 'asc' }, include: { session: { select: { state: true } }, activeRubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } }, _count: { select: { entries: true, assignments: true, scoreSheets: true, snapshots: true } } } },
       _count: { select: { contestants: true, members: true } },
     },
   });

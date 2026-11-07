@@ -11,7 +11,7 @@ export default function ResultsPage() {
   const [error, setError] = useState('');
   useEffect(() => { fetch('/api/results', { cache: 'no-store' }).then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error); setRounds(body.rounds); }).catch((reason) => { setError(reason.message || 'Không thể tải kết quả.'); setRounds([]); }); }, []);
   return <>
-    <PageHeader eyebrow="RESULTS CENTER" title="Kết quả cuộc thi" description="Theo dõi phiếu điểm, khóa snapshot và công bố kết quả." />
+    <PageHeader eyebrow="TỔNG HỢP KẾT QUẢ" title="Kết quả cuộc thi" description="Theo dõi phiếu điểm, khóa snapshot và công bố kết quả." />
     {error && <Notice tone="error">{error}</Notice>}
     {rounds === null ? <Loading /> : rounds.length ? <div className="card-grid two-columns">{rounds.map((round) => <section className="surface-card" key={round.id}>
       <div className="surface-heading"><div><h2>{round.competition.name}</h2><p>{round.sequence}. {round.name}</p></div><StatusPill value={round.status} /></div>

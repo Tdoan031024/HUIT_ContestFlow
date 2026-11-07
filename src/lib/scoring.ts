@@ -40,3 +40,8 @@ export function aggregateJudgeScores(scores: number[], method: 'AVERAGE' | 'MEDI
   }
   return Math.round((scores.reduce((sum, score) => sum + score, 0) / scores.length) * 10000) / 10000;
 }
+
+export function roundScore(value: number, precision: number) {
+  const factor = 10 ** Math.min(4, Math.max(0, precision));
+  return Math.sign(value) * Math.round((Math.abs(value) + Number.EPSILON) * factor) / factor;
+}

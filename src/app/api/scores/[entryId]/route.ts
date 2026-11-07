@@ -22,7 +22,10 @@ export async function GET(_request: Request, context: Context) {
     where: { entryId_judgeId: { entryId, judgeId: user.id } },
     include: { rubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } }, details: true },
   });
-  const rubricVersion = sheet?.rubricVersion ?? (entry.round.activeRubricVersionId
+  const pinnedSheet = sheet ?? await prisma.scoreSheet.findFirst({ where: { entryId }, orderBy: { createdAt: 'asc' }, select: { rubricVersionId: true } });
+  const rubricVersion = sheet?.rubricVersion ?? (pinnedSheet?.rubricVersionId
+    ? await prisma.rubricVersion.findUnique({ where: { id: pinnedSheet.rubricVersionId }, include: { criteria: { orderBy: { sequence: 'asc' } } } })
+    : entry.round.activeRubricVersionId
     ? await prisma.rubricVersion.findUnique({ where: { id: entry.round.activeRubricVersionId }, include: { criteria: { orderBy: { sequence: 'asc' } } } })
     : null);
   if (!rubricVersion) return Response.json({ error: 'Vòng thi chưa có rubric được kích hoạt.' }, { status: 409 });
@@ -32,7 +35,7 @@ export async function GET(_request: Request, context: Context) {
       displayName: entry.round.anonymous ? 'Danh tính được ẩn' : entry.contestant.displayName,
       organization: entry.round.anonymous ? null : entry.contestant.organization,
     },
-    round: { id: entry.round.id, name: entry.round.name, status: entry.round.status, anonymous: entry.round.anonymous },
+    round: { id: entry.round.id, name: entry.round.name, status: entry.round.status, anonymous: entry.round.anonymous, roundingPrecision: entry.round.roundingPrecision },
     rubric: rubricVersion,
     scoreSheet: sheet ? { id: sheet.id, status: sheet.status, totalScore: sheet.totalScore, submittedAt: sheet.submittedAt, details: sheet.details } : null,
   });
@@ -47,7 +50,7 @@ export async function PUT(request: Request, context: Context) {
   const entry = await prisma.competitionEntry.findUnique({ where: { id: entryId }, include: { round: true } });
   if (!entry) return Response.json({ error: 'Không tìm thấy lượt thi.' }, { status: 404 });
   if (!(await isAssignedJudge(user, entry.roundId, entry.id))) return Response.json({ error: 'Bạn chưa được phân công chấm lượt thi này.' }, { status: 403 });
-  const existing = await prisma.scoreSheet.findUnique({ where: { entryId_judgeId: { entryId, judgeId: user.id } }, select: { id: true, status: true } });
+  const existing = await prisma.scoreSheet.findUnique({ where: { entryId_judgeId: { entryId, judgeId: user.id } }, select: { id: true, status: true, rubricVersionId: true } });
   if (existing?.status === 'SUBMITTED') return Response.json({ error: 'Phiếu đã nộp. Chỉ Admin mới có thể mở lại phiếu.' }, { status: 409 });
   if (entry.round.status === 'COMPLETED' && !existing) return Response.json({ error: 'Vòng thi đã kết thúc; cần Admin mở lại phiếu trước khi tạo điểm mới.' }, { status: 409 });
 
@@ -60,9 +63,8 @@ export async function PUT(request: Request, context: Context) {
     return Response.json({ error: 'Phiên chấm hiện chưa được bắt đầu.' }, { status: 409 });
   }
 
-  const rubricVersionId = existing
-    ? (await prisma.scoreSheet.findUniqueOrThrow({ where: { id: existing.id }, select: { rubricVersionId: true } })).rubricVersionId
-    : entry.round.activeRubricVersionId;
+  const pinnedSheet = existing ?? await prisma.scoreSheet.findFirst({ where: { entryId }, orderBy: { createdAt: 'asc' }, select: { rubricVersionId: true } });
+  const rubricVersionId = pinnedSheet?.rubricVersionId ?? entry.round.activeRubricVersionId;
   if (!rubricVersionId) return Response.json({ error: 'Vòng thi chưa có rubric được kích hoạt.' }, { status: 409 });
   const rubricVersion = await prisma.rubricVersion.findUnique({ where: { id: rubricVersionId }, include: { criteria: true } });
   if (!rubricVersion) return Response.json({ error: 'Không tìm thấy phiên bản rubric.' }, { status: 409 });

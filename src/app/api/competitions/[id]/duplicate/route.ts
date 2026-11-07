@@ -49,6 +49,7 @@ export async function POST(request: Request, context: Context) {
           publishScores: original.publishScores,
           aggregateMethod: original.aggregateMethod,
           tieBreakMethod: original.tieBreakMethod,
+          roundingPrecision: original.roundingPrecision,
         } });
         const criteria = original.activeRubricVersion?.criteria ?? [];
         const rubric = await tx.rubric.create({ data: {

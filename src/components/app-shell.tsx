@@ -17,7 +17,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
   const pathname = usePathname();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const section = pathname.startsWith('/competitions/') ? pathname.split('/')[3] ?? 'Tổng quan' : '';
+  const section = pathname === '/competitions/new' ? 'new' : pathname.startsWith('/competitions/') ? pathname.split('/')[3] ?? 'overview' : '';
   const currentLabel = links.find((item) => item.href === pathname)?.label ?? (section ? sectionLabel(section) : 'Tổng quan');
 
   async function logout() {
@@ -67,6 +67,6 @@ function initials(name: string) {
 }
 
 function sectionLabel(section: string) {
-  const labels: Record<string, string> = { contestants: 'Thí sinh', judges: 'Giám khảo', rubric: 'Tiêu chí chấm', live: 'Điều phối trực tiếp', scores: 'Phiếu chấm', results: 'Kết quả', activity: 'Nhật ký hoạt động' };
+  const labels: Record<string, string> = { new: 'Tạo cuộc thi mới', overview: 'Tổng quan', contestants: 'Thí sinh', judges: 'Giám khảo', rubric: 'Tiêu chí chấm', live: 'Điều phối trực tiếp', scores: 'Phiếu chấm', results: 'Kết quả', activity: 'Nhật ký hoạt động' };
   return labels[section] ?? 'Chi tiết cuộc thi';
 }

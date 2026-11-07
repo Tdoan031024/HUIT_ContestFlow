@@ -144,6 +144,7 @@ model CompetitionRound {
   publishScores         Boolean             @default(false) @map("publish_scores")
   aggregateMethod       String              @default("AVERAGE") @map("aggregate_method") @db.VarChar(24)
   tieBreakMethod        String              @default("TOTAL_SCORE") @map("tie_break_method") @db.VarChar(32)
+  roundingPrecision     Int                 @default(2) @map("rounding_precision")
   activeRubricVersionId String?             @map("active_rubric_version_id") @db.Char(36)
   createdAt             DateTime            @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt             DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
