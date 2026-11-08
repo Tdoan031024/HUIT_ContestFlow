@@ -49,9 +49,7 @@ Deploy this repository as one Node.js app using the host's Node.js application m
 
 ### GitHub Actions CI/CD
 
-`.github/workflows/ci-cd.yml` validates the Prisma schema and builds with Node.js 22 on pull requests and pushes to `main`. A successful `main` build also creates a short-lived cPanel release artifact that includes the `app.cjs` startup file. Automatic deployment is disabled until the cPanel target is configured; then set the repository variable `CPANEL_DEPLOY_ENABLED=true`. The job also supports an explicit deploy through the workflow's `workflow_dispatch` input.
-
-Configure these repository secrets: `CPANEL_HOST`, `CPANEL_USER`, `CPANEL_SSH_KEY`, `CPANEL_SSH_PORT`, and `CPANEL_KNOWN_HOSTS`. Configure repository variables: `CPANEL_APP_PATH` (the existing cPanel Node.js application root) and optionally `CPANEL_NODE_BIN` (defaults to the cPanel Node.js 22 path). Keep the production `.env` on the server; the uploaded artifact does not contain it. Set `CPANEL_AUTO_MIGRATE=true` only after reviewing migrations and confirming the production backup/restore process. The cPanel application must already use Node.js 22 and restart on `tmp/restart.txt`.
+`.github/workflows/ci-cd.yml` validates the Prisma schema and builds with Node.js 22 on pull requests and pushes to `main`. Pushes to `main` automatically deploy a short-lived cPanel release artifact through SSH; manual runs from `main` also deploy. Configure these repository secrets: `CPANEL_HOST`, `CPANEL_USER`, `CPANEL_SSH_KEY`, and `CPANEL_SSH_PORT` (optional; defaults to `22`). The workflow deploys to `/home/uqqwmiabhosting/public_html/contestflow.huitmedia.edu.vn`, installs production dependencies, and restarts the existing cPanel Node.js 22 application using `tmp/restart.txt`. It does not apply database migrations automatically; apply reviewed migrations separately. Keep the production `.env` on the server; it is not included in the release artifact.
 
 See `docs/TECH_STACK.md` for architecture decisions and the implementation sequence.
 See `docs/DATABASE_OPERATIONS.md` for backup/restore details and the local recovery rehearsal.
