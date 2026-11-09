@@ -67,7 +67,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   });
   if (!session || session.expiresAt <= new Date() || !session.user.isActive) {
     if (session) await prisma.session.delete({ where: { id: session.id } });
-    jar.delete(COOKIE_NAME);
+    // This helper also runs while rendering Server Components, where Next.js only permits cookie reads.
     return null;
   }
   return {

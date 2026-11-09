@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, canViewCompetition, unauthorized } from '@/lib/api';
+import { refreshCompetitionStatus } from '@/lib/competition-status';
 import { aggregateJudgeScores, roundScore } from '@/lib/scoring';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const actionSchema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('lock'), roundId: z.string().uuid() }),
+  z.object({ action: z.literal('lock'), roundId: z.string().uuid(), reason: z.string().trim().min(10).max(2000).optional() }),
   z.object({ action: z.literal('publish'), roundId: z.string().uuid() }),
   z.object({ action: z.literal('reopen-score'), roundId: z.string().uuid(), scoreSheetId: z.string().uuid(), reason: z.string().trim().min(10).max(2000) }),
 ]);
@@ -15,6 +16,8 @@ type Context = { params: Promise<{ id: string }> };
 type JudgeResult = { judge: string; score: number | null; details?: { criterionId: string; criterion: string; score: number }[] };
 type ResultRow = { entryId: string; entryCode: string; title: string | null; contestant: string; organization: string | null; totalScore: number | null; rank: number | null; submittedCount: number; requiredCount: number; judges: JudgeResult[] };
 type RankableResult = ResultRow & { tieBreakScores: number[] };
+type SnapshotPolicy = { anonymous: boolean; requiredJudgeCount: number; allowAdvanceWithGaps: boolean; publishJudgeScores: boolean; aggregateMethod: string; tieBreakMethod: string; roundingPrecision: number };
+type SnapshotData = { policy: SnapshotPolicy; rows: ResultRow[] };
 
 export async function GET(request: Request, context: Context) {
   const user = await getCurrentUser();
@@ -31,10 +34,16 @@ export async function GET(request: Request, context: Context) {
   const snapshot = await prisma.resultSnapshot.findFirst({ where: { roundId, ...(manager ? {} : { published: true }) }, orderBy: { version: 'desc' } });
   const showSnapshot = snapshot && (!manager || round.status === 'COMPLETED');
   if (showSnapshot && snapshot) {
-    const snapshotRows = snapshot.data as ResultRow[];
-    const rows = manager ? snapshotRows : snapshotRows.map((row) => ({ ...row, judges: round.publishScores ? row.judges.map(({ judge, score }) => ({ judge, score })) : [] }));
+    const lockedBy = await prisma.user.findUnique({ where: { id: snapshot.lockedBy }, select: { fullName: true } });
+    const stored = snapshot.data as unknown as SnapshotData | ResultRow[];
+    const snapshotRows = Array.isArray(stored) ? stored : stored.rows;
+    const policy = Array.isArray(stored) ? null : stored.policy;
+    const rows = manager ? snapshotRows : snapshotRows.map((row) => ({
+      ...row,
+      judges: policy?.publishJudgeScores ? row.judges.map(({ judge, score }) => ({ judge, score })) : [],
+    }));
     if (new URL(request.url).searchParams.get('format') === 'csv') return csvResponse(rows, round.name);
-    return Response.json({ round: { id: round.id, name: round.name, status: round.status, aggregateMethod: round.aggregateMethod, tieBreakMethod: round.tieBreakMethod, roundingPrecision: round.roundingPrecision }, snapshot: { ...snapshot, data: rows }, missing: [] });
+    return Response.json({ round: { id: round.id, name: round.name, status: round.status, aggregateMethod: policy?.aggregateMethod ?? round.aggregateMethod, tieBreakMethod: policy?.tieBreakMethod ?? round.tieBreakMethod, roundingPrecision: policy?.roundingPrecision ?? round.roundingPrecision, anonymous: policy?.anonymous ?? true, requiredJudgeCount: policy?.requiredJudgeCount ?? round.requiredJudgeCount, allowAdvanceWithGaps: policy?.allowAdvanceWithGaps ?? round.allowAdvanceWithGaps }, snapshot: { ...snapshot, data: rows, policy, lockedByName: lockedBy?.fullName ?? 'Tài khoản đã bị xóa' }, missing: [] });
   }
   if (!manager) return Response.json({ error: 'Kết quả chưa được công bố.' }, { status: 404 });
 
@@ -71,18 +80,21 @@ export async function POST(request: Request, context: Context) {
   if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Chỉ Admin mới được chốt kết quả.' }, { status: 403 });
   const parsed = actionSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Yêu cầu cập nhật kết quả không hợp lệ.' }, { status: 400 });
-  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id } });
+  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, include: { session: true } });
   if (!round) return Response.json({ error: 'Không tìm thấy vòng thi.' }, { status: 404 });
 
   if (parsed.data.action === 'reopen-score') {
+    const earlyClosure = await prisma.auditEvent.findFirst({ where: { competitionId: id, action: 'COMPETITION_CLOSED_EARLY' }, select: { id: true } });
+    if (earlyClosure) return Response.json({ error: 'Cuộc thi đã được đóng sớm và không thể mở lại phiếu. Hãy liên hệ quản trị hệ thống để xử lý tiếp.' }, { status: 409 });
     const sheet = await prisma.scoreSheet.findFirst({ where: { id: parsed.data.scoreSheetId, roundId: round.id, competitionId: id } });
-    if (!sheet || sheet.status !== 'SUBMITTED') return Response.json({ error: 'Không tìm thấy phiếu đã nộp để mở lại.' }, { status: 404 });
+    const hasSnapshot = await prisma.resultSnapshot.findFirst({ where: { roundId: round.id }, select: { id: true } });
+    if (!sheet || !['SUBMITTED', 'DRAFT'].includes(sheet.status) || (sheet.status === 'DRAFT' && !hasSnapshot)) return Response.json({ error: 'Không tìm thấy phiếu cần mở lại.' }, { status: 404 });
     const reason = parsed.data.reason;
     await prisma.$transaction(async (tx) => {
       await tx.scoreSheet.update({ where: { id: sheet.id }, data: { status: 'REOPENED', submittedAt: null, reopenedReason: reason } });
       await tx.competitionRound.update({ where: { id: round.id }, data: { status: 'READY' } });
       await tx.competitionSession.updateMany({ where: { roundId: round.id }, data: { state: 'PAUSED', version: { increment: 1 } } });
-      await tx.competition.update({ where: { id }, data: { status: 'READY' } });
+      await refreshCompetitionStatus(tx, id);
       await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'SCORE_REOPENED', entityType: 'ScoreSheet', entityId: sheet.id, details: { reason } } });
     });
     return Response.json({ ok: true, message: 'Đã mở lại phiếu chấm; bản kết quả cũ vẫn được lưu trong lịch sử.' });
@@ -97,11 +109,19 @@ export async function POST(request: Request, context: Context) {
   }
 
   if (round.status === 'COMPLETED' && await prisma.resultSnapshot.findFirst({ where: { roundId: round.id } })) return Response.json({ error: 'Kết quả đã khóa. Mở lại phiếu bằng lý do trước khi chốt phiên bản mới.' }, { status: 409 });
+  const previousSnapshot = await prisma.resultSnapshot.findFirst({ where: { roundId: round.id }, select: { id: true } });
+  if (round.session?.state !== 'COMPLETED' && !(round.session?.state === 'PAUSED' && previousSnapshot)) return Response.json({ error: 'Kết thúc phiên điều phối trước khi khóa kết quả.' }, { status: 409 });
+  const pendingSheets = await prisma.scoreSheet.findMany({ where: { roundId: round.id, status: { in: ['DRAFT', 'REOPENED'] } }, include: { entry: { select: { entryCode: true } }, judge: { select: { fullName: true } } } });
+  if (pendingSheets.length) {
+    const pending = pendingSheets.map((sheet) => `${sheet.entry.entryCode} · ${sheet.judge.fullName}`);
+    return Response.json({ error: `Còn ${pendingSheets.length} bản nháp hoặc phiếu vừa mở lại chưa nộp: ${pending.join(', ')}. Không thể khóa snapshot khi còn công việc này.` }, { status: 409 });
+  }
   const entries = await prisma.competitionEntry.findMany({ where: { roundId: round.id, status: 'ACTIVE' }, orderBy: { sequence: 'asc' }, include: { contestant: true } });
   if (!entries.length) return Response.json({ error: 'Vòng thi chưa có thí sinh.' }, { status: 409 });
   const sheets = await prisma.scoreSheet.findMany({ where: { roundId: round.id, status: 'SUBMITTED' }, include: { judge: { select: { fullName: true } }, details: { orderBy: { criterion: { sequence: 'asc' } }, include: { criterion: { select: { id: true, name: true, sequence: true } } } } } });
   const missing = entries.filter((entry) => sheets.filter((sheet) => sheet.entryId === entry.id).length < round.requiredJudgeCount);
   if (missing.length && !round.allowAdvanceWithGaps) return Response.json({ error: `Còn ${missing.length} lượt thi thiếu phiếu điểm.`, missing: missing.map((entry) => entry.entryCode) }, { status: 409 });
+  if (missing.length && round.allowAdvanceWithGaps && !parsed.data.reason) return Response.json({ error: `Còn ${missing.length} lượt thi thiếu phiếu. Nhập lý do để khóa kết quả với ngoại lệ.`, missing: missing.map((entry) => entry.entryCode), needsOverrideReason: true }, { status: 409 });
 
   const rankable: RankableResult[] = entries.map((entry) => {
     const entrySheets = sheets.filter((sheet) => sheet.entryId === entry.id);
@@ -118,13 +138,27 @@ export async function POST(request: Request, context: Context) {
   });
   const rows = applyRanks(rankable, round.tieBreakMethod);
   const version = (await prisma.resultSnapshot.aggregate({ where: { roundId: round.id }, _max: { version: true } }))._max.version ?? 0;
+  const snapshotData: SnapshotData = {
+    policy: {
+      anonymous: round.anonymous,
+      requiredJudgeCount: round.requiredJudgeCount,
+      allowAdvanceWithGaps: round.allowAdvanceWithGaps,
+      publishJudgeScores: round.publishScores,
+      aggregateMethod: round.aggregateMethod,
+      tieBreakMethod: round.tieBreakMethod,
+      roundingPrecision: round.roundingPrecision,
+    },
+    rows,
+  };
+  const exceptionReason = parsed.data.action === 'lock' ? parsed.data.reason : undefined;
   const snapshot = await prisma.$transaction(async (tx) => {
     const created = await tx.resultSnapshot.create({ data: {
-      competitionId: id, roundId: round.id, version: version + 1, lockedBy: user.id, published: false, data: rows as never,
+      competitionId: id, roundId: round.id, version: version + 1, lockedBy: user.id, published: false, data: snapshotData as never,
     } });
     await tx.competitionRound.update({ where: { id: round.id }, data: { status: 'COMPLETED' } });
     await tx.competitionSession.updateMany({ where: { roundId: round.id }, data: { currentEntryId: null, state: 'COMPLETED', version: { increment: 1 } } });
-      await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'RESULTS_LOCKED', entityType: 'ResultSnapshot', entityId: created.id, details: { version: version + 1, entryCount: rows.length, missingCount: missing.length, aggregateMethod: round.aggregateMethod, tieBreakMethod: round.tieBreakMethod, roundingPrecision: round.roundingPrecision } } });
+    await refreshCompetitionStatus(tx, id);
+    await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'RESULTS_LOCKED', entityType: 'ResultSnapshot', entityId: created.id, details: { version: version + 1, entryCount: rows.length, missingCount: missing.length, aggregateMethod: round.aggregateMethod, tieBreakMethod: round.tieBreakMethod, roundingPrecision: round.roundingPrecision, ...(missing.length ? { reason: exceptionReason, missingEntryIds: missing.map((entry) => entry.id) } : {}) } } });
     return created;
   });
   return Response.json({ snapshot }, { status: 201 });

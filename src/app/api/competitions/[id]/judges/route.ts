@@ -37,8 +37,11 @@ export async function POST(request: Request, context: Context) {
   if (!parsed.success || (!parsed.data.judgeId && !(parsed.data.identifier || parsed.data.email))) {
     return Response.json({ error: 'Nhập username hoặc email giám khảo.' }, { status: 400 });
   }
-  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true } });
+  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true, status: true, session: { select: { state: true } }, _count: { select: { scoreSheets: true, snapshots: true } } } });
   if (!round) return Response.json({ error: 'Vòng thi không thuộc cuộc thi này.' }, { status: 400 });
+  if (round.status === 'LIVE' || round.status === 'COMPLETED' || (round.session && round.session.state !== 'IDLE') || round._count.scoreSheets > 0 || round._count.snapshots > 0) {
+    return Response.json({ error: 'Phân công đã khóa sau khi bắt đầu điều phối, chấm điểm hoặc khóa kết quả.' }, { status: 409 });
+  }
   if (parsed.data.entryId) {
     const entry = await prisma.competitionEntry.findFirst({ where: { id: parsed.data.entryId, roundId: round.id, competitionId: id }, select: { id: true } });
     if (!entry) return Response.json({ error: 'Lượt thi không thuộc vòng này.' }, { status: 400 });

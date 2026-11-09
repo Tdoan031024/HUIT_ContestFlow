@@ -5,28 +5,20 @@ $envFile = Join-Path $ProjectRoot '.env'
 $envLines = Get-Content -LiteralPath $envFile
 $setupLine = $envLines | Where-Object { $_ -match '^ADMIN_SETUP_KEY=' } | Select-Object -First 1
 $databaseLine = $envLines | Where-Object { $_ -match '^DATABASE_URL=' } | Select-Object -First 1
-if (-not $setupLine -or -not $databaseLine) { throw 'Cần có ADMIN_SETUP_KEY và DATABASE_URL trong .env của môi trường kiểm thử riêng.' }
+if (-not $setupLine -or (-not $databaseLine -and -not $env:HCF_E2E_DATABASE_URL)) { throw 'Cần có ADMIN_SETUP_KEY và DATABASE_URL trong .env hoặc HCF_E2E_DATABASE_URL của môi trường kiểm thử riêng.' }
 $setupKey = $setupLine.Substring($setupLine.IndexOf('=') + 1).Trim().Trim('"')
-$databaseUrl = $databaseLine.Substring($databaseLine.IndexOf('=') + 1).Trim().Trim('"')
+$databaseUrl = if ($env:HCF_E2E_DATABASE_URL) { $env:HCF_E2E_DATABASE_URL } else { $databaseLine.Substring($databaseLine.IndexOf('=') + 1).Trim().Trim('"') }
 $databaseUri = [uri]$databaseUrl
-$databaseCredentials = $databaseUri.UserInfo.Split(':', 2)
-$databaseUser = [uri]::UnescapeDataString($databaseCredentials[0])
-$databasePassword = if ($databaseCredentials.Count -gt 1) { [uri]::UnescapeDataString($databaseCredentials[1]) } else { '' }
-$databaseName = [uri]::UnescapeDataString($databaseUri.AbsolutePath.TrimStart('/'))
-$databasePort = if ($databaseUri.IsDefaultPort) { 3306 } else { $databaseUri.Port }
-$mysqlPath = if ($env:HCF_MYSQL_BIN) { $env:HCF_MYSQL_BIN } else { 'C:\Program Files\MySQL\MySQL Server 9.3\bin\mysql.exe' }
-$Mysql = (Get-Command $mysqlPath -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
-if (-not $Mysql -and (Test-Path -LiteralPath $mysqlPath)) { $Mysql = $mysqlPath }
-if (-not $Mysql) { throw 'Không tìm thấy mysql.exe. Đặt biến HCF_MYSQL_BIN tới mysql.exe để dọn dữ liệu kiểm thử.' }
+if ($databaseUri.Host -notin @('localhost', '127.0.0.1', '::1', '[::1]')) { throw 'E2E chỉ được chạy với DATABASE_URL trỏ tới database local.' }
+$baseUri = [uri]$BaseUrl
+if ($baseUri.Host -notin @('localhost', '127.0.0.1', '::1', '[::1]')) { throw 'E2E chỉ được gọi ứng dụng local để tránh ghi dữ liệu lên host thật.' }
 $suffix = [guid]::NewGuid().ToString('N').Substring(0, 8)
 $adminEmail = "codex-e2e-admin+$suffix@huit.test"
 $judgeAEmail = "codex-e2e-judge-a+$suffix@huit.test"
 $judgeBEmail = "codex-e2e-judge-b+$suffix@huit.test"
-$viewerEmail = "codex-e2e-viewer+$suffix@huit.test"
 $adminPassword = 'LocalE2E-Admin-3pw!'
 $judgePassword = 'LocalE2E-Judge-3pw!'
 $initialJudgePassword = $judgePassword
-$viewerPassword = 'LocalE2E-Viewer-3pw!'
 $competitionId = $null
 $duplicateId = $null
 $setupCreated = $false
@@ -56,7 +48,8 @@ function Set-AuthCookie {
   $pair = $SetCookie.Split(';')[0]
   $parts = $pair.Split('=', 2)
   if ($parts.Count -ne 2 -or $parts[0] -ne 'hcf_session') { throw 'Authentication response did not set the expected session cookie.' }
-  $Session.Cookies.Add([System.Net.Cookie]::new('hcf_session', $parts[1], '/', 'localhost'))
+  $cookieHost = ([uri]$BaseUrl).Host
+  $Session.Cookies.Add([System.Net.Cookie]::new('hcf_session', $parts[1], '/', $cookieHost))
 }
 
 function Invoke-AuthRequest {
@@ -134,6 +127,8 @@ try {
   $setupCreated = $true
   $sessionCheck = Invoke-Api -Path '/api/auth/me' -Session $adminSession
   Assert-True ($sessionCheck.user.email -eq $adminEmail) 'Admin session cookie is accepted by the API.'
+  $emptyDashboard = Invoke-Api -Path '/api/dashboard' -Session $adminSession
+  Assert-True ($emptyDashboard.systemRole -eq 'ADMIN' -and $emptyDashboard.stats.percent -eq 0) 'Admin dashboard returns a finite zero progress value when no score is expected.'
   Test-Phase 'first Admin setup and secure session'
 
   $competition = (Invoke-Api -Path '/api/competitions' -Method POST -Session $adminSession -Body @{ name = "E2E Cup $suffix"; description = 'Temporary end-to-end verification'; organizingUnit = 'HUIT'; location = 'Test Hall'; modality = 'HYBRID'; firstRoundName = 'Test Round' }).competition
@@ -141,6 +136,7 @@ try {
   $detail = (Invoke-Api -Path "/api/competitions/$competitionId" -Session $adminSession).competition
   $round = $detail.rounds[0]
   Assert-True ($null -ne $round.activeRubricVersion -and $round.activeRubricVersion.criteria.Count -eq 3) 'Default round and three-criterion rubric are created.'
+  Assert-True ($round.anonymous) 'New rounds default to anonymous judging.'
   Assert-True ($detail.organizingUnit -eq 'HUIT' -and $detail.location -eq 'Test Hall' -and $detail.modality -eq 'HYBRID') 'Competition management details are persisted.'
   $duplicate = (Invoke-Api -Path "/api/competitions/$competitionId/duplicate" -Method POST -Session $adminSession -Body @{ name = "E2E Copy $suffix" }).competition
   $duplicateId = $duplicate.id
@@ -149,6 +145,8 @@ try {
   Invoke-Api -Path "/api/competitions/$duplicateId" -Method PATCH -Session $adminSession -Body @{ startsAt = '2026-12-01T10:00:00.000Z'; endsAt = '2026-12-01T11:00:00.000Z'; location = 'Hall A' } | Out-Null
   $duplicateDetail = (Invoke-Api -Path "/api/competitions/$duplicateId" -Session $adminSession).competition
   Assert-True ($duplicateDetail.startsAt -and $duplicateDetail.endsAt -and $duplicateDetail.location -eq 'Hall A') 'Competition dates and location can be edited.'
+  $closedCopy = Invoke-Api -Path "/api/competitions/$duplicateId/close-early" -Method POST -Session $adminSession -Body @{ reason = 'Bản sao chỉ dùng để xác minh thao tác đóng sớm.' }
+  Assert-True ($closedCopy.competition.status -eq 'COMPLETED') 'Early closure completes all rounds and records the explicit action.'
   Test-Phase 'competition details, date editing, and safe configuration copy'
   Invoke-Api -Path "/api/competitions/$competitionId/rounds/$($round.id)" -Method PATCH -Session $adminSession -Body @{ requiredJudgeCount = 2; aggregateMethod = 'MEDIAN'; anonymous = $true; allowAdvanceWithGaps = $false; publishScores = $false } | Out-Null
   $rubricCriteria = @(
@@ -165,22 +163,39 @@ try {
   $entryId = $contestant.entries[0].id
   $csvRound = (Invoke-Api -Path "/api/competitions/$competitionId/rounds" -Method POST -Session $adminSession -Body @{ name = 'CSV Round' }).round
   $csvBody = @{ roundId = $csvRound.id; csv = "Name,Organization,Email,Phone,Title`nCSV Team,HUIT,csv-$suffix@huit.test,0900000000,CSV project" }
-  $import = Invoke-Api -Path "/api/competitions/$competitionId/contestants/import" -Method POST -Session $adminSession -Body $csvBody
+  $preview = Invoke-Api -Path "/api/competitions/$competitionId/contestants/import" -Method POST -Session $adminSession -Body $csvBody
+  Assert-True ($preview.preview.rows.Count -eq 1 -and $preview.preview.issues.Count -eq 0) 'CSV preview validates one clean row before the import is confirmed.'
+  $import = Invoke-Api -Path "/api/competitions/$competitionId/contestants/import" -Method POST -Session $adminSession -Body ($csvBody + @{ confirm = $true })
   Assert-True ($import.imported -eq 1) 'CSV import inserts exactly one contestant.'
+  $adminProgress = Invoke-Api -Path '/api/dashboard' -Session $adminSession
+  $adminCompetitionProgress = $adminProgress.competitions | Where-Object { $_.id -eq $competitionId } | Select-Object -First 1
+  Assert-True ($adminProgress.stats.expectedScores -eq 3 -and $adminProgress.stats.percent -eq 0 -and $adminCompetitionProgress.progress.expected -eq 3) 'Admin dashboard keeps global and competition progress denominators aligned.'
   Test-Phase 'contestant creation, automatic entry code, and CSV import'
+
+  $preflight = (Invoke-Api -Path "/api/competitions/$competitionId/rounds/$($round.id)/preflight" -Session $adminSession).preflight
+  Assert-True ($preflight.entryCount -eq 1 -and $preflight.rubricReady -and $preflight.missingAssignments.Count -eq 1) 'Preflight identifies rubric readiness, entry count, and missing judge coverage.'
+  $initialSession = Get-LiveSession -CompetitionId $competitionId -RoundId $round.id -Session $adminSession
+  Expect-Status -Path "/api/competitions/$competitionId/rounds/$($round.id)/session" -Method POST -Body @{ action = 'start'; expectedVersion = $initialSession.version } -Session $adminSession -Expected 409
+  Test-Phase 'preflight blocks a round with incomplete judge coverage'
 
   foreach ($judge in @(@{ name = 'Judge E2E A'; email = $judgeAEmail }, @{ name = 'Judge E2E B'; email = $judgeBEmail })) {
     Invoke-Api -Path "/api/competitions/$competitionId/judges" -Method POST -Session $adminSession -Body @{ roundId = $round.id; fullName = $judge.name; email = $judge.email; password = $judgePassword } | Out-Null
   }
-  $viewer = Invoke-Api -Path "/api/competitions/$competitionId/viewers" -Method POST -Session $adminSession -Body @{ fullName = 'Viewer E2E'; email = $viewerEmail; password = $viewerPassword }
-  Test-Phase 'Judge and result-viewer account creation and round assignment'
+  Test-Phase 'Judge account creation and round assignment'
 
   $judgeAssignment = (Invoke-Api -Path "/api/competitions/$competitionId/judges" -Session $adminSession).assignments | Where-Object { $_.user.email -eq $judgeAEmail } | Select-Object -First 1
+  $previousJudgeSession = New-LoginSession -Email $judgeAEmail -Password $judgePassword
   $passwordReset = Invoke-Api -Path "/api/competitions/$competitionId/judges/$($judgeAssignment.id)" -Method PATCH -Session $adminSession -Body @{ action = 'reset-password' }
   Expect-Status -Path '/api/auth/login' -Method POST -Body @{ email = $judgeAEmail; password = $judgePassword } -Session $null -Expected 401
+  Expect-Status -Path '/api/auth/me' -Method GET -Session $previousJudgeSession -Expected 401
   $judgePassword = $passwordReset.temporaryPassword
   $judgeSessionCheck = New-LoginSession -Email $judgeAEmail -Password $judgePassword
   Assert-True (($passwordReset.temporaryPassword.Length -ge 20) -and ((Invoke-Api -Path '/api/auth/me' -Session $judgeSessionCheck).user.email -eq $judgeAEmail)) 'Password reset invalidates the old password and supports a secure new login.'
+  $judgeDashboard = Invoke-Api -Path '/api/dashboard' -Session $judgeSessionCheck
+  Assert-True ($judgeDashboard.systemRole -eq 'JUDGE' -and $judgeDashboard.stats.expectedScores -eq 1 -and $judgeDashboard.stats.percent -eq 0) 'Judge dashboard progress is based only on assigned entries.'
+  Expect-Status -Path "/api/competitions/$competitionId/rounds/$($round.id)/preflight" -Method GET -Session $judgeSessionCheck -Expected 403
+  Expect-Status -Path "/api/competitions/$competitionId/rounds/$($round.id)/session" -Method GET -Session $judgeSessionCheck -Expected 403
+  Expect-Status -Path '/api/competitions' -Method GET -Session $judgeSessionCheck -Expected 403
   Test-Phase 'Judge password reset and prior-session invalidation'
 
   $beforeStart = Get-LiveSession -CompetitionId $competitionId -RoundId $round.id -Session $adminSession
@@ -190,7 +205,7 @@ try {
   $judgeASession = New-LoginSession -Email $judgeAEmail -Password $judgePassword
   $tasksA = (Invoke-Api -Path '/api/judge/tasks' -Session $judgeASession).tasks
   $taskA = $tasksA | Where-Object { $_.entry.id -eq $entryId } | Select-Object -First 1
-  Assert-True ($null -ne $taskA -and $taskA.entry.displayName -and $taskA.entry.displayName -ne 'Test Team') 'Assigned Judge sees current live entry and anonymity is enforced.'
+  Assert-True ($null -ne $taskA -and $taskA.entry.displayName -ne 'Test Team' -and $null -eq $taskA.entry.title -and $null -eq $taskA.entry.organization -and $taskA.taskStatus -eq 'LIVE') 'Assigned Judge sees the live task with identity and potentially identifying title hidden.'
   $rubric = (Invoke-Api -Path "/api/scores/$entryId" -Session $judgeASession).rubric
   $criteria = @($rubric.criteria)
   $invalidDetails = @(@{ criterionId = $criteria[0].id; score = 11; comment = '' })
@@ -221,6 +236,8 @@ try {
   Invoke-Api -Path "/api/scores/$entryId" -Method PUT -Session $judgeBSession -Body @{ details = $detailsB; submit = $true } | Out-Null
   $beforeFinish = Get-LiveSession -CompetitionId $competitionId -RoundId $round.id -Session $adminSession
   Invoke-Api -Path "/api/competitions/$competitionId/rounds/$($round.id)/session" -Method POST -Session $adminSession -Body @{ action = 'finish'; expectedVersion = $beforeFinish.version } | Out-Null
+  $afterRoundFinish = (Invoke-Api -Path "/api/competitions/$competitionId" -Session $adminSession).competition
+  Assert-True ($afterRoundFinish.status -ne 'COMPLETED') 'Finishing one round does not complete a competition with another unfinished round.'
   $locked = Invoke-Api -Path "/api/competitions/$competitionId/results" -Method POST -Session $adminSession -Body @{ action = 'lock'; roundId = $round.id }
   Assert-True ($locked.snapshot.version -eq 1) 'First result snapshot is locked after all required judges submit.'
   $managerResults = Invoke-Api -Path "/api/competitions/$competitionId/results?roundId=$($round.id)" -Session $adminSession
@@ -230,15 +247,18 @@ try {
   Test-Phase 'missing-score lock guard, private judge sheets, live finish, score aggregation, and immutable result snapshot'
 
   Invoke-Api -Path "/api/competitions/$competitionId/results" -Method POST -Session $adminSession -Body @{ action = 'publish'; roundId = $round.id } | Out-Null
-  $viewerSession = New-LoginSession -Email $viewerEmail -Password $viewerPassword
-  $publicResults = Invoke-Api -Path "/api/competitions/$competitionId/results?roundId=$($round.id)" -Session $viewerSession
-  Assert-True ($publicResults.snapshot.published -and $publicResults.snapshot.data[0].judges.Count -eq 0) 'Viewer receives published result with Judge score breakdown hidden.'
-  Expect-Status -Path "/api/competitions/$competitionId/contestants" -Method GET -Session $viewerSession -Expected 403
-  $csv = Invoke-AuthenticatedDownload -Path "/api/competitions/$competitionId/results?roundId=$($round.id)&format=csv" -Session $viewerSession
+  $judgeResults = Invoke-Api -Path "/api/competitions/$competitionId/results?roundId=$($round.id)" -Session $judgeASession
+  Assert-True ($judgeResults.snapshot.published -and $judgeResults.snapshot.data[0].judges.Count -eq 0 -and $judgeResults.snapshot.data[0].contestant -ne 'Test Team') 'Judge receives the published snapshot with identity and Judge score breakdown hidden by the pinned policy.'
+  Expect-Status -Path "/api/competitions/$competitionId/contestants" -Method GET -Session $judgeASession -Expected 403
+  Expect-Status -Path "/api/competitions/$competitionId/audit" -Method GET -Session $judgeASession -Expected 403
+  $csv = Invoke-AuthenticatedDownload -Path "/api/competitions/$competitionId/results?roundId=$($round.id)&format=csv" -Session $judgeASession
   Assert-True ($csv.StatusCode -eq 200 -and $csv.Content.Contains('CF-001')) 'Published result CSV is downloadable.'
   $audit = Invoke-Api -Path "/api/competitions/$competitionId/audit" -Session $adminSession
   Assert-True ($audit.total -ge 8) 'Audit history records core workflow actions.'
-  Test-Phase 'publishing, viewer-only access, hidden Judge breakdown, CSV export, and audit history'
+  Test-Phase 'publishing, Judge read-only access, hidden identity and score breakdown, CSV export, and audit history'
+
+  Expect-Status -Path "/api/scores/$entryId" -Method PUT -Body @{ details = $detailsA; submit = $false } -Session $judgeASession -Expected 409
+  Expect-Status -Path "/api/competitions/$competitionId/rounds/$($round.id)" -Method PATCH -Body @{ requiredJudgeCount = 1 } -Session $adminSession -Expected 409
 
   $sheetA = (Invoke-Api -Path "/api/competitions/$competitionId/scores?roundId=$($round.id)" -Session $adminSession).rows[0].judges | Where-Object { $_.email -eq $judgeAEmail } | Select-Object -First 1
   Invoke-Api -Path "/api/competitions/$competitionId/results" -Method POST -Session $adminSession -Body @{ action = 'reopen-score'; roundId = $round.id; scoreSheetId = $sheetA.scoreSheetId; reason = 'Điều chỉnh sau khi hội đồng rà soát.' } | Out-Null
@@ -251,32 +271,49 @@ try {
   $lockedAgain = Invoke-Api -Path "/api/competitions/$competitionId/results" -Method POST -Session $adminSession -Body @{ action = 'lock'; roundId = $round.id }
   Invoke-Api -Path "/api/competitions/$competitionId/results" -Method POST -Session $adminSession -Body @{ action = 'publish'; roundId = $round.id } | Out-Null
   Assert-True ($lockedAgain.snapshot.version -eq 2) 'Reopened score is re-locked as a new snapshot version.'
-  $latest = Invoke-Api -Path "/api/competitions/$competitionId/results?roundId=$($round.id)" -Session $viewerSession
+  $latest = Invoke-Api -Path "/api/competitions/$competitionId/results?roundId=$($round.id)" -Session $judgeASession
   Assert-True ([math]::Abs([double]$latest.snapshot.data[0].totalScore - 8) -lt 0.001) 'Published version two contains the revised median.'
   Test-Phase 'reasoned score reopening, re-submission, and immutable snapshot versioning'
+
+  if ($env:HCF_E2E_KEEP_DATA -eq '1') {
+    $fixturePath = Join-Path ([System.IO.Path]::GetTempPath()) "hcf-browser-fixture-$suffix.json"
+    $fixture = @{
+      baseUrl = $BaseUrl
+      adminEmail = $adminEmail
+      adminPassword = $adminPassword
+      judgeEmail = $judgeBEmail
+      judgePassword = $initialJudgePassword
+      competitionId = $competitionId
+      roundId = $round.id
+      entryId = $entryId
+      secondaryRoundId = $csvRound.id
+    } | ConvertTo-Json -Depth 5
+    [System.IO.File]::WriteAllText($fixturePath, $fixture, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Output "BROWSER FIXTURE: $fixturePath"
+  }
 
   $health = Invoke-Api -Path '/api/health'
   Assert-True ($health.database -eq 'ok') 'Health endpoint confirms MySQL connectivity.'
   Test-Phase 'health endpoint with migrated MySQL'
   Write-Output 'E2E RESULT: ALL WORKFLOW ASSERTIONS PASSED'
 } finally {
-  if ($setupCreated) {
-    $escapedEmails = @($adminEmail, $judgeAEmail, $judgeBEmail, $viewerEmail) | ForEach-Object { "'$_'" }
+  if ($setupCreated -and $env:HCF_E2E_KEEP_DATA -ne '1') {
+    $escapedEmails = @($adminEmail, $judgeAEmail, $judgeBEmail) | ForEach-Object { "'$_'" }
     $emailList = $escapedEmails -join ','
     $competitionIds = @($competitionId, $duplicateId) | Where-Object { $_ } | ForEach-Object { "'$_'" }
     $competitionList = $competitionIds -join ','
-    $cleanupSql = if ($competitionList) { "DELETE FROM competitions WHERE id IN ($competitionList); " } else { '' }
+    $cleanupSql = if ($competitionList) { "DELETE FROM audit_events WHERE competition_id IN ($competitionList); DELETE FROM competitions WHERE id IN ($competitionList); " } else { '' }
+    $cleanupSql = "DELETE FROM audit_events WHERE actor_id IN (SELECT id FROM users WHERE email IN ($emailList)); " + $cleanupSql
     $cleanupSql += "DELETE FROM users WHERE email IN ($emailList);"
     $cleanupPath = Join-Path ([System.IO.Path]::GetTempPath()) "hcf-e2e-cleanup-$suffix.sql"
     [System.IO.File]::WriteAllText($cleanupPath, $cleanupSql, [System.Text.Encoding]::ASCII)
-    $previousMysqlPassword = $env:MYSQL_PWD
-    $env:MYSQL_PWD = $databasePassword
-    Get-Content -LiteralPath $cleanupPath | & $Mysql --protocol=TCP --connect-timeout=5 "--host=$($databaseUri.Host)" "--port=$databasePort" "--user=$databaseUser" "--database=$databaseName"
-    $mysqlExit = $LASTEXITCODE
-    $env:MYSQL_PWD = $previousMysqlPassword
+    $previousDatabaseUrl = $env:DATABASE_URL
+    $env:DATABASE_URL = $databaseUrl
+    & node (Join-Path $ProjectRoot 'scripts/e2e-cleanup.mjs') $cleanupPath
+    $cleanupExit = $LASTEXITCODE
     Remove-Item -LiteralPath $cleanupPath -Force -ErrorAction SilentlyContinue
-    if ($null -eq $previousMysqlPassword) { Remove-Item Env:\MYSQL_PWD -ErrorAction SilentlyContinue } else { $env:MYSQL_PWD = $previousMysqlPassword }
-    if ($mysqlExit -ne 0) { Write-Output 'CLEANUP WARNING: MySQL could not remove temporary E2E data.' }
+    if ($null -eq $previousDatabaseUrl) { Remove-Item Env:\DATABASE_URL -ErrorAction SilentlyContinue } else { $env:DATABASE_URL = $previousDatabaseUrl }
+    if ($cleanupExit -ne 0) { Write-Output 'CLEANUP WARNING: MySQL could not remove temporary E2E data.' }
     else { Write-Output 'CLEANUP: Temporary users, competition data, and related score sheets removed.' }
   }
 }

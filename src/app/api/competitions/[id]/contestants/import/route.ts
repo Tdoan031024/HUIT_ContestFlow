@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, unauthorized } from '@/lib/api';
 import { prisma } from '@/lib/prisma';
 import { previewContestantCsv } from '@/lib/contestant-csv';
+import { roundEditLockReason } from '@/lib/round-editability';
 
 export const runtime = 'nodejs';
 const schema = z.object({ roundId: z.string().uuid(), csv: z.string().min(1).max(1_000_000), confirm: z.boolean().optional().default(false) });
@@ -17,6 +18,8 @@ export async function POST(request: Request, context: Context) {
   if (!parsed.success) return Response.json({ error: 'Tệp CSV trống hoặc vượt quá 1 MB.' }, { status: 400 });
   const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true } });
   if (!round) return Response.json({ error: 'Vòng thi không thuộc cuộc thi này.' }, { status: 400 });
+  const lockReason = await roundEditLockReason(prisma, id, round.id);
+  if (lockReason) return Response.json({ error: lockReason }, { status: 409 });
   const preview = previewContestantCsv(parsed.data.csv);
   const emails = [...new Set(preview.rows.map((row) => row.email.toLocaleLowerCase('en-US')).filter(Boolean))];
   if (emails.length) {

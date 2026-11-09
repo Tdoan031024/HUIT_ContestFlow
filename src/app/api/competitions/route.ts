@@ -20,9 +20,9 @@ const createSchema = z.object({
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
-  const where = user.systemRole === 'ADMIN' ? {} : { members: { some: { userId: user.id } } };
+  if (user.systemRole !== 'ADMIN') return Response.json({ error: 'Chỉ Admin được xem danh sách quản lý cuộc thi.' }, { status: 403 });
   const competitions = await prisma.competition.findMany({
-    where,
+    where: { status: { not: 'ARCHIVED' } },
     orderBy: [{ updatedAt: 'desc' }],
     include: {
       _count: { select: { contestants: true, rounds: true, scoreSheets: true } },
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
         },
       });
       const round = await tx.competitionRound.create({
-        data: { competitionId: created.id, name: parsed.data.firstRoundName, sequence: 1 },
+        data: { competitionId: created.id, name: parsed.data.firstRoundName, sequence: 1, anonymous: true },
       });
       const rubric = await tx.rubric.create({
         data: {

@@ -7,21 +7,37 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Notice } from '@/components/ui';
 
 type Mode = 'login' | 'setup';
+type SetupStatus = 'checking' | 'required' | 'complete' | 'unavailable';
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [setupRequired, setSetupRequired] = useState<boolean | null>(null);
+  const [setupStatus, setSetupStatus] = useState<SetupStatus>(mode === 'setup' ? 'checking' : 'required');
+  const [setupStatusError, setSetupStatusError] = useState('');
+  const [setupRetry, setSetupRetry] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
+    if (mode !== 'setup') return;
+    let active = true;
+    setSetupStatus('checking');
+    setSetupStatusError('');
+
     fetch('/api/auth/status', { cache: 'no-store' }).then(async (response) => {
       const data = await response.json();
-      if (response.ok) setSetupRequired(data.setupRequired);
-      else setError(data.error || 'Không thể kiểm tra trạng thái hệ thống.');
-    }).catch(() => setError('Không thể kết nối máy chủ.'));
-  }, []);
+      if (!response.ok || typeof data.setupRequired !== 'boolean') {
+        throw new Error(data.error || 'Không thể kiểm tra trạng thái hệ thống.');
+      }
+      if (active) setSetupStatus(data.setupRequired ? 'required' : 'complete');
+    }).catch((reason: unknown) => {
+      if (!active) return;
+      setSetupStatusError(reason instanceof Error ? reason.message : 'Không thể kết nối máy chủ.');
+      setSetupStatus('unavailable');
+    });
+
+    return () => { active = false; };
+  }, [mode, setupRetry]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,8 +90,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
             <h2>{isSetup ? 'Khởi tạo tài khoản Admin' : 'Đăng nhập'}</h2>
             <p className="auth-description">{isSetup ? 'Tạo tài khoản quản trị đầu tiên để thiết lập cuộc thi.' : 'Dành cho Admin và Giám khảo.'}</p>
             {error && <Notice tone="error">{error}</Notice>}
-            {isSetup && setupRequired === false && <Notice tone="warning">Hệ thống đã có Admin. Hãy đăng nhập bằng tài khoản hiện có.</Notice>}
-            <form className="auth-form" onSubmit={submit}>
+            {isSetup && setupStatus === 'checking' && <Notice>Đang kiểm tra trạng thái khởi tạo…</Notice>}
+            {isSetup && setupStatus === 'complete' && <Notice tone="warning">Hệ thống đã có Admin. Hãy đăng nhập bằng tài khoản hiện có.</Notice>}
+            {isSetup && setupStatus === 'unavailable' && <Notice tone="error">{setupStatusError}</Notice>}
+            {(!isSetup || setupStatus === 'required') && <form className="auth-form" onSubmit={submit}>
               {isSetup && <label className="auth-field"><span>Mã khởi tạo Admin</span><div className="auth-input-wrap"><AuthIcon name="key" /><input name="setupKey" type="password" autoComplete="off" required placeholder="Nhập mã từ cấu hình máy chủ" /></div></label>}
               {isSetup && <label className="auth-field"><span>Họ và tên</span><div className="auth-input-wrap"><AuthIcon name="user" /><input name="fullName" required minLength={2} maxLength={160} autoComplete="name" placeholder="Nhập họ và tên" /></div></label>}
               <label className="auth-field"><span>{isSetup ? 'Email' : 'Tên đăng nhập hoặc email'}</span><div className="auth-input-wrap"><AuthIcon name={isSetup ? 'mail' : 'user'} /><input name={isSetup ? 'email' : 'identifier'} type={isSetup ? 'email' : 'text'} required autoComplete={isSetup ? 'email' : 'username'} autoCapitalize="none" spellCheck={false} placeholder={isSetup ? 'ten@huit.edu.vn' : 'Nhập tên đăng nhập hoặc email'} /></div></label>
@@ -83,9 +101,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
               {!isSetup && <label className="auth-remember"><input name="rememberMe" type="checkbox" /><span>Giữ đăng nhập trong 30 ngày</span></label>}
               {!isSetup && <div className="auth-form-hint"><span className="auth-hint-dot" /> Tài khoản Giám khảo do Ban tổ chức cấp.</div>}
               {isSetup && <div className="auth-form-hint"><span className="auth-hint-dot" /> Mã khởi tạo chỉ sử dụng một lần.</div>}
-              <button className="auth-submit" type="submit" disabled={busy || (isSetup && setupRequired === false)}><span>{busy ? 'Đang xử lý…' : isSetup ? 'Tạo Admin và tiếp tục' : 'Đăng nhập'}</span><span className="auth-submit-arrow">→</span></button>
-            </form>
-            {isSetup && <div className="auth-switch-row"><span>Đã có tài khoản?</span><Link href="/login">Đăng nhập <b>→</b></Link></div>}
+              <button className="auth-submit" type="submit" disabled={busy}><span>{busy ? 'Đang xử lý…' : isSetup ? 'Tạo Admin và tiếp tục' : 'Đăng nhập'}</span><span className="auth-submit-arrow">→</span></button>
+            </form>}
+            {isSetup && setupStatus === 'complete' && <div className="auth-switch-row"><span>Đã có tài khoản?</span><Link href="/login">Đăng nhập <b>→</b></Link></div>}
+            {isSetup && setupStatus === 'unavailable' && <div className="auth-switch-row"><span>Không thể kiểm tra thiết lập.</span><button className="text-button" type="button" onClick={() => setSetupRetry((current) => current + 1)}>Thử lại</button></div>}
+            {isSetup && setupStatus === 'required' && <div className="auth-switch-row"><span>Đã có tài khoản?</span><Link href="/login">Đăng nhập <b>→</b></Link></div>}
           </div>
           <footer className="auth-panel-footer"><a href="https://huitmedia.edu.vn" target="_blank" rel="noreferrer" aria-label="HUIT Media"><Image src="/brand/huit-media-logo.png" width={676} height={187} sizes="108px" alt="HUIT Media" /></a></footer>
         </section>

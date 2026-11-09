@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, unauthorized } from '@/lib/api';
 import { prisma } from '@/lib/prisma';
+import { roundEditLockReason } from '@/lib/round-editability';
 
 export const runtime = 'nodejs';
 const schema = z.object({
@@ -37,6 +38,8 @@ export async function POST(request: Request, context: Context) {
   if (!parsed.success) return Response.json({ error: 'Kiểm tra lại tên thí sinh, email và vòng thi.' }, { status: 400 });
   const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true } });
   if (!round) return Response.json({ error: 'Vòng thi không thuộc cuộc thi này.' }, { status: 400 });
+  const lockReason = await roundEditLockReason(prisma, id, round.id);
+  if (lockReason) return Response.json({ error: lockReason }, { status: 409 });
   const contestant = await prisma.$transaction(async (tx) => {
     const created = await tx.contestant.create({ data: {
       competitionId: id,

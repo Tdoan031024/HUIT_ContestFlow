@@ -23,5 +23,5 @@ export async function GET() {
     const snapshot = snapshots[0];
     return snapshot ? { ...round, snapshots: [snapshot] } : null;
   })).then((items) => items.filter(Boolean));
-  return Response.json({ rounds: visible });
+  return Response.json({ systemRole: user.systemRole, rounds: visible });
 }

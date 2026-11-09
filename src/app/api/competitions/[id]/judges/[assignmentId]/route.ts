@@ -35,6 +35,10 @@ export async function DELETE(_request: Request, context: Context) {
   if (!(await canManageCompetition(currentUser, id))) return Response.json({ error: 'Bạn không có quyền gỡ giám khảo.' }, { status: 403 });
   const assignment = await prisma.judgeAssignment.findFirst({ where: { id: assignmentId, competitionId: id } });
   if (!assignment) return Response.json({ error: 'Không tìm thấy phân công.' }, { status: 404 });
+  const round = await prisma.competitionRound.findUnique({ where: { id: assignment.roundId }, select: { status: true, session: { select: { state: true } }, _count: { select: { scoreSheets: true, snapshots: true } } } });
+  if (!round || round.status === 'LIVE' || round.status === 'COMPLETED' || (round.session && round.session.state !== 'IDLE') || round._count.scoreSheets > 0 || round._count.snapshots > 0) {
+    return Response.json({ error: 'Không thể gỡ phân công sau khi vòng đã bắt đầu hoặc có phiếu chấm.' }, { status: 409 });
+  }
   await prisma.$transaction(async (tx) => {
     await tx.judgeAssignment.delete({ where: { id: assignment.id } });
     const remaining = await tx.judgeAssignment.count({ where: { competitionId: id, userId: assignment.userId } });

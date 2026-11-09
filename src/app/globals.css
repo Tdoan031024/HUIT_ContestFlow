@@ -115,7 +115,7 @@
 }
 @media(max-width:600px){
   .auth-page{width:100%;overflow-x:hidden}
-  .auth-shell{width:100%;grid-template-columns:minmax(0,1fr)}
+  .auth-shell{width:100%;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);align-content:stretch}
   .auth-brand-panel{padding:18px 20px 15px}
   .auth-brand{gap:10px}
   .auth-university-logo{width:142px;padding:4px 6px}
@@ -144,3 +144,326 @@
 .live-number{width:auto;min-width:68px;padding:0 8px;white-space:nowrap;font-size:14px}
 @media(max-width:600px){.table-wrap{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}.table-wrap::after{content:"Vuốt ngang để xem thêm cột →";display:block;padding:6px 10px;border-top:1px solid #edf0f4;background:#fbfcfe;color:#7b8799;font-size:10px;text-align:right;white-space:nowrap}}
 .csv-preview{display:grid;gap:10px;margin:12px 0;padding:13px;border:1px solid #dfe7f3;border-radius:11px;background:#fbfcff}.csv-preview .surface-heading{align-items:center;margin:0}.csv-preview .surface-heading h2{font-size:14px}.csv-preview .surface-heading p{font-size:11px}.csv-preview-table{max-height:320px}.csv-preview-errors{padding:10px 12px;border:1px solid #f3d3d3;border-radius:8px;background:#fff7f7;color:#9c4141;font-size:11px}.csv-preview-errors ul{display:grid;gap:4px;margin:7px 0 0;padding-left:18px}.audit-detail-list{display:grid;gap:4px;min-width:190px;margin:0;padding:0;list-style:none;white-space:normal}.audit-detail-list li{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px}.audit-detail-list li strong{color:var(--ink);font-weight:600;text-align:right}
+
+/* Accessible, touch-first controls shared across Admin and Judge workspaces. */
+.skip-link{position:fixed;z-index:100;top:8px;left:8px;transform:translateY(-160%);padding:10px 14px;border-radius:7px;background:#123d68;color:#fff;font-size:14px;font-weight:650}
+.skip-link:focus{transform:translateY(0);outline:3px solid #9fc7ef;outline-offset:2px}
+:focus-visible{outline:3px solid #75a5dc;outline-offset:2px}
+.page-content,.main-area,.surface-card,.card-grid,.toolbar,.page-heading{min-width:0}
+.field-help{color:#65748a;font-size:12px;line-height:1.5}
+.data-table td{font-size:12px;white-space:normal;vertical-align:top}
+.data-table th{font-size:11px}
+.status-pill{font-size:11px}
+.button,.icon-button,.nav-link,.subnav a,.tab-button,.logout-button,.mobile-logout{min-height:44px}
+.small-button{min-height:40px}
+.icon-button{display:inline-grid;width:44px;place-items:center;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-size:20px}
+.app-dialog{width:min(560px,calc(100vw - 28px));max-width:none;max-height:min(84dvh,760px);overflow:auto;margin:auto;padding:0;border:1px solid #dbe3ed;border-radius:16px;background:#fff;color:var(--ink);box-shadow:0 24px 80px #10233c40}
+.app-dialog::backdrop{background:#10233c78;backdrop-filter:blur(2px)}
+.dialog-heading{position:sticky;top:0;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 22px 14px;border-bottom:1px solid var(--line);background:#fff}
+.dialog-heading h2{margin:0;font-size:19px;line-height:1.35}
+.dialog-heading p{margin:6px 0 0;color:#5f6f84;font-size:14px;line-height:1.55;overflow-wrap:anywhere}
+.dialog-content{padding:18px 22px 22px}
+.dialog-actions,.dialog-form{display:grid;gap:12px}
+.dialog-actions{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:16px}
+.dialog-form .field-label{font-size:14px}
+.dialog-form .field-input{min-height:48px;font-size:16px}
+.preflight-summary{margin-top:14px;padding:15px 16px;border:1px solid #dbe5f0;border-radius:12px;background:#f8fafc}
+.preflight-heading{display:flex;justify-content:space-between;gap:10px;color:#253b55;font-size:14px}
+.preflight-heading span{color:#247a5d;font-size:12px;font-weight:650}
+.preflight-summary ul{display:grid;gap:4px;margin:9px 0 8px;padding-left:20px;color:#52647b;font-size:13px}
+.preflight-summary .text-button{display:inline-flex;min-height:40px;align-items:center}
+.judge-queue{display:grid;gap:13px}
+.judge-card{min-width:0;padding:18px 20px}
+.judge-card-top,.judge-card-bottom,.judge-entry{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.judge-event{margin:0 0 3px;color:#62748a;font-size:13px}
+.judge-card-top h2{margin:0;font-size:18px}
+.judge-entry{justify-content:flex-start;margin-top:15px;padding:14px;border-radius:10px;background:#f7f9fc}
+.judge-entry-code{display:grid;min-width:62px;min-height:48px;place-items:center;border-radius:9px;background:#e7eff8;color:#174e7d;font-size:14px;font-weight:750}
+.judge-entry strong{font-size:15px}
+.judge-entry p{margin:3px 0 0;color:#5f7085;font-size:13px;overflow-wrap:anywhere}
+.judge-task-meta{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0;color:#617188;font-size:13px}
+.judge-card-bottom{align-items:flex-start;border-top:1px solid var(--line);padding-top:12px}
+.judge-card-bottom p{margin:0;color:#52647b;font-size:13px}
+.competition-lifecycle{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.competition-lifecycle small{color:#617188;font-size:13px}
+@media(max-width:820px){
+  .sidebar{position:relative;z-index:11;padding:10px 12px 8px;overflow:hidden}
+  .brand{max-width:100%;margin-bottom:9px}
+  .sidebar-nav{scroll-snap-type:x proximity;padding-bottom:3px}
+  .nav-link{min-height:44px;padding:0 11px;font-size:13px;scroll-snap-align:start}
+  .nav-icon{width:20px}
+  .topbar{min-width:0;padding:0 14px}
+  .breadcrumbs{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .topbar-right{flex:none}
+  .page-content{width:100%;padding:22px 16px}
+  .surface-card{padding:17px}
+  .table-wrap{max-width:100%;overscroll-behavior-x:contain}
+  .data-table{min-width:680px}
+  .score-criterion{grid-template-columns:minmax(0,1fr) minmax(120px,.42fr);gap:12px}
+  .score-criterion .comment-field{grid-column:1/-1}
+  .app-footer{padding-right:16px;padding-left:16px}
+}
+@media(max-width:600px){
+  html,body{width:100%;overflow-x:clip}
+  .sidebar{padding:9px 10px 6px}
+  .brand-school-logo{width:96px}
+  .brand-name{font-size:12px}
+  .sidebar-nav{margin-right:-10px;margin-left:-2px}
+  .nav-link{gap:7px;padding:0 10px;font-size:12px}
+  .main-area{width:100%;margin-left:0}
+  .topbar{height:50px;padding:0 12px}
+  .breadcrumbs{gap:6px;font-size:11px}
+  .live-indicator,.top-avatar{display:none}
+  .mobile-logout{padding:0 5px;font-size:12px}
+  .page-content{min-height:calc(100svh - 160px);padding:18px 12px}
+  .page-heading{gap:11px;margin-bottom:18px}
+  .page-heading h1{font-size:22px;overflow-wrap:anywhere}
+  .page-heading p{font-size:14px;line-height:1.55}
+  .eyebrow{font-size:11px}
+  .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .stat-card{padding:12px}
+  .stat-label{font-size:12px;line-height:1.4}
+  .surface-card{padding:15px 12px;border-radius:12px}
+  .surface-heading{align-items:flex-start;flex-direction:column;gap:8px}
+  .surface-heading h2{font-size:16px}
+  .surface-heading p{font-size:13px;line-height:1.5}
+  .card-grid,.two-columns,.three-columns,.form-grid{grid-template-columns:minmax(0,1fr)}
+  .toolbar{align-items:stretch}
+  .toolbar-left,.toolbar-right,.toolbar-right>.button{width:100%}
+  .toolbar-left{align-items:stretch;flex-direction:column}
+  .form-actions{align-items:stretch;flex-direction:column-reverse}
+  .form-actions>.button,.table-actions>.button{min-height:44px}
+  .subnav{margin-right:-12px;margin-left:-12px;border-right:0;border-left:0;border-radius:0;scroll-snap-type:x proximity}
+  .subnav a{min-height:44px;padding:10px 12px;scroll-snap-align:start}
+  .field-label{font-size:13px}
+  .field-input,.field-select,.field-textarea,.filter-input{min-height:46px;font-size:16px}
+  .field-help{font-size:12px}
+  .button{min-height:46px;font-size:13px}
+  .small-button{min-height:42px}
+  .status-pill{font-size:11px}
+  .metric-chip{font-size:12px}
+  .competition-row{align-items:flex-start;flex-wrap:wrap}
+  .competition-row>.row-end{align-items:flex-start;flex-direction:row;flex-wrap:wrap}
+  .competition-copy h3{font-size:14px;white-space:normal;overflow-wrap:anywhere}
+  .competition-copy p{font-size:12px;line-height:1.45}
+  .progress-line{font-size:12px}
+  .score-criterion{grid-template-columns:minmax(0,1fr) minmax(88px,.42fr);gap:10px;padding:13px 0}
+  .score-criterion strong{font-size:14px}
+  .score-criterion small{font-size:12px;line-height:1.5}
+  .score-number{max-width:none;min-height:48px}
+  .score-footer{align-items:stretch}
+  .score-footer .table-actions,.score-footer .table-actions>.button{width:100%}
+  .live-current{align-items:flex-start;gap:10px;padding:12px}
+  .live-current h3{font-size:16px;overflow-wrap:anywhere}
+  .live-current p{font-size:13px;line-height:1.5}
+  .live-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .live-controls>.field-label{grid-column:1/-1;min-width:0!important}
+  .live-controls>.button{width:100%;padding-right:8px;padding-left:8px}
+  .judge-card{padding:15px 12px}
+  .judge-card-top,.judge-card-bottom{align-items:flex-start;flex-direction:column}
+  .judge-entry{align-items:flex-start}
+  .judge-card-bottom>.button{width:100%}
+  .preflight-heading{align-items:flex-start;flex-direction:column}
+  .app-dialog{width:calc(100vw - 20px);max-height:calc(100dvh - 24px);border-radius:13px}
+  .dialog-heading{padding:16px 15px 12px}
+  .dialog-heading h2{font-size:18px}
+  .dialog-content{padding:14px 15px 18px}
+  .dialog-actions{grid-template-columns:1fr}
+  .app-footer{font-size:12px}
+  .app-media-credit{align-self:flex-start;white-space:normal;font-size:12px}
+  .app-media-credit img{width:58px}
+  .auth-brand-panel{padding:15px 16px 12px}
+  .auth-brand{gap:8px}
+  .auth-university-logo{width:126px}
+  .auth-brand-copy strong{font-size:14px}
+  .auth-brand-copy small{font-size:12px}
+  .auth-form-panel{padding:22px 16px 18px}
+  .auth-card h2{font-size:24px}
+  .auth-description{font-size:14px}
+  .auth-field{font-size:14px}
+  .auth-input-wrap input{padding-left:42px}
+  .auth-submit{min-height:52px;font-size:16px}
+  .auth-switch-row{font-size:13px}
+}
+@media(max-width:360px){
+  .brand-school-logo{width:82px}
+  .brand-name{font-size:11px}
+  .nav-link{gap:6px;padding:0 8px;font-size:11px}
+  .page-content{padding-right:10px;padding-left:10px}
+  .surface-card{padding-right:10px;padding-left:10px}
+  .stat-card{padding:10px}
+  .live-controls{grid-template-columns:1fr}
+  .live-controls>.field-label{grid-column:auto}
+  .judge-entry-code{min-width:54px}
+}
+@media(max-height:520px) and (orientation:landscape){
+  .sidebar{padding-top:7px;padding-bottom:6px}
+  .brand{margin-bottom:5px}
+  .sidebar-nav{gap:3px}
+  .page-content{padding-top:14px;padding-bottom:14px}
+  .page-heading{margin-bottom:12px}
+  .field-input,.field-select,.field-textarea,.filter-input,input:not([type="checkbox"]):not([type="radio"]),select,textarea{min-height:44px}
+  .button,.small-button,.icon-button,.text-button,.tab-button,.logout-button,.mobile-logout{min-height:44px}
+  .auth-brand-panel{padding-top:14px;padding-bottom:12px}
+  .auth-brand-body{display:none}
+  .auth-form-panel{min-height:auto;padding-top:14px;padding-bottom:14px}
+  .auth-card{margin:auto}
+  .auth-description{margin-bottom:12px}
+  .auth-form{gap:10px}
+  .auth-panel-footer{margin-top:10px;padding-top:8px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Final consistency pass: readable metadata and one quiet HUIT icon language. */
+.stat-icon.purple,.stat-icon.amber{background:#eef3ff;color:var(--blue)}
+.stat-icon svg,.quick-icon svg,.action-mark svg,.competition-symbol svg,.empty-mark svg,.note-mark svg{display:block;width:18px;height:18px}
+.action-mark svg{width:16px;height:16px}
+.stat-foot,.quick-link-copy small,.account-copy small,.sidebar-note p,.audit-detail-list li{color:#5f6e82;font-size:12px}
+.quick-link-copy strong{font-size:13px}
+.sidebar-note strong{font-size:12px}
+.eyebrow{font-size:11px}
+.data-table th{font-size:12px}
+.data-table td{font-size:13px}
+.field-label{font-size:13px}
+.field-help{font-size:12px}
+.metric-chip{font-size:12px}
+.status-pill{font-size:12px}
+.app-footer{font-size:12px}
+.competition-row:hover{transform:translateY(-2px)}
+.quick-link[href]{border-radius:9px;transition:background-color .16s,color .16s}
+.quick-link[href]:hover{background:#f8fafd;color:var(--blue)}
+.quick-link[href]>svg{flex:none;color:#7c8ba1}
+.nav-arrow svg{display:block}
+.dashboard-actions{margin:0 0 18px;padding:16px 18px;border:1px solid var(--line);border-left:3px solid #c2882c;border-radius:12px;background:#fff}
+.dashboard-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.dashboard-section-heading h2{margin:3px 0 0;font-size:16px;letter-spacing:-.2px}
+.dashboard-count{display:grid;min-width:30px;height:30px;place-items:center;border-radius:99px;background:#fff4e4;color:#895d1e;font-size:13px;font-weight:700}
+.action-list{display:grid;gap:6px}
+.action-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:58px;padding:8px 11px;border-radius:9px;background:#f8fafd;transition:background-color .16s,color .16s}
+.action-row:hover{background:#f1f5fa;color:var(--blue)}
+.action-mark{display:grid;width:34px;height:34px;place-items:center;border-radius:9px;background:#fff3e3;color:#9a671d}
+.action-live .action-mark{background:#eaf7f0;color:#287b5c}
+.action-publish .action-mark{background:#eef3ff;color:var(--blue)}
+.action-copy{display:grid;min-width:0;gap:2px}
+.action-copy strong{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.action-copy small{color:#5f6e82;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.action-open{display:inline-flex;align-items:center;gap:5px;color:var(--blue);font-size:13px;font-weight:650;white-space:nowrap}
+.action-open svg{width:16px;height:16px}
+.action-empty{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:9px;background:#f3faf6;color:#287b5c}
+.action-empty>span{display:grid;width:30px;height:30px;place-items:center;border-radius:99px;background:#fff;font-weight:750}
+.action-empty strong{font-size:13px}
+.action-empty p{margin:1px 0 0;color:#5f6e82;font-size:12px}
+@media(max-width:600px){
+  .dashboard-actions{padding:13px 12px}
+  .action-row{grid-template-columns:32px minmax(0,1fr);gap:9px;padding:9px}
+  .action-mark{width:30px;height:30px}
+  .action-open{grid-column:2;justify-self:start;padding-top:2px}
+}
+.dialog-close{flex:none}
+.search-field{display:block;width:min(340px,100%);min-width:0}
+.search-field .filter-input{width:100%;min-height:44px;font-size:16px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.audit-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:12px}
+.audit-filters .field-label{min-width:0}
+.audit-pagination{align-items:center;margin-top:13px}
+.skip-link{min-height:44px}
+.brand{min-height:44px}
+.logout-button{width:44px;height:44px}
+.text-button{display:inline-flex;min-height:44px;align-items:center;padding:7px 8px}
+.text-button,.small-button{min-width:44px}
+.small-button{min-height:44px}
+input[type="checkbox"]{width:20px;height:20px;flex:none;accent-color:var(--blue)}
+.pill-row:has(>input[type="checkbox"]){min-height:44px;align-items:center}
+.app-media-credit{min-height:44px}
+.auth-panel-footer>a{min-height:44px}
+.auth-switch-row a{display:inline-flex;min-height:44px;align-items:center}
+@media(max-width:900px){
+  .sidebar{position:relative;inset:auto;z-index:11;width:100%;height:auto;padding:10px 12px 8px;overflow:hidden;border-right:0;border-bottom:1px solid var(--line)}
+  .brand{max-width:100%;margin:0 0 9px 4px}
+  .brand-school-logo{width:108px}
+  .brand-name{font-size:13px}
+  .workspace-caption{display:none}
+  .sidebar-nav{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;padding-bottom:3px}
+  .sidebar-nav::-webkit-scrollbar{display:none}
+  .nav-link{flex:none;min-height:44px;padding:0 11px;font-size:13px;scroll-snap-align:start}
+  .nav-icon{width:20px}
+  .sidebar-spacer,.sidebar-note,.account-card{display:none}
+  .main-area{width:100%;margin-left:0}
+  .topbar{height:52px;min-width:0;padding:0 14px}
+  .breadcrumbs{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .topbar-right{flex:none}
+  .mobile-logout{display:inline-flex;min-height:44px;align-items:center;padding:0 8px;font-size:12px}
+  .page-content{width:100%;min-height:calc(100svh - 138px);padding:22px 16px}
+  .app-footer{align-items:flex-start;flex-direction:column;gap:9px;padding:0 16px 15px}
+  .app-media-credit{align-self:flex-start}
+}
+@media(max-width:600px){
+  .sidebar{padding:9px 10px 6px}
+  .brand-school-logo{width:96px}
+  .brand-name{font-size:12px}
+  .sidebar-nav{margin-right:-10px;margin-left:-2px}
+  .nav-link{gap:7px;padding:0 10px;font-size:12px}
+  .topbar{height:50px;padding:0 12px}
+  .live-indicator,.top-avatar{display:none}
+  .mobile-logout{padding:0 5px;font-size:12px}
+  .page-content{min-height:calc(100svh - 160px);padding:18px 12px}
+  .app-footer{padding-right:12px;padding-left:12px}
+  .app-media-credit{align-self:flex-start}
+  .audit-filters{grid-template-columns:minmax(0,1fr)}
+  .audit-pagination{align-items:stretch;flex-direction:column}
+  .audit-pagination .table-actions{width:100%;flex-wrap:wrap}
+  .audit-pagination .table-actions>.button{flex:1}
+}
+
+/* Phone workspace: clear context at the top, task navigation at the thumb zone. */
+.mobile-bottom-nav{display:none}
+.mobile-subnav-select{display:none}
+@media(max-width:600px){
+  .sidebar{padding:9px 12px 8px;border-bottom-color:#e5eaf1}
+  .brand{gap:10px;margin:0 0 0 2px}
+  .brand-school-logo{width:104px}
+  .brand-name{font-size:13px;letter-spacing:-.3px}
+  .sidebar-nav{display:none}
+  .topbar{height:44px;padding:0 14px;background:transparent;border-bottom:0}
+  .breadcrumbs{gap:0;color:#53657b;font-size:12px}
+  .breadcrumbs span,.breadcrumbs b{display:none}
+  .breadcrumbs strong{color:#53657b;font-size:12px;font-weight:600}
+  .mobile-logout{min-width:44px;justify-content:center;gap:6px;padding:0 8px;border:1px solid #e3e9f1;border-radius:10px;background:#fff;color:#53657b}
+  .page-content{min-height:calc(100svh - 124px);padding:14px 14px 96px}
+  .app-footer{padding:0 14px calc(88px + env(safe-area-inset-bottom))}
+  .mobile-bottom-nav{position:fixed;z-index:20;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:6px 12px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #e4e9f0;background:#fff}
+  .mobile-nav-link{display:flex;min-width:0;min-height:52px;align-items:center;justify-content:center;flex-direction:column;gap:3px;border-radius:12px;color:#6c7a8e;font-size:11px;font-weight:550;line-height:1.2;text-align:center;transition:background-color .16s,color .16s}
+  .mobile-nav-link svg{flex:none}
+  .mobile-nav-link.active{background:#edf4fb;color:#0b54a0;font-weight:700}
+  .mobile-nav-link:focus-visible{outline-offset:1px}
+  .subnav{display:none}
+  .mobile-subnav-select{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;min-height:60px;margin:0 0 16px;padding:7px 12px;border:1px solid #e4eaf2;border-radius:13px;background:#fff;color:#63748a}
+  .mobile-subnav-select>span{font-size:12px;font-weight:600;white-space:nowrap}
+  .mobile-subnav-select select{width:100%;min-width:0;min-height:44px;padding:0 10px;border:0;border-radius:9px;outline-offset:2px;background:#f5f8fc;color:#1b2c43;font-size:14px;font-weight:650}
+  .page-heading{margin-bottom:17px}
+  .page-heading h1{font-size:23px;line-height:1.25;letter-spacing:-.6px}
+  .page-heading p{font-size:14px;line-height:1.5}
+  .surface-card{border-color:#e8edf4;border-radius:15px;box-shadow:0 5px 18px #20334d08}
+  .stat-card{border-color:#e8edf4;border-radius:14px}
+  .score-footer--mobile-dock{position:fixed;z-index:19;right:0;bottom:calc(64px + env(safe-area-inset-bottom));left:0;display:grid;grid-template-columns:minmax(0,1fr);gap:7px;margin:0;padding:9px 12px 10px;border-top:1px solid #e4e9f0;background:#fff;box-shadow:0 -8px 24px #17253b14}
+  .score-footer--mobile-dock .score-total{display:flex;align-items:baseline;gap:3px;color:#53657b;font-size:12px}
+  .score-footer--mobile-dock .score-total strong{margin-left:2px;font-size:19px}
+  .score-footer--mobile-dock .table-actions{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px;width:100%}
+  .score-footer--mobile-dock .table-actions>.button{width:100%;min-width:0;min-height:46px;padding:8px 7px;font-size:12px;white-space:nowrap}
+  .page-content:has(.score-footer--mobile-dock){padding-bottom:calc(190px + env(safe-area-inset-bottom))}
+  .score-form:has(input:focus,textarea:focus) .score-footer--mobile-dock{position:static;margin:16px -12px -15px;padding:13px 12px 0;border-top:1px solid #e8edf4;background:#fff;box-shadow:none}
+  .score-form:has(input:focus,textarea:focus) .score-footer--mobile-dock .table-actions{grid-template-columns:1fr}
+  .score-form:has(input:focus,textarea:focus) .score-footer--mobile-dock .table-actions>.button{min-height:48px;font-size:13px}
+}
+@media(max-width:360px){
+  .brand-school-logo{width:88px}
+  .brand-name{font-size:12px}
+  .mobile-nav-link{font-size:10px}
+  .mobile-bottom-nav{gap:3px;padding-right:8px;padding-left:8px}
+  .mobile-subnav-select{gap:8px;padding-right:9px;padding-left:10px}
+  .score-footer--mobile-dock .table-actions>.button{font-size:11px}
+}
+@media(max-height:520px) and (orientation:landscape){
+  .score-footer--mobile-dock{position:static}
+  .page-content:has(.score-footer--mobile-dock){padding-bottom:24px}
+}

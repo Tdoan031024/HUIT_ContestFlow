@@ -22,6 +22,7 @@ export async function GET(_request: Request, context: Context) {
     where: { entryId_judgeId: { entryId, judgeId: user.id } },
     include: { rubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } }, details: true },
   });
+  const latestSnapshot = await prisma.resultSnapshot.findFirst({ where: { roundId: entry.roundId }, orderBy: { version: 'desc' }, select: { id: true } });
   const pinnedSheet = sheet ?? await prisma.scoreSheet.findFirst({ where: { entryId }, orderBy: { createdAt: 'asc' }, select: { rubricVersionId: true } });
   const rubricVersion = sheet?.rubricVersion ?? (pinnedSheet?.rubricVersionId
     ? await prisma.rubricVersion.findUnique({ where: { id: pinnedSheet.rubricVersionId }, include: { criteria: { orderBy: { sequence: 'asc' } } } })
@@ -31,13 +32,13 @@ export async function GET(_request: Request, context: Context) {
   if (!rubricVersion) return Response.json({ error: 'Vòng thi chưa có rubric được kích hoạt.' }, { status: 409 });
   return Response.json({
     entry: {
-      id: entry.id, code: entry.entryCode, title: entry.title,
+      id: entry.id, code: entry.entryCode, title: entry.round.anonymous ? null : entry.title,
       displayName: entry.round.anonymous ? 'Danh tính được ẩn' : entry.contestant.displayName,
       organization: entry.round.anonymous ? null : entry.contestant.organization,
     },
     round: { id: entry.round.id, name: entry.round.name, status: entry.round.status, anonymous: entry.round.anonymous, roundingPrecision: entry.round.roundingPrecision },
     rubric: rubricVersion,
-    scoreSheet: sheet ? { id: sheet.id, status: sheet.status, totalScore: sheet.totalScore, submittedAt: sheet.submittedAt, details: sheet.details } : null,
+    scoreSheet: sheet ? { id: sheet.id, status: sheet.status, totalScore: sheet.totalScore, submittedAt: sheet.submittedAt, details: sheet.details, locked: Boolean(latestSnapshot && sheet.status !== 'REOPENED') } : null,
   });
 }
 
@@ -52,15 +53,18 @@ export async function PUT(request: Request, context: Context) {
   if (!(await isAssignedJudge(user, entry.roundId, entry.id))) return Response.json({ error: 'Bạn chưa được phân công chấm lượt thi này.' }, { status: 403 });
   const existing = await prisma.scoreSheet.findUnique({ where: { entryId_judgeId: { entryId, judgeId: user.id } }, select: { id: true, status: true, rubricVersionId: true } });
   if (existing?.status === 'SUBMITTED') return Response.json({ error: 'Phiếu đã nộp. Chỉ Admin mới có thể mở lại phiếu.' }, { status: 409 });
+  const latestSnapshot = await prisma.resultSnapshot.findFirst({ where: { roundId: entry.roundId }, orderBy: { version: 'desc' }, select: { id: true } });
+  if (latestSnapshot && existing?.status !== 'REOPENED') return Response.json({ error: 'Kết quả đã khóa. Liên hệ Admin để mở lại phiếu trước khi chỉnh sửa.' }, { status: 409 });
   if (entry.round.status === 'COMPLETED' && !existing) return Response.json({ error: 'Vòng thi đã kết thúc; cần Admin mở lại phiếu trước khi tạo điểm mới.' }, { status: 409 });
 
   const assignment = await prisma.judgeAssignment.findFirst({ where: { userId: user.id, roundId: entry.roundId } });
   const session = await prisma.competitionSession.findUnique({ where: { roundId: entry.roundId }, select: { currentEntryId: true, state: true } });
-  if (assignment?.entryId === null && existing?.status !== 'REOPENED' && session?.currentEntryId !== entryId) {
-    return Response.json({ error: 'Bạn chỉ được bắt đầu chấm thí sinh đang được điều phối trực tiếp.' }, { status: 409 });
+  const continuingWork = existing?.status === 'DRAFT' || existing?.status === 'REOPENED';
+  if (assignment?.entryId === null && !continuingWork && session?.currentEntryId !== entryId) {
+    return Response.json({ error: 'Bạn chỉ được bắt đầu chấm lượt đang được điều phối trực tiếp. Bản nháp hiện có vẫn có thể tiếp tục sau khi đổi lượt.' }, { status: 409 });
   }
-  if (assignment?.entryId === null && !existing && session?.state !== 'LIVE') {
-    return Response.json({ error: 'Phiên chấm hiện chưa được bắt đầu.' }, { status: 409 });
+  if (assignment?.entryId === null && !continuingWork && session?.state !== 'LIVE') {
+    return Response.json({ error: 'Phiên chấm chưa hoạt động. Chờ Admin bắt đầu điều phối lượt thi.' }, { status: 409 });
   }
 
   const pinnedSheet = existing ?? await prisma.scoreSheet.findFirst({ where: { entryId }, orderBy: { createdAt: 'asc' }, select: { rubricVersionId: true } });

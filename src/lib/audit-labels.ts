@@ -1,5 +1,5 @@
 const actionLabels: Record<string, string> = {
-  COMPETITION_CREATED: 'Tạo cuộc thi', COMPETITION_UPDATED: 'Cập nhật cuộc thi', COMPETITION_ARCHIVED: 'Lưu trữ cuộc thi',
+  COMPETITION_CREATED: 'Tạo cuộc thi', COMPETITION_UPDATED: 'Cập nhật cuộc thi', COMPETITION_ARCHIVED: 'Lưu trữ cuộc thi', COMPETITION_CLOSED_EARLY: 'Đóng sớm cuộc thi',
   ROUND_CREATED: 'Tạo vòng thi', ROUND_UPDATED: 'Cập nhật vòng thi',
   CONTESTANT_CREATED: 'Thêm thí sinh', CONTESTANT_UPDATED: 'Cập nhật hồ sơ thí sinh', CONTESTANT_WITHDRAWN: 'Rút thí sinh', CONTESTANTS_IMPORTED: 'Nhập danh sách thí sinh', ENTRY_CREATED: 'Đăng ký lượt thi', ENTRY_ORDER_UPDATED: 'Đổi thứ tự thi',
   JUDGE_ASSIGNED: 'Phân công giám khảo', JUDGE_UNASSIGNED: 'Thu hồi phân công giám khảo', JUDGE_PASSWORD_RESET: 'Đặt lại mật khẩu giám khảo',
@@ -13,7 +13,7 @@ const entityLabels: Record<string, string> = {
   JudgeAssignment: 'Phân công giám khảo', RubricVersion: 'Phiên bản rubric', ScoreSheet: 'Phiếu chấm', ResultSnapshot: 'Bản kết quả',
 };
 const detailLabels: Record<string, string> = {
-  count: 'Số hồ sơ', criteriaCount: 'Số tiêu chí', version: 'Phiên bản', previousVersion: 'Phiên bản trước', existingSheets: 'Phiếu đã tạo',
+  count: 'Số hồ sơ', criteriaCount: 'Số tiêu chí', version: 'Phiên bản', previousVersion: 'Phiên bản trước', existingSheets: 'Phiếu đã tạo', missingAssignmentCount: 'Lượt thiếu phân công',
   entryCount: 'Số lượt thi', missingCount: 'Lượt còn thiếu phiếu', totalScore: 'Điểm tổng', reason: 'Lý do', state: 'Trạng thái phiên',
   anonymous: 'Ẩn danh thí sinh', requiredJudgeCount: 'Số phiếu yêu cầu', allowAdvanceWithGaps: 'Cho phép thiếu phiếu', publishScores: 'Công khai điểm giám khảo', aggregateMethod: 'Cách tổng hợp', tieBreakMethod: 'Xử lý đồng điểm', roundingPrecision: 'Chữ số làm tròn',
   status: 'Trạng thái',

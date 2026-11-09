@@ -18,7 +18,7 @@ export async function POST(request: Request, context: Context) {
   if (!competition) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
   const sequence = (await prisma.competitionRound.aggregate({ where: { competitionId: id }, _max: { sequence: true } }))._max.sequence ?? 0;
   const round = await prisma.$transaction(async (tx) => {
-    const created = await tx.competitionRound.create({ data: { competitionId: id, name: parsed.data.name, sequence: sequence + 1 } });
+    const created = await tx.competitionRound.create({ data: { competitionId: id, name: parsed.data.name, sequence: sequence + 1, anonymous: true } });
     const rubric = await tx.rubric.create({ data: {
       competitionId: id,
       roundId: created.id,

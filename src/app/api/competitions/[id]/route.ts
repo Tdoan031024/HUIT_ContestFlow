@@ -11,10 +11,9 @@ const updateSchema = z.object({
   organizingUnit: z.string().trim().max(180).nullable().optional(),
   location: z.string().trim().max(240).nullable().optional(),
   modality: z.enum(['ONSITE', 'ONLINE', 'HYBRID']).optional(),
-  status: z.enum(['DRAFT', 'REGISTRATION', 'READY', 'LIVE', 'COMPLETED', 'ARCHIVED']).optional(),
   startsAt: z.string().datetime().nullable().optional(),
   endsAt: z.string().datetime().nullable().optional(),
-});
+}).strict();
 
 type Context = { params: Promise<{ id: string }> };
 
