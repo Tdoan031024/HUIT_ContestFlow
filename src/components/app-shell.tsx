@@ -39,7 +39,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           <Image className="brand-school-logo" src="/brand/huit-logo.svg" width={1600} height={350} alt="Trường Đại học Công Thương TP. Hồ Chí Minh" priority />
           <span className="brand-name">ContestFlow</span>
         </Link>
-        <div className="workspace-caption">QUẢN LÝ CUỘC THI</div>
+        <div className="workspace-caption">{user.systemRole === 'ADMIN' ? 'BAN TỔ CHỨC' : 'HỘI ĐỒNG GIÁM KHẢO'}</div>
         <nav className="sidebar-nav" aria-label="Điều hướng chính">
           {visibleLinks.map((item) => {
             const active = isActive(item.href);
@@ -47,7 +47,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           })}
         </nav>
         <div className="sidebar-spacer" />
-        <div className="sidebar-note"><div className="note-mark" aria-hidden="true"><Icon name="help" size={16} /></div><div><strong>Hỗ trợ vận hành</strong><p>Quản lý vòng thi và phiếu chấm trong một nơi.</p></div></div>
+        <div className="sidebar-note"><div className="note-mark" aria-hidden="true"><Icon name="help" size={16} /></div><div><strong>{user.systemRole === 'ADMIN' ? 'Trợ giúp vận hành' : 'Hướng dẫn chấm thi'}</strong><p>{user.systemRole === 'ADMIN' ? 'Thiết lập cuộc thi, quy tắc và phân công.' : 'Chấm theo thứ tự, lưu nháp hoặc nộp phiếu.'}</p></div></div>
         <div className="account-card">
           <span className="user-avatar">{initials(user.fullName)}</span>
           <span className="account-copy"><strong>{user.fullName}</strong><small>{user.systemRole === 'ADMIN' ? 'Quản trị viên' : 'Giám khảo'}</small></span>
@@ -57,7 +57,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       <div className="main-area">
         <header className="topbar">
           <div className="breadcrumbs"><span>HUIT ContestFlow</span><b>/</b><strong>{currentLabel}</strong></div>
-          <div className="topbar-right"><span className="live-indicator"><i /> Hệ thống quản lý</span><span className="top-avatar">{initials(user.fullName)}</span><button className="mobile-logout" type="button" onClick={logout} disabled={busy}><Icon name="logout" /> <span>Đăng xuất</span></button></div>
+          <div className="topbar-right"><span className="live-indicator"><i /> Hệ thống quản lý</span><span className="topbar-role">{user.systemRole === 'ADMIN' ? 'BAN TỔ CHỨC' : 'GIÁM KHẢO'}</span><span className="top-avatar" aria-label={user.fullName}>{initials(user.fullName)}</span><button className="mobile-logout" type="button" onClick={logout} disabled={busy}><Icon name="logout" /> <span>Đăng xuất</span></button></div>
         </header>
         <main className="page-content" id="main-content" tabIndex={-1}>{children}</main>
         <footer className="app-footer"><span>© {new Date().getFullYear()} HUIT ContestFlow · Trường Đại học Công Thương TP. Hồ Chí Minh</span><a className="app-media-credit" href="https://huitmedia.edu.vn" target="_blank" rel="noreferrer"><Image src="/brand/huit-media-logo.png" width={676} height={187} sizes="64px" alt="HUIT Media" /><span>Kênh thông tin và truyền thông HUIT</span></a></footer>

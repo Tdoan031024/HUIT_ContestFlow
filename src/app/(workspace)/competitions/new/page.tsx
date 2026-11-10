@@ -23,7 +23,7 @@ export default function NewCompetitionPage() {
   }
   return <>
     <PageHeader eyebrow="THIẾT LẬP" title="Tạo cuộc thi mới" description="Bắt đầu với thông tin cơ bản và vòng đầu tiên." action={<Link href="/competitions" className="button secondary-button">← Danh sách</Link>} />
-    <div className="card-grid two-columns">
+    <div className="card-grid creation-workspace">
       <SectionCard title="Thông tin cuộc thi" subtitle="Bạn có thể bổ sung và chỉnh sửa sau khi tạo.">
         {error && <Notice tone="error">{error}</Notice>}
         <form className="form-stack" onSubmit={submit}>

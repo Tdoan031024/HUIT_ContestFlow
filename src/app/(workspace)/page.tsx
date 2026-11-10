@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { EmptyState, Loading, Notice, PageHeader, StatusPill, formatDate } from '@/components/ui';
 import { auditActionLabel } from '@/lib/audit-labels';
-import { Icon, type IconName } from '@/components/icons';
+import { Icon } from '@/components/icons';
 
 type Data = {
   systemRole: 'ADMIN' | 'JUDGE';
@@ -23,11 +23,21 @@ export default function DashboardPage() {
     <PageHeader eyebrow="TỔNG QUAN" title="Tổng quan" description="Theo dõi cuộc thi, tiến độ chấm và hoạt động gần đây." action={data?.systemRole === 'ADMIN' ? <Link className="button primary-button" href="/competitions/new">＋ Tạo cuộc thi</Link> : data?.systemRole === 'JUDGE' ? <Link className="button primary-button" href="/judge">Mở lượt chấm →</Link> : undefined} />
     {error && <Notice tone="error">{error}</Notice>}
     {!data ? <Loading /> : <>
-      <section className="stats-grid" aria-label="Tổng quan số liệu">
-        <Stat label={data.systemRole === 'ADMIN' ? 'Cuộc thi đang quản lý' : 'Cuộc thi được phân công'} value={data.stats.competitionCount} icon="trophy" foot="Không tính cuộc thi đã lưu trữ" />
-        <Stat label={data.systemRole === 'ADMIN' ? 'Thí sinh' : 'Lượt thi được giao'} value={data.stats.contestantCount} icon="users" foot={data.systemRole === 'ADMIN' ? 'Trong các cuộc thi của bạn' : 'Theo phân công của bạn'} />
-        <Stat label={data.systemRole === 'ADMIN' ? 'Giám khảo được phân công' : 'Phiếu của tôi đã nộp'} value={data.systemRole === 'ADMIN' ? data.stats.judgeCount : data.stats.submittedScores} icon={data.systemRole === 'ADMIN' ? 'clipboard' : 'check'} foot={data.systemRole === 'ADMIN' ? 'Tài khoản có ít nhất một phân công' : `Trong ${data.stats.expectedScores} lượt được giao`} />
-        <Stat label={data.systemRole === 'ADMIN' ? 'Phiếu điểm đã hoàn tất' : 'Tiến độ chấm của tôi'} value={`${data.stats.percent}%`} icon="check" tone="green" foot={`${data.stats.submittedScores} / ${data.stats.expectedScores} phiếu yêu cầu`} />
+      <section className="dashboard-overview" aria-label="Tổng quan số liệu">
+        <div className="dashboard-progress-feature">
+          <div className="dashboard-progress-topline"><span>TIẾN ĐỘ CHẤM</span><span>{data.systemRole === 'ADMIN' ? 'TOÀN HỆ THỐNG' : 'CÁ NHÂN'}</span></div>
+          <div className="dashboard-progress-main">
+            <div className="dashboard-progress-value">{data.stats.percent}<small>%</small></div>
+            <p>{data.systemRole === 'ADMIN' ? 'Phiếu chấm đã hoàn tất trên các vòng đang quản lý.' : 'Lượt được giao đã có phiếu chấm hoàn tất.'}</p>
+          </div>
+          <div className="dashboard-progress-track" role="progressbar" aria-label="Tiến độ phiếu chấm" aria-valuemin={0} aria-valuemax={100} aria-valuenow={data.stats.percent}><span style={{ width: `${data.stats.percent}%` }} /></div>
+          <div className="dashboard-progress-foot"><span>{data.stats.submittedScores} / {data.stats.expectedScores} phiếu đã nộp</span><Link href={data.systemRole === 'ADMIN' ? '/results' : '/judge'}>{data.systemRole === 'ADMIN' ? 'Theo dõi kết quả' : 'Tiếp tục chấm'} <span aria-hidden="true">→</span></Link></div>
+        </div>
+        <div className="dashboard-metrics">
+          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Cuộc thi' : 'Cuộc thi được giao'}</span><strong>{data.stats.competitionCount}</strong><small>{data.systemRole === 'ADMIN' ? 'Không tính lưu trữ' : 'Được Ban tổ chức giao'}</small></div>
+          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Thí sinh' : 'Lượt thi'}</span><strong>{data.stats.contestantCount}</strong><small>{data.systemRole === 'ADMIN' ? 'Trong các cuộc thi đang quản lý' : 'Trong danh sách chấm của bạn'}</small></div>
+          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Giám khảo' : 'Phiếu đã nộp'}</span><strong>{data.systemRole === 'ADMIN' ? data.stats.judgeCount : data.stats.submittedScores}</strong><small>{data.systemRole === 'ADMIN' ? 'Có ít nhất một phân công' : `Trên ${data.stats.expectedScores} lượt được giao`}</small></div>
+        </div>
       </section>
       {data.systemRole === 'ADMIN' && <section className="dashboard-actions" aria-labelledby="dashboard-actions-title">
         <div className="dashboard-section-heading"><div><span className="eyebrow">ĐIỀU HÀNH</span><h2 id="dashboard-actions-title">Việc cần xử lý</h2></div><span className="dashboard-count">{data.actionItems?.length ?? 0}</span></div>
@@ -58,8 +68,4 @@ export default function DashboardPage() {
       </div>
     </>}
   </>;
-}
-
-function Stat({ label, value, icon, tone = '', foot }: { label: string; value: string | number; icon: IconName; tone?: string; foot: string }) {
-  return <article className="stat-card"><div className="stat-top"><span className={`stat-icon ${tone}`} aria-hidden="true"><Icon name={icon} /></span></div><div className="stat-number">{value}</div><div className="stat-label">{label}</div><div className="stat-foot">{foot}</div></article>;
 }
