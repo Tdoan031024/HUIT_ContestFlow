@@ -14,7 +14,7 @@ export async function GET() {
     where: { userId: user.id, user: { isActive: true }, competition: { status: { not: 'ARCHIVED' } } },
     orderBy: [{ round: { competition: { startsAt: 'asc' } } }, { round: { sequence: 'asc' } }],
     include: {
-      competition: { select: { id: true, name: true, status: true } },
+      competition: { select: { id: true, name: true, status: true, startsAt: true } },
       round: { include: {
         session: true,
         activeRubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } },
@@ -100,13 +100,23 @@ export async function GET() {
     return {
       competition: assignment.competition,
       round: { id: round.id, name: round.name, sequence: round.sequence, status: round.status, anonymous: round.anonymous, sessionState, roundingPrecision: round.roundingPrecision },
-      entry: { id: currentEntry.id, code: currentEntry.entryCode, title: round.anonymous ? null : currentEntry.title, displayName: round.anonymous ? 'Danh tính được ẩn' : currentEntry.contestant.displayName, organization: round.anonymous ? null : currentEntry.contestant.organization },
+      entry: { id: currentEntry.id, code: currentEntry.entryCode, sequence: currentEntry.sequence, title: round.anonymous ? null : currentEntry.title, displayName: round.anonymous ? 'Danh tính được ẩn' : currentEntry.contestant.displayName, organization: round.anonymous ? null : currentEntry.contestant.organization },
       rubric,
       scoreSheet: scoreSheet ? { id: scoreSheet.id, status: scoreSheet.status, totalScore: scoreSheet.totalScore, submittedAt: scoreSheet.submittedAt } : null,
       taskStatus: status,
       taskMessage: message,
       canOpen: status !== 'UNAVAILABLE' && status !== 'WAITING',
     };
+  });
+
+  tasks.sort((a, b) => {
+    const aStartsAt = a.competition.startsAt?.getTime() ?? Number.NEGATIVE_INFINITY;
+    const bStartsAt = b.competition.startsAt?.getTime() ?? Number.NEGATIVE_INFINITY;
+    return aStartsAt - bStartsAt
+      || a.competition.name.localeCompare(b.competition.name, 'vi')
+      || a.round.sequence - b.round.sequence
+      || a.entry.sequence - b.entry.sequence
+      || a.entry.code.localeCompare(b.entry.code, 'vi');
   });
 
   return Response.json({ tasks });

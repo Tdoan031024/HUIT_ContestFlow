@@ -176,7 +176,7 @@
 .judge-card{min-width:0;padding:18px 20px}
 .judge-card-top,.judge-card-bottom,.judge-entry{display:flex;align-items:center;justify-content:space-between;gap:14px}
 .judge-event{margin:0 0 3px;color:#62748a;font-size:13px}
-.judge-card-top h2{margin:0;font-size:18px}
+.judge-entry-order{color:#62748a;font-size:12px;font-weight:650}
 .judge-entry{justify-content:flex-start;margin-top:15px;padding:14px;border-radius:10px;background:#f7f9fc}
 .judge-entry-code{display:grid;min-width:62px;min-height:48px;place-items:center;border-radius:9px;background:#e7eff8;color:#174e7d;font-size:14px;font-weight:750}
 .judge-entry strong{font-size:15px}
@@ -184,6 +184,22 @@
 .judge-task-meta{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0;color:#617188;font-size:13px}
 .judge-card-bottom{align-items:flex-start;border-top:1px solid var(--line);padding-top:12px}
 .judge-card-bottom p{margin:0;color:#52647b;font-size:13px}
+.judge-competition-list{display:grid;gap:10px;max-width:1040px}
+.judge-competition-card{display:flex;min-width:0;min-height:82px;align-items:center;justify-content:space-between;gap:16px;padding:17px 19px;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);text-align:left;cursor:pointer;transition:border-color .15s,background .15s,transform .15s,box-shadow .15s}
+.judge-competition-card:hover{transform:translateY(-1px);border-color:#cfdbf2;background:#fcfdff;box-shadow:0 6px 16px #20334d0a}
+.judge-competition-card:focus-visible,.judge-back-button:focus-visible{outline:3px solid #98b4ff;outline-offset:2px}
+.judge-competition-copy{display:grid;min-width:0;gap:5px}
+.judge-competition-copy strong{overflow-wrap:anywhere;font-size:15px;letter-spacing:-.2px}
+.judge-competition-copy>span{color:var(--muted);font-size:12px}
+.judge-competition-end{display:flex;flex:none;align-items:center;gap:13px;color:#5274be;font-size:21px}
+.judge-back-button{min-height:40px;margin:0 0 13px;padding:0;border:0;background:transparent;color:#426cdd;font-size:12px;font-weight:700;cursor:pointer}
+.judge-selected-heading,.judge-round-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.judge-selected-heading{margin:0 0 21px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.judge-selected-heading h2,.judge-round-heading h2{margin:4px 0 0;font-size:18px;letter-spacing:-.35px}
+.judge-assignment-count,.judge-round-count{flex:none;color:#617188;font-size:12px}
+.judge-round-section{display:grid;gap:11px;margin-bottom:23px}
+.judge-round-heading{padding-bottom:10px;border-bottom:1px solid var(--line)}
+.judge-round-heading h2{font-size:16px}
 .competition-lifecycle{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .competition-lifecycle small{color:#617188;font-size:13px}
 @media(max-width:820px){
@@ -295,6 +311,17 @@
   .live-controls{grid-template-columns:1fr}
   .live-controls>.field-label{grid-column:auto}
   .judge-entry-code{min-width:54px}
+}
+@media(max-width:520px){
+  .judge-competition-card{min-height:72px;gap:10px;padding:14px 12px}
+  .judge-competition-copy strong{font-size:13px}
+  .judge-competition-copy>span{font-size:11px}
+  .judge-competition-end{gap:7px}
+  .judge-selected-heading,.judge-round-heading{align-items:flex-start;flex-direction:column}
+  .judge-selected-heading{gap:9px;padding:14px}
+  .judge-selected-heading h2{font-size:16px}
+  .judge-round-heading{gap:5px}
+  .judge-card{padding:15px 12px}
 }
 @media(max-height:520px) and (orientation:landscape){
   .sidebar{padding-top:7px;padding-bottom:6px}

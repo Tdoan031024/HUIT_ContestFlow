@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { EmptyState, Loading, Notice, PageHeader, StatusPill, useConfirmDialog } from '@/components/ui';
 
-type Task = { competition: { id: string; name: string; status: string }; round: { id: string; name: string; sequence: number; status: string; anonymous: boolean; sessionState: string; roundingPrecision: number }; entry: { id: string; code: string; title: string | null; displayName: string; organization: string | null }; rubric: { version: number; name: string; criteria: Criterion[] } | null; scoreSheet: { id: string; status: string; totalScore: number | null; submittedAt: string | null } | null; taskStatus: string; taskMessage: string; canOpen: boolean };
+type Task = { competition: { id: string; name: string; status: string; startsAt: string | null }; round: { id: string; name: string; sequence: number; status: string; anonymous: boolean; sessionState: string; roundingPrecision: number }; entry: { id: string; code: string; sequence: number; title: string | null; displayName: string; organization: string | null }; rubric: { version: number; name: string; criteria: Criterion[] } | null; scoreSheet: { id: string; status: string; totalScore: number | null; submittedAt: string | null } | null; taskStatus: string; taskMessage: string; canOpen: boolean };
 type Criterion = { id: string; name: string; description: string | null; minimum: number | string; maximum: number | string; step: number | string; weight: number | string; commentRequired: boolean };
 type ScoreState = { score: string; comment: string };
 
@@ -18,6 +18,7 @@ async function request<T>(url: string, options?: RequestInit) {
 
 export function JudgeTasks() {
   const [tasks, setTasks] = useState<Task[] | null>(null);
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
     let active = true;
@@ -26,15 +27,45 @@ export function JudgeTasks() {
     const interval = window.setInterval(refresh, 5000);
     return () => { active = false; window.clearInterval(interval); };
   }, []);
+  const competitions = useMemo(() => {
+    const grouped = new Map<string, { id: string; name: string; status: string; tasks: Task[] }>();
+    for (const task of tasks ?? []) {
+      const competition = grouped.get(task.competition.id) ?? { id: task.competition.id, name: task.competition.name, status: task.competition.status, tasks: [] };
+      competition.tasks.push(task);
+      grouped.set(competition.id, competition);
+    }
+    return [...grouped.values()].map((competition) => ({ ...competition, roundCount: new Set(competition.tasks.map((task) => task.round.id)).size }));
+  }, [tasks]);
+  const selectedCompetition = competitions.find((competition) => competition.id === selectedCompetitionId) ?? null;
+  const rounds = useMemo(() => {
+    if (!selectedCompetition) return [];
+    const grouped = new Map<string, { id: string; name: string; sequence: number; tasks: Task[] }>();
+    for (const task of selectedCompetition.tasks) {
+      const round = grouped.get(task.round.id) ?? { id: task.round.id, name: task.round.name, sequence: task.round.sequence, tasks: [] };
+      round.tasks.push(task);
+      grouped.set(round.id, round);
+    }
+    return [...grouped.values()].sort((a, b) => a.sequence - b.sequence);
+  }, [selectedCompetition]);
   return <>
-    <PageHeader eyebrow="DÀNH CHO GIÁM KHẢO" title="Khu vực giám khảo" description="Xem lượt thi được phân công, nhập điểm và nộp phiếu chấm." />
+    <PageHeader eyebrow="GIÁM KHẢO" title="Chấm thi" description={selectedCompetition ? 'Chọn đội được phân công để mở phiếu chấm theo thứ tự Admin đã thiết lập.' : 'Chọn cuộc thi được Admin phân công để xem các lượt chấm của bạn.'} />
     {error && <Notice tone="error">{error}</Notice>}
-    {tasks === null ? <Loading /> : tasks.length ? <section className="judge-queue">{tasks.map((task) => <article className="judge-card" key={`${task.round.id}-${task.entry.id}`}>
-      <div className="judge-card-top"><div><p className="judge-event">{task.competition.name}</p><h2>{task.round.sequence}. {task.round.name}</h2></div><StatusPill value={task.taskStatus} /></div>
-      <div className="judge-entry"><span className="judge-entry-code">{task.entry.code}</span><div><strong>{task.entry.displayName}</strong><p>{task.entry.title || task.entry.organization || 'Lượt thi được giao'}</p></div></div>
-      <div className="judge-task-meta"><span>{task.rubric?.criteria.length ?? 0} tiêu chí · Rubric v{task.rubric?.version ?? '—'}</span>{task.scoreSheet?.totalScore !== null && task.scoreSheet && <span>Điểm của tôi: {Number(task.scoreSheet.totalScore).toFixed(task.round.roundingPrecision)}</span>}</div>
-      <div className="judge-card-bottom"><p>{task.taskMessage}</p>{task.canOpen ? <Link className="button primary-button" href={`/judge/${task.entry.id}`}>{task.taskStatus === 'LOCKED' ? 'Xem bản nháp đã khóa' : task.scoreSheet?.status === 'SUBMITTED' ? 'Xem phiếu đã nộp' : task.scoreSheet?.status === 'DRAFT' ? 'Tiếp tục bản nháp' : task.scoreSheet?.status === 'REOPENED' ? 'Sửa phiếu đã mở lại' : 'Mở phiếu chấm'}</Link> : <button className="button secondary-button" type="button" disabled>Xem phiếu khi được mở</button>}</div>
-    </article>)}</section> : <EmptyState title="Chưa có lượt thi được phân công" description="Khi Admin phân công bạn vào vòng thi, lượt chấm sẽ xuất hiện ở đây." />}
+    {tasks === null ? <Loading /> : !tasks.length ? <EmptyState title="Chưa có cuộc thi được phân công" description="Khi Admin phân công bạn chấm một hoặc nhiều đội, cuộc thi sẽ xuất hiện ở đây." /> : !selectedCompetition ? <section className="judge-competition-list" aria-label="Cuộc thi được phân công">{competitions.map((competition) => <button className="judge-competition-card" key={competition.id} type="button" onClick={() => setSelectedCompetitionId(competition.id)}>
+      <span className="judge-competition-copy"><strong>{competition.name}</strong><span>{competition.roundCount} vòng thi · {competition.tasks.length} lượt được phân công</span></span>
+      <span className="judge-competition-end"><StatusPill value={competition.status} /><span aria-hidden="true">→</span></span>
+    </button>)}</section> : <>
+      <button className="judge-back-button" type="button" onClick={() => setSelectedCompetitionId(null)}>← Danh sách cuộc thi</button>
+      <div className="judge-selected-heading"><div><span className="eyebrow">CUỘC THI</span><h2>{selectedCompetition.name}</h2></div><span className="judge-assignment-count">{selectedCompetition.tasks.length} lượt được phân công</span></div>
+      {rounds.map((round) => <section className="judge-round-section" key={round.id}>
+        <div className="judge-round-heading"><div><span className="eyebrow">VÒNG {round.sequence}</span><h2>{round.name}</h2></div><span className="judge-round-count">{round.tasks.length} lượt</span></div>
+        <div className="judge-queue">{round.tasks.map((task) => <article className="judge-card" key={`${task.round.id}-${task.entry.id}`}>
+          <div className="judge-card-top"><span className="judge-entry-order">Thứ tự {task.entry.sequence}</span><StatusPill value={task.taskStatus} /></div>
+          <div className="judge-entry"><span className="judge-entry-code">{task.entry.code}</span><div><strong>{task.entry.displayName}</strong><p>{task.entry.title || task.entry.organization || 'Lượt thi được giao'}</p></div></div>
+          <div className="judge-task-meta"><span>{task.rubric?.criteria.length ?? 0} tiêu chí · Rubric v{task.rubric?.version ?? '—'}</span>{task.scoreSheet?.totalScore !== null && task.scoreSheet && <span>Điểm của tôi: {Number(task.scoreSheet.totalScore).toFixed(task.round.roundingPrecision)}</span>}</div>
+          <div className="judge-card-bottom"><p>{task.taskMessage}</p>{task.canOpen ? <Link className="button primary-button" href={`/judge/${task.entry.id}`}>{task.taskStatus === 'LOCKED' ? 'Xem bản nháp đã khóa' : task.scoreSheet?.status === 'SUBMITTED' ? 'Xem phiếu đã nộp' : task.scoreSheet?.status === 'DRAFT' ? 'Tiếp tục bản nháp' : task.scoreSheet?.status === 'REOPENED' ? 'Sửa phiếu đã mở lại' : 'Mở phiếu chấm'}</Link> : <button className="button secondary-button" type="button" disabled>Xem phiếu khi được mở</button>}</div>
+        </article>)}</div>
+      </section>)}
+    </>}
   </>;
 }
 

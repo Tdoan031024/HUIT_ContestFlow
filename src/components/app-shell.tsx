@@ -10,7 +10,7 @@ import { Icon, type IconName } from '@/components/icons';
 const links: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Tổng quan', icon: 'home' },
   { href: '/competitions', label: 'Cuộc thi', icon: 'trophy' },
-  { href: '/judge', label: 'Khu vực giám khảo', icon: 'clipboard' },
+  { href: '/judge', label: 'Chấm thi', icon: 'clipboard' },
   { href: '/results', label: 'Kết quả', icon: 'chart' },
 ];
 
@@ -67,7 +67,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           const active = isActive(item.href);
           return <Link key={item.href} className={`mobile-nav-link${active ? ' active' : ''}`} href={item.href} aria-current={active ? 'page' : undefined}>
             <Icon name={item.icon} size={20} />
-            <span>{item.label === 'Khu vực giám khảo' ? 'Chấm thi' : item.label}</span>
+            <span>{item.label}</span>
           </Link>;
         })}
       </nav>

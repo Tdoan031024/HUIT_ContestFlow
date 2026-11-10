@@ -52,7 +52,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Không thể thực hiện thao tác.');
-      router.replace('/');
+      const destination = mode === 'login' && data.user?.systemRole === 'JUDGE' ? '/judge' : '/';
+      router.replace(destination);
       router.refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Không thể kết nối máy chủ.');
