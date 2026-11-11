@@ -42,14 +42,13 @@ export function CompetitionsList() {
   const liveTotal = counts.LIVE;
 
   return <>
-    <PageHeader eyebrow="BAN TỔ CHỨC" title="Cuộc thi" description="Thiết lập vòng thi, quản lý thí sinh và theo dõi tiến độ." action={<Link className="button primary-button" href="/competitions/new">＋ Tạo cuộc thi</Link>} />
+    <PageHeader eyebrow="BAN TỔ CHỨC" title="Cuộc thi" description="Quản lý danh sách và tiến độ." action={<Link className="button primary-button" href="/competitions/new">＋ Tạo cuộc thi</Link>} />
     {error && <Notice tone="error">{error}</Notice>}
     {!items ? <Loading /> : <>
       <section className="competition-summary" aria-label="Tóm tắt danh sách cuộc thi">
         <div className="competition-summary-title"><span>KHÔNG GIAN ĐIỀU HÀNH</span><strong>{items.length.toLocaleString('vi-VN')} <small>cuộc thi</small></strong></div>
         <div className="competition-summary-stat"><span>Đang diễn ra</span><strong>{liveTotal.toLocaleString('vi-VN')}</strong></div>
         <div className="competition-summary-stat"><span>Thí sinh</span><strong>{contestantTotal.toLocaleString('vi-VN')}</strong></div>
-        <p>Chọn một cuộc thi để cấu hình vòng, tiêu chí, thí sinh và phân công giám khảo.</p>
       </section>
       <section className="competition-index">
       <div className="competition-index-heading"><div><span className="eyebrow">DANH MỤC</span><h2>Danh sách cuộc thi</h2></div><span>{filtered.length} kết quả</span></div>

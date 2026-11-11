@@ -51,22 +51,19 @@ export function JudgeTasks() {
     }
     return [...grouped.values()].sort((a, b) => a.sequence - b.sequence).map((round) => ({ ...round, tasks: [...round.tasks].sort((a, b) => a.entry.sequence - b.entry.sequence) }));
   }, [selectedCompetition]);
-  const assignedTotal = competitions.reduce((total, competition) => total + competition.tasks.length, 0);
-  const submittedTotal = competitions.reduce((total, competition) => total + competition.submittedCount, 0);
   return <>
-    <PageHeader eyebrow="GIÁM KHẢO" title="Chấm thi" description={selectedCompetition ? 'Chọn đội được phân công để mở phiếu chấm theo thứ tự Admin đã thiết lập.' : 'Chọn cuộc thi được Admin phân công để xem các lượt chấm của bạn.'} />
+    <PageHeader eyebrow="GIÁM KHẢO" title="Chấm thi" description={selectedCompetition ? 'Các lượt chấm theo thứ tự Ban tổ chức đã xếp.' : 'Mở một cuộc thi để xem các lượt chấm của bạn.'} />
     {error && <Notice tone="error">{error}</Notice>}
     {tasks === null ? <Loading /> : !tasks.length ? <EmptyState title="Chưa có cuộc thi được phân công" description="Khi Admin phân công bạn chấm một hoặc nhiều đội, cuộc thi sẽ xuất hiện ở đây." /> : !selectedCompetition ? <>
-      <section className="judge-overview" aria-label="Tóm tắt công việc chấm thi">
-        <div><span className="eyebrow">PHÂN CÔNG CỦA BẠN</span><h2>Chọn cuộc thi để bắt đầu</h2><p>Danh sách lượt thi sẽ theo đúng thứ tự Ban tổ chức đã thiết lập.</p></div>
-        <div className="judge-overview-metrics"><div><strong>{competitions.length}</strong><span>cuộc thi</span></div><div><strong>{assignedTotal}</strong><span>lượt chấm</span></div><div><strong>{submittedTotal}</strong><span>đã nộp</span></div></div>
+      <section className="judge-list-heading" aria-label="Cuộc thi được giao">
+        <div><span className="eyebrow">PHÂN CÔNG CỦA BẠN</span><strong>{competitions.length} cuộc thi</strong></div>
       </section>
       <section className="judge-competition-list" aria-label="Cuộc thi được phân công">{competitions.map((competition, index) => {
       const completion = competition.tasks.length ? Math.round(competition.submittedCount / competition.tasks.length * 100) : 0;
       return <button className="judge-competition-card" key={competition.id} type="button" onClick={() => setSelectedCompetitionId(competition.id)}>
       <span className="judge-event-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-      <span className="judge-competition-copy"><span className="judge-event-topline"><span>{competition.roundCount} vòng thi</span><StatusPill value={competition.status} /></span><strong>{competition.name}</strong><span className="judge-competition-progress"><span>{competition.submittedCount} / {competition.tasks.length} phiếu đã nộp</span><span className="judge-progress-track" role="progressbar" aria-label={`Tiến độ chấm ${competition.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion}><i style={{ width: `${completion}%` }} /></span></span></span>
-      <span className="judge-competition-end"><span>{competition.tasks.length} lượt chấm</span><b aria-hidden="true">→</b></span>
+      <span className="judge-competition-copy"><span className="judge-event-topline"><span>{competition.roundCount} vòng thi · {competition.tasks.length} lượt</span><StatusPill value={competition.status} /></span><strong>{competition.name}</strong><span className="judge-competition-progress"><span>{competition.submittedCount} / {competition.tasks.length} phiếu đã nộp</span><span className="judge-progress-track" role="progressbar" aria-label={`Tiến độ chấm ${competition.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion}><i style={{ width: `${completion}%` }} /></span></span></span>
+      <span className="judge-competition-end"><span>Mở danh sách</span><b aria-hidden="true">→</b></span>
     </button>;
     })}</section>
     </> : <>
@@ -75,7 +72,7 @@ export function JudgeTasks() {
       {rounds.map((round) => <section className="judge-round-section" key={round.id}>
         <div className="judge-round-heading"><div><span className="eyebrow">VÒNG {round.sequence}</span><h2>{round.name}</h2></div><span className="judge-round-count">{round.tasks.length} lượt</span></div>
         <div className="judge-queue">{round.tasks.map((task) => <article className="judge-card" key={`${task.round.id}-${task.entry.id}`}>
-          <div className="judge-card-top"><span className="judge-entry-order">Thứ tự {task.entry.sequence}</span><StatusPill value={task.taskStatus} /></div>
+        <div className="judge-card-top"><span className="judge-entry-order"><span>{String(task.entry.sequence).padStart(2, '0')}</span> Thứ tự chấm</span><StatusPill value={task.taskStatus} /></div>
           <div className="judge-entry"><span className="judge-entry-code">{task.entry.code}</span><div><strong>{task.entry.displayName}</strong><p>{task.entry.title || task.entry.organization || 'Lượt thi được giao'}</p></div></div>
           <div className="judge-task-meta"><span>{task.rubric?.criteria.length ?? 0} tiêu chí · Rubric v{task.rubric?.version ?? '—'}</span>{task.scoreSheet?.totalScore !== null && task.scoreSheet && <span>Điểm của tôi: {Number(task.scoreSheet.totalScore).toFixed(task.round.roundingPrecision)}</span>}</div>
           <div className="judge-card-bottom"><p>{task.taskMessage}</p>{task.canOpen ? <Link className="button primary-button" href={`/judge/${task.entry.id}`}>{task.taskStatus === 'LOCKED' ? 'Xem bản nháp đã khóa' : task.scoreSheet?.status === 'SUBMITTED' ? 'Xem phiếu đã nộp' : task.scoreSheet?.status === 'DRAFT' ? 'Tiếp tục bản nháp' : task.scoreSheet?.status === 'REOPENED' ? 'Sửa phiếu đã mở lại' : 'Mở phiếu chấm'}</Link> : <button className="button secondary-button" type="button" disabled>Xem phiếu khi được mở</button>}</div>
@@ -153,7 +150,7 @@ export function JudgeScoreForm({ entryId }: { entryId: string }) {
 
   if (!payload) return <><PageHeader eyebrow="DÀNH CHO GIÁM KHẢO" title="Phiếu chấm" description="Nhập điểm theo tiêu chí và lưu bản nháp." />{error && <Notice tone="error">{error}</Notice>}{!error && <Loading />}</>;
   return <>
-    <PageHeader eyebrow={`${payload.round.name} · ${payload.entry.code}`} title={payload.entry.displayName} description={payload.entry.title || payload.entry.organization || 'Phiếu chấm độc lập của giám khảo.'} action={<Link className="button secondary-button" href="/judge">← Các lượt thi</Link>} />
+    <PageHeader eyebrow={`${payload.round.name} · ${payload.entry.code}`} title={payload.entry.displayName} description={payload.entry.title || payload.entry.organization || 'Phiếu chấm'} action={<Link className="button secondary-button" href="/judge">← Danh sách</Link>} />
     {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
     {payload.scoreSheet?.locked && <Notice tone="warning">Snapshot kết quả đã khóa. Bản nháp được giữ nguyên ở chế độ chỉ đọc; liên hệ Admin nếu cần mở lại và tạo phiên bản kết quả mới.</Notice>}
     {payload.round.status === 'COMPLETED' && !readOnly && <Notice tone="warning">Vòng đã kết thúc. Bạn có thể hoàn tất bản nháp đã tạo; để bắt đầu phiếu mới, hãy liên hệ Admin mở lại vòng.</Notice>}
@@ -171,12 +168,12 @@ export function JudgeScoreForm({ entryId }: { entryId: string }) {
       <section className="score-sheet-panel">
         <div className="score-sheet-heading"><div><span className="eyebrow">PHIẾU CHẤM</span><h2>{payload.rubric.name}</h2><p>Điểm được lưu riêng cho giám khảo. Bản nháp tự lưu khi bạn nhập.</p></div><span className="score-criteria-count">{payload.rubric.criteria.length} tiêu chí</span></div>
         <form className="score-form" onSubmit={submit}>
-          {payload.rubric.criteria.map((criterion, index) => <div className="score-criterion" key={criterion.id}>
+          {payload.rubric.criteria.map((criterion, index) => <div className={`score-criterion${scores[criterion.id]?.score !== undefined && scores[criterion.id]?.score !== '' ? ' score-criterion--complete' : ''}`} key={criterion.id}>
             <div className="score-criterion-heading"><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{criterion.name}{criterion.commentRequired && <span style={{ color: '#bd5555' }}> *</span>}</strong>{criterion.description && <small>{criterion.description}</small>}<small>Thang {criterion.minimum}–{criterion.maximum} · bước {criterion.step} · trọng số {criterion.weight}</small></div></div>
             <label className="field-label">Điểm<input className="field-input score-number" aria-label={`Điểm: ${criterion.name}`} type="number" min={Number(criterion.minimum)} max={Number(criterion.maximum)} step={Number(criterion.step)} value={scores[criterion.id]?.score ?? ''} onChange={(event) => update(criterion.id, 'score', event.target.value)} disabled={readOnly} required /></label>
             <label className="field-label comment-field">Nhận xét{criterion.commentRequired && <span className="field-help">Bắt buộc</span>}<textarea className="field-textarea" style={{ minHeight: 62 }} value={scores[criterion.id]?.comment ?? ''} onChange={(event) => update(criterion.id, 'comment', event.target.value)} maxLength={5000} disabled={readOnly} required={criterion.commentRequired} /></label>
           </div>)}
-          <div className={`score-footer${readOnly ? '' : ' score-footer--mobile-dock'}`}><div className="score-total">Điểm hiện tại <strong>{hasEnteredScore ? currentTotal.toFixed(payload.round.roundingPrecision) : '—'}</strong>{saving ? <span className="field-help"> · Đang lưu…</span> : saved ? <span className="field-help"> · Đã lưu</span> : changed ? <span className="field-help"> · Chưa lưu</span> : null}</div><div className="table-actions">{!readOnly && <><button className="button secondary-button" type="button" onClick={() => void persist(false)} disabled={saving}>Lưu bản nháp</button><button className="button primary-button" type="submit" disabled={saving}>{saving ? 'Đang gửi…' : 'Nộp phiếu chấm'}</button></>}{readOnly && <StatusPill value="SUBMITTED" />}</div></div>
+          <div className={`score-footer${readOnly ? '' : ' score-footer--mobile-dock'}`}><div className="score-total"><span>Điểm hiện tại</span><strong>{hasEnteredScore ? currentTotal.toFixed(payload.round.roundingPrecision) : '—'}</strong><span className={`score-save-state${saving ? ' is-saving' : saved ? ' is-saved' : changed ? ' is-changed' : ''}`} role="status">{saving ? 'Đang lưu' : saved ? 'Đã lưu' : changed ? 'Chưa lưu' : readOnly ? 'Đã nộp' : 'Tự lưu'}</span></div><div className="table-actions">{!readOnly && <><button className="button secondary-button" type="button" onClick={() => void persist(false)} disabled={saving}>Lưu nháp</button><button className="button primary-button" type="submit" disabled={saving}>{saving ? 'Đang gửi…' : 'Nộp phiếu'}</button></>}{readOnly && <StatusPill value="SUBMITTED" />}</div></div>
         </form>
       </section>
     </div>

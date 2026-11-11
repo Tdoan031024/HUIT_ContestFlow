@@ -36,6 +36,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       <a className="skip-link" href="#main-content">Bỏ qua điều hướng</a>
       <aside className="sidebar">
         <Link className="brand" href="/" aria-label="HUIT ContestFlow trang chủ">
+          <span className="brand-mini-mark" aria-hidden="true">CF</span>
           <Image className="brand-school-logo" src="/brand/huit-logo.svg" width={1600} height={350} alt="Trường Đại học Công Thương TP. Hồ Chí Minh" priority />
           <span className="brand-name">ContestFlow</span>
         </Link>
@@ -43,7 +44,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         <nav className="sidebar-nav" aria-label="Điều hướng chính">
           {visibleLinks.map((item) => {
             const active = isActive(item.href);
-            return <Link key={item.href} className={`nav-link${active ? ' active' : ''}`} href={item.href} aria-current={active ? 'page' : undefined}><span className="nav-icon"><Icon name={item.icon} /></span><span>{item.label}</span></Link>;
+            return <Link key={item.href} className={`nav-link${active ? ' active' : ''}`} href={item.href} title={item.label} aria-current={active ? 'page' : undefined}><span className="nav-icon"><Icon name={item.icon} /></span><span>{item.label}</span></Link>;
           })}
         </nav>
         <div className="sidebar-spacer" />
@@ -56,6 +57,10 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       </aside>
       <div className="main-area">
         <header className="topbar">
+          <Link className="mobile-brand" href="/" aria-label="HUIT ContestFlow, trang chủ">
+            <span className="mobile-brand-mark" aria-hidden="true">CF</span>
+            <span>ContestFlow</span>
+          </Link>
           <div className="breadcrumbs"><span>HUIT ContestFlow</span><b>/</b><strong>{currentLabel}</strong></div>
           <div className="topbar-right"><span className="live-indicator"><i /> Hệ thống quản lý</span><span className="topbar-role">{user.systemRole === 'ADMIN' ? 'BAN TỔ CHỨC' : 'GIÁM KHẢO'}</span><span className="top-avatar" aria-label={user.fullName}>{initials(user.fullName)}</span><button className="mobile-logout" type="button" onClick={logout} disabled={busy}><Icon name="logout" /> <span>Đăng xuất</span></button></div>
         </header>

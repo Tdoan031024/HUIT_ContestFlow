@@ -20,7 +20,7 @@ export default function DashboardPage() {
   useEffect(() => { fetch('/api/dashboard', { cache: 'no-store' }).then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error); setData(body); }).catch((reason) => setError(reason.message || 'Không tải được dữ liệu.')); }, []);
 
   return <>
-    <PageHeader eyebrow="TỔNG QUAN" title="Tổng quan" description="Theo dõi cuộc thi, tiến độ chấm và hoạt động gần đây." action={data?.systemRole === 'ADMIN' ? <Link className="button primary-button" href="/competitions/new">＋ Tạo cuộc thi</Link> : data?.systemRole === 'JUDGE' ? <Link className="button primary-button" href="/judge">Mở lượt chấm →</Link> : undefined} />
+    <PageHeader eyebrow="TỔNG QUAN" title="Tổng quan" description="Cuộc thi, tiến độ chấm và hoạt động." action={data?.systemRole === 'ADMIN' ? <Link className="button primary-button" href="/competitions/new">＋ Tạo cuộc thi</Link> : data?.systemRole === 'JUDGE' ? <Link className="button primary-button" href="/judge">Mở lượt chấm →</Link> : undefined} />
     {error && <Notice tone="error">{error}</Notice>}
     {!data ? <Loading /> : <>
       <section className="dashboard-overview" aria-label="Tổng quan số liệu">
@@ -34,9 +34,9 @@ export default function DashboardPage() {
           <div className="dashboard-progress-foot"><span>{data.stats.submittedScores} / {data.stats.expectedScores} phiếu đã nộp</span><Link href={data.systemRole === 'ADMIN' ? '/results' : '/judge'}>{data.systemRole === 'ADMIN' ? 'Theo dõi kết quả' : 'Tiếp tục chấm'} <span aria-hidden="true">→</span></Link></div>
         </div>
         <div className="dashboard-metrics">
-          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Cuộc thi' : 'Cuộc thi được giao'}</span><strong>{data.stats.competitionCount}</strong><small>{data.systemRole === 'ADMIN' ? 'Không tính lưu trữ' : 'Được Ban tổ chức giao'}</small></div>
-          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Thí sinh' : 'Lượt thi'}</span><strong>{data.stats.contestantCount}</strong><small>{data.systemRole === 'ADMIN' ? 'Trong các cuộc thi đang quản lý' : 'Trong danh sách chấm của bạn'}</small></div>
-          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Giám khảo' : 'Phiếu đã nộp'}</span><strong>{data.systemRole === 'ADMIN' ? data.stats.judgeCount : data.stats.submittedScores}</strong><small>{data.systemRole === 'ADMIN' ? 'Có ít nhất một phân công' : `Trên ${data.stats.expectedScores} lượt được giao`}</small></div>
+          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Cuộc thi' : 'Được phân công'}</span><strong>{data.stats.competitionCount}</strong></div>
+          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Thí sinh' : 'Lượt chấm'}</span><strong>{data.stats.contestantCount}</strong></div>
+          <div className="dashboard-metric"><span>{data.systemRole === 'ADMIN' ? 'Giám khảo' : 'Đã nộp'}</span><strong>{data.systemRole === 'ADMIN' ? data.stats.judgeCount : data.stats.submittedScores}</strong></div>
         </div>
       </section>
       {data.systemRole === 'ADMIN' && <section className="dashboard-actions" aria-labelledby="dashboard-actions-title">

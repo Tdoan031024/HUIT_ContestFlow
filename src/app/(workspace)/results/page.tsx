@@ -14,14 +14,14 @@ export default function ResultsPage() {
   const publishedCount = rounds?.filter((round) => round.snapshots.some((snapshot) => snapshot.published)).length ?? 0;
   const entryCount = rounds?.reduce((total, round) => total + round._count.entries, 0) ?? 0;
   return <>
-    <PageHeader eyebrow={systemRole === 'JUDGE' ? 'DÀNH CHO GIÁM KHẢO' : 'TỔNG HỢP KẾT QUẢ'} title="Kết quả cuộc thi" description={systemRole === 'JUDGE' ? 'Chỉ các snapshot do ban tổ chức công bố mới xuất hiện tại đây.' : 'Theo dõi tiến độ, khóa snapshot và công bố kết quả.'} />
+    <PageHeader eyebrow={systemRole === 'JUDGE' ? 'GIÁM KHẢO' : 'BAN TỔ CHỨC'} title="Kết quả" description={systemRole === 'JUDGE' ? 'Kết quả đã được công bố.' : 'Theo dõi và công bố kết quả theo vòng.'} />
     {error && <Notice tone="error">{error}</Notice>}
     {rounds === null ? <Loading /> : rounds.length ? <>
       <section className="results-summary" aria-label="Tóm tắt kết quả">
         <div><span>VÒNG THI</span><strong>{rounds.length}</strong></div>
         <div><span>ĐÃ CÔNG BỐ</span><strong>{publishedCount}</strong></div>
         <div><span>LƯỢT THI</span><strong>{entryCount}</strong></div>
-        <p>{systemRole === 'JUDGE' ? 'Chỉ xem các kết quả được Ban tổ chức công bố.' : 'Mở từng vòng để rà soát phiếu, khóa snapshot và công bố.'}</p>
+        <p>{systemRole === 'JUDGE' ? 'Chỉ hiển thị kết quả đã công bố.' : 'Mở một vòng để xử lý kết quả.'}</p>
       </section>
       <section className="results-workbench" aria-label="Các vòng thi có kết quả">
         <div className="results-workbench-heading"><div><span className="eyebrow">KẾT QUẢ</span><h2>Vòng thi</h2></div><span>{rounds.length} vòng</span></div>
