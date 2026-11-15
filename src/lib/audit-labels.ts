@@ -1,15 +1,16 @@
 const actionLabels: Record<string, string> = {
   COMPETITION_CREATED: 'Tạo cuộc thi', COMPETITION_UPDATED: 'Cập nhật cuộc thi', COMPETITION_ARCHIVED: 'Lưu trữ cuộc thi', COMPETITION_CLOSED_EARLY: 'Đóng sớm cuộc thi',
-  ROUND_CREATED: 'Tạo vòng thi', ROUND_UPDATED: 'Cập nhật vòng thi',
+  ROUND_CREATED: 'Tạo thiết lập chấm', ROUND_UPDATED: 'Cập nhật thiết lập chấm',
   CONTESTANT_CREATED: 'Thêm thí sinh', CONTESTANT_UPDATED: 'Cập nhật hồ sơ thí sinh', CONTESTANT_WITHDRAWN: 'Rút thí sinh', CONTESTANTS_IMPORTED: 'Nhập danh sách thí sinh', ENTRY_CREATED: 'Đăng ký lượt thi', ENTRY_ORDER_UPDATED: 'Đổi thứ tự thi',
+  JUDGE_CREATED: 'Tạo tài khoản giám khảo', JUDGE_UPDATED: 'Cập nhật tài khoản giám khảo', JUDGE_DELETED: 'Xóa tài khoản giám khảo', JUDGE_DEACTIVATED: 'Ngừng hoạt động tài khoản giám khảo', JUDGE_ACTIVATED: 'Kích hoạt tài khoản giám khảo',
   JUDGE_ASSIGNED: 'Phân công giám khảo', JUDGE_UNASSIGNED: 'Thu hồi phân công giám khảo', JUDGE_PASSWORD_RESET: 'Đặt lại mật khẩu giám khảo',
-  RUBRIC_VERSION_ACTIVATED: 'Tạo và kích hoạt phiên bản rubric',
+  RUBRIC_DRAFT_SAVED: 'Lưu bản nháp bộ tiêu chí', RUBRIC_VERSION_ACTIVATED: 'Công bố phiên bản bộ tiêu chí',
   SESSION_START: 'Bắt đầu điều phối', SESSION_PAUSE: 'Tạm dừng điều phối', SESSION_RESUME: 'Tiếp tục điều phối', SESSION_SELECT: 'Chọn lượt thi', SESSION_NEXT: 'Chuyển sang lượt thi tiếp theo', SESSION_PREVIOUS: 'Quay lại lượt thi trước', SESSION_FINISH: 'Kết thúc điều phối',
   SCORE_SUBMITTED: 'Nộp phiếu chấm', SCORE_DRAFT_SAVED: 'Lưu bản nháp phiếu chấm', SCORE_REOPENED: 'Mở lại phiếu chấm',
   RESULTS_LOCKED: 'Khóa kết quả', RESULTS_PUBLISHED: 'Công bố kết quả',
 };
 const entityLabels: Record<string, string> = {
-  Competition: 'Cuộc thi', CompetitionRound: 'Vòng thi', Contestant: 'Thí sinh', CompetitionEntry: 'Lượt thi',
+  Competition: 'Cuộc thi', CompetitionRound: 'Thiết lập chấm', Contestant: 'Thí sinh', CompetitionEntry: 'Lượt thi',
   JudgeAssignment: 'Phân công giám khảo', RubricVersion: 'Phiên bản rubric', ScoreSheet: 'Phiếu chấm', ResultSnapshot: 'Bản kết quả',
 };
 const detailLabels: Record<string, string> = {

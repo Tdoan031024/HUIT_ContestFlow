@@ -34,7 +34,7 @@ export async function inspectRoundReadiness(
       },
       assignments: {
         where: { user: { isActive: true, systemRole: 'JUDGE' } },
-        select: { entryId: true, userId: true },
+        select: { userId: true },
       },
     },
   });
@@ -44,7 +44,6 @@ export async function inspectRoundReadiness(
   const missingAssignments = round.entries.flatMap((entry) => {
     const assignedJudgeCount = new Set(
       round.assignments
-        .filter((assignment) => assignment.entryId === null || assignment.entryId === entry.id)
         .map((assignment) => assignment.userId),
     ).size;
 

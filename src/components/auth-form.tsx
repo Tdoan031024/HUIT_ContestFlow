@@ -77,7 +77,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             <div className="auth-brand-copy-block">
               <p className="auth-kicker">Hệ thống quản lý cuộc thi</p>
               <h1>Quản lý cuộc thi<br /><em>và chấm điểm.</em></h1>
-              <p>Admin điều phối vòng thi. Giám khảo chấm, lưu và nộp phiếu theo phân công.</p>
+              <p>Admin quản lý cuộc thi. Giám khảo chấm và nộp phiếu theo phân công.</p>
             </div>
             <AuthProductPreview />
           </div>
@@ -98,7 +98,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
               {isSetup && <label className="auth-field"><span>Mã khởi tạo Admin</span><div className="auth-input-wrap"><AuthIcon name="key" /><input name="setupKey" type="password" autoComplete="off" required placeholder="Nhập mã từ cấu hình máy chủ" /></div></label>}
               {isSetup && <label className="auth-field"><span>Họ và tên</span><div className="auth-input-wrap"><AuthIcon name="user" /><input name="fullName" required minLength={2} maxLength={160} autoComplete="name" placeholder="Nhập họ và tên" /></div></label>}
               <label className="auth-field"><span>{isSetup ? 'Email' : 'Tên đăng nhập hoặc email'}</span><div className="auth-input-wrap"><AuthIcon name={isSetup ? 'mail' : 'user'} /><input name={isSetup ? 'email' : 'identifier'} type={isSetup ? 'email' : 'text'} required autoComplete={isSetup ? 'email' : 'username'} autoCapitalize="none" spellCheck={false} placeholder={isSetup ? 'ten@huit.edu.vn' : 'Tên đăng nhập / email'} /></div></label>
-              <label className="auth-field"><span>Mật khẩu</span><div className="auth-input-wrap"><AuthIcon name="lock" /><input name="password" type={showPassword ? 'text' : 'password'} required minLength={isSetup ? 12 : 1} maxLength={128} autoComplete={isSetup ? 'new-password' : 'current-password'} placeholder={isSetup ? 'Tối thiểu 12 ký tự' : 'Nhập mật khẩu'} /><button className="password-toggle" type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}>{showPassword ? 'Ẩn' : 'Hiện'}</button></div></label>
+              <div className="auth-field"><label htmlFor="auth-password">Mật khẩu</label><div className="auth-input-wrap"><AuthIcon name="lock" /><input id="auth-password" name="password" type={showPassword ? 'text' : 'password'} required minLength={isSetup ? 12 : 1} maxLength={128} autoComplete={isSetup ? 'new-password' : 'current-password'} placeholder={isSetup ? 'Tối thiểu 12 ký tự' : 'Nhập mật khẩu'} /><button className="password-toggle" type="button" aria-pressed={showPassword} aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? 'Ẩn' : 'Hiện'}</button></div></div>
               {!isSetup && <label className="auth-remember"><input name="rememberMe" type="checkbox" /><span>Giữ đăng nhập trong 30 ngày</span></label>}
               {!isSetup && <div className="auth-form-hint"><span className="auth-hint-dot" /> Tài khoản Giám khảo do Ban tổ chức cấp.</div>}
               {isSetup && <div className="auth-form-hint"><span className="auth-hint-dot" /> Mã khởi tạo chỉ sử dụng một lần.</div>}

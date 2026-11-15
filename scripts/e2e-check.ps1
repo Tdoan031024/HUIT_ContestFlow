@@ -135,13 +135,13 @@ try {
   $competitionId = $competition.id
   $detail = (Invoke-Api -Path "/api/competitions/$competitionId" -Session $adminSession).competition
   $round = $detail.rounds[0]
-  Assert-True ($null -ne $round.activeRubricVersion -and $round.activeRubricVersion.criteria.Count -eq 3) 'Default round and three-criterion rubric are created.'
+  Assert-True ($null -eq $round.activeRubricVersion) 'New competition starts without a pre-created rubric.'
   Assert-True ($round.anonymous) 'New rounds default to anonymous judging.'
   Assert-True ($detail.organizingUnit -eq 'HUIT' -and $detail.location -eq 'Test Hall' -and $detail.modality -eq 'HYBRID') 'Competition management details are persisted.'
   $duplicate = (Invoke-Api -Path "/api/competitions/$competitionId/duplicate" -Method POST -Session $adminSession -Body @{ name = "E2E Copy $suffix" }).competition
   $duplicateId = $duplicate.id
   $duplicateDetail = (Invoke-Api -Path "/api/competitions/$duplicateId" -Session $adminSession).competition
-  Assert-True ($duplicateDetail.status -eq 'DRAFT' -and $duplicateDetail.rounds.Count -eq 1 -and $duplicateDetail.rounds[0].activeRubricVersion.criteria.Count -eq 3 -and $duplicateDetail._count.contestants -eq 0) 'Competition copy contains configuration and rubric only.'
+  Assert-True ($duplicateDetail.status -eq 'READY' -and $duplicateDetail.rounds.Count -eq 1 -and $null -eq $duplicateDetail.rounds[0].activeRubricVersion -and $duplicateDetail._count.contestants -eq 0) 'Competition copy keeps setup configuration without adding a rubric that does not exist on the source.'
   Invoke-Api -Path "/api/competitions/$duplicateId" -Method PATCH -Session $adminSession -Body @{ startsAt = '2026-12-01T10:00:00.000Z'; endsAt = '2026-12-01T11:00:00.000Z'; location = 'Hall A' } | Out-Null
   $duplicateDetail = (Invoke-Api -Path "/api/competitions/$duplicateId" -Session $adminSession).competition
   Assert-True ($duplicateDetail.startsAt -and $duplicateDetail.endsAt -and $duplicateDetail.location -eq 'Hall A') 'Competition dates and location can be edited.'

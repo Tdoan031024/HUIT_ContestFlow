@@ -1,6 +1,6 @@
 import type { ReactNode, SVGProps } from 'react';
 
-export type IconName = 'home' | 'trophy' | 'clipboard' | 'chart' | 'users' | 'calendar' | 'check' | 'alert' | 'arrow' | 'logout' | 'plus' | 'search' | 'clock' | 'menu' | 'close' | 'help';
+export type IconName = 'home' | 'trophy' | 'clipboard' | 'chart' | 'users' | 'calendar' | 'check' | 'alert' | 'arrow' | 'arrow-left' | 'arrow-up' | 'arrow-down' | 'chevron-down' | 'logout' | 'plus' | 'search' | 'clock' | 'menu' | 'close' | 'help' | 'grip' | 'copy' | 'trash';
 
 const paths: Record<IconName, ReactNode> = {
   home: <><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9M9 20v-6h6v6" /></>,
@@ -12,6 +12,10 @@ const paths: Record<IconName, ReactNode> = {
   check: <><path d="m5 12 4 4L19 6" /></>,
   alert: <><path d="M12 3 2.8 19h18.4L12 3Z" /><path d="M12 9v4m0 3h.01" /></>,
   arrow: <><path d="M5 12h14m-6-6 6 6-6 6" /></>,
+  'arrow-left': <><path d="M19 12H5m7 7-7-7 7-7" /></>,
+  'arrow-up': <><path d="M12 19V5m-7 7 7-7 7 7" /></>,
+  'arrow-down': <><path d="M12 5v14m7-7-7 7-7-7" /></>,
+  'chevron-down': <><path d="m6 9 6 6 6-6" /></>,
   logout: <><path d="M10 17l5-5-5-5m5 5H3" /><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" /></>,
   plus: <><path d="M12 5v14M5 12h14" /></>,
   search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></>,
@@ -19,6 +23,9 @@ const paths: Record<IconName, ReactNode> = {
   menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
   close: <><path d="m6 6 12 12M18 6 6 18" /></>,
   help: <><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.3 2.3 0 1 1 3.8 1.7c-1.1 1-1.6 1.4-1.6 2.8m0 3h.01" /></>,
+  grip: <><circle cx="8" cy="5" r="1" /><circle cx="16" cy="5" r="1" /><circle cx="8" cy="12" r="1" /><circle cx="16" cy="12" r="1" /><circle cx="8" cy="19" r="1" /><circle cx="16" cy="19" r="1" /></>,
+  copy: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></>,
+  trash: <><path d="M4 7h16m-10 4v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" /></>,
 };
 
 export function Icon({ name, size = 18, ...props }: { name: IconName; size?: number } & SVGProps<SVGSVGElement>) {

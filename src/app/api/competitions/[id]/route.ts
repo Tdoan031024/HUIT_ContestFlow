@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, canViewCompetition, errorMessage, unauthorized } from '@/lib/api';
+import { ensureCompetitionWorkspace } from '@/lib/competition-workspace-data';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
@@ -22,6 +23,7 @@ export async function GET(_request: Request, context: Context) {
   if (!user) return unauthorized();
   const { id } = await context.params;
   if (!(await canViewCompetition(user, id))) return Response.json({ error: 'Không tìm thấy cuộc thi hoặc bạn không có quyền xem.' }, { status: 404 });
+  await ensureCompetitionWorkspace(id);
   const competition = await prisma.competition.findUnique({
     where: { id },
     include: {
@@ -30,7 +32,8 @@ export async function GET(_request: Request, context: Context) {
     },
   });
   if (!competition) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
-  return Response.json({ competition, permissions: { manage: await canManageCompetition(user, id) } });
+  const { rounds, ...competitionDetails } = competition;
+  return Response.json({ competition: competitionDetails, workspace: rounds[0] ?? null, permissions: { manage: await canManageCompetition(user, id) } });
 }
 
 export async function PATCH(request: Request, context: Context) {

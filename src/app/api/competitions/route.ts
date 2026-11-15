@@ -14,7 +14,6 @@ const createSchema = z.object({
   modality: z.enum(['ONSITE', 'ONLINE', 'HYBRID']).optional().default('ONSITE'),
   startsAt: z.string().datetime().optional().or(z.literal('')),
   endsAt: z.string().datetime().optional().or(z.literal('')),
-  firstRoundName: z.string().trim().min(2).max(160).optional().default('Vòng sơ khảo'),
 });
 
 export async function GET() {
@@ -59,26 +58,8 @@ export async function POST(request: Request) {
         },
       });
       const round = await tx.competitionRound.create({
-        data: { competitionId: created.id, name: parsed.data.firstRoundName, sequence: 1, anonymous: true },
+        data: { competitionId: created.id, name: 'Chấm thi', sequence: 1, anonymous: true },
       });
-      const rubric = await tx.rubric.create({
-        data: {
-          competitionId: created.id,
-          roundId: round.id,
-          name: 'Rubric mặc định',
-          versions: { create: {
-            version: 1,
-            name: 'Phiên bản 1',
-            criteria: { create: [
-              { name: 'Tính sáng tạo', description: 'Mức độ mới và khác biệt của ý tưởng.', minimum: 0, maximum: 10, step: 0.5, weight: 1, sequence: 1 },
-              { name: 'Tính khả thi', description: 'Khả năng triển khai trong thực tế.', minimum: 0, maximum: 10, step: 0.5, weight: 1, sequence: 2 },
-              { name: 'Tác động', description: 'Giá trị mang lại cho đối tượng thụ hưởng.', minimum: 0, maximum: 10, step: 0.5, weight: 1, sequence: 3 },
-            ] },
-          } },
-        },
-      });
-      const version = await tx.rubricVersion.findFirstOrThrow({ where: { rubricId: rubric.id, version: 1 }, select: { id: true } });
-      await tx.competitionRound.update({ where: { id: round.id }, data: { activeRubricVersionId: version.id } });
       await tx.competitionSession.create({ data: { roundId: round.id } });
       await tx.auditEvent.create({ data: { competitionId: created.id, actorId: user.id, action: 'COMPETITION_CREATED', entityType: 'Competition', entityId: created.id } });
       return created;

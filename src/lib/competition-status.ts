@@ -19,7 +19,7 @@ export async function refreshCompetitionStatus(db: StatusDatabase, competitionId
         ? 'READY'
         : competition.status === 'REGISTRATION'
           ? 'REGISTRATION'
-          : 'DRAFT';
+          : 'READY';
 
   if (nextStatus !== competition.status) {
     await db.competition.update({ where: { id: competitionId }, data: { status: nextStatus } });

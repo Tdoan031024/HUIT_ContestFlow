@@ -1,29 +1,27 @@
 import { z } from 'zod';
-import { getCurrentUser, hashPassword } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, canViewCompetition, unauthorized } from '@/lib/api';
 import { prisma } from '@/lib/prisma';
+import { ensureCompetitionWorkspace } from '@/lib/competition-workspace-data';
 
 export const runtime = 'nodejs';
-const schema = z.object({
-  roundId: z.string().uuid(),
-  entryId: z.string().uuid().optional().nullable(),
-  fullName: z.string().trim().min(2).max(160).optional(),
-  identifier: z.string().trim().min(3).max(255).optional(),
-  email: z.string().trim().email().max(255).optional(),
-  password: z.string().min(12).max(128).optional(),
-  judgeId: z.string().uuid().optional(),
-});
+const schema = z.union([
+  z.object({ judgeId: z.string().uuid() }).strict(),
+  z.object({ judgeIds: z.array(z.string().uuid()).min(1).max(100) }).strict(),
+]);
 type Context = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, context: Context) {
+export async function GET(request: Request, context: Context) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
   const { id } = await context.params;
   if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Chỉ Admin được quản lý danh sách giám khảo.' }, { status: 403 });
+  const workspace = await ensureCompetitionWorkspace(id);
+  if (!workspace) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
   const assignments = await prisma.judgeAssignment.findMany({
     where: { competitionId: id },
-    orderBy: [{ round: { sequence: 'asc' } }, { user: { fullName: 'asc' } }],
-    include: { user: { select: { id: true, fullName: true, username: true, email: true, isActive: true } }, round: { select: { id: true, name: true } }, entry: { select: { id: true, entryCode: true } } },
+    orderBy: { user: { fullName: 'asc' } },
+    include: { user: { select: { id: true, fullName: true, username: true, email: true, isActive: true } } },
   });
   return Response.json({ assignments });
 }
@@ -34,53 +32,42 @@ export async function POST(request: Request, context: Context) {
   const { id } = await context.params;
   if (!(await canManageCompetition(currentUser, id))) return Response.json({ error: 'Bạn không có quyền phân công giám khảo.' }, { status: 403 });
   const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success || (!parsed.data.judgeId && !(parsed.data.identifier || parsed.data.email))) {
-    return Response.json({ error: 'Nhập username hoặc email giám khảo.' }, { status: 400 });
-  }
-  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true, status: true, session: { select: { state: true } }, _count: { select: { scoreSheets: true, snapshots: true } } } });
-  if (!round) return Response.json({ error: 'Vòng thi không thuộc cuộc thi này.' }, { status: 400 });
+  if (!parsed.success) return Response.json({ error: 'Chọn giám khảo trong danh sách tài khoản đã tạo.' }, { status: 400 });
+  const judgeIds = 'judgeIds' in parsed.data ? parsed.data.judgeIds : [parsed.data.judgeId];
+  if (new Set(judgeIds).size !== judgeIds.length) return Response.json({ error: 'Danh sách có giám khảo bị chọn trùng.' }, { status: 400 });
+  const round = await ensureCompetitionWorkspace(id);
+  if (!round) return Response.json({ error: 'Không tìm thấy khu vực chấm của cuộc thi.' }, { status: 400 });
   if (round.status === 'LIVE' || round.status === 'COMPLETED' || (round.session && round.session.state !== 'IDLE') || round._count.scoreSheets > 0 || round._count.snapshots > 0) {
     return Response.json({ error: 'Phân công đã khóa sau khi bắt đầu điều phối, chấm điểm hoặc khóa kết quả.' }, { status: 409 });
   }
-  if (parsed.data.entryId) {
-    const entry = await prisma.competitionEntry.findFirst({ where: { id: parsed.data.entryId, roundId: round.id, competitionId: id }, select: { id: true } });
-    if (!entry) return Response.json({ error: 'Lượt thi không thuộc vòng này.' }, { status: 400 });
-  }
-
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const identifier = (parsed.data.identifier ?? parsed.data.email)?.trim().toLowerCase();
-      const isEmail = identifier?.includes('@') ?? false;
-      let judge = parsed.data.judgeId
-        ? await tx.user.findUnique({ where: { id: parsed.data.judgeId } })
-        : isEmail
-          ? await tx.user.findUnique({ where: { email: identifier! } })
-          : await tx.user.findUnique({ where: { username: identifier! } });
-      if (parsed.data.judgeId && !judge) throw new Error('Không tìm thấy tài khoản giám khảo.');
-      if (!judge) {
-        if (!parsed.data.fullName) throw new Error('Nhập họ tên cho tài khoản giám khảo mới.');
-        if (!parsed.data.password) throw new Error('Cần đặt mật khẩu ban đầu tối thiểu 12 ký tự cho tài khoản mới.');
-        judge = await tx.user.create({ data: {
-          fullName: parsed.data.fullName!, email: isEmail ? identifier! : null, username: isEmail ? null : identifier!,
-          passwordHash: await hashPassword(parsed.data.password), systemRole: 'JUDGE',
+      const foundJudges = await tx.user.findMany({ where: { id: { in: judgeIds } } });
+      if (foundJudges.length !== judgeIds.length) throw new Error('Không tìm thấy một hoặc nhiều tài khoản giám khảo đã chọn.');
+      const judges = judgeIds.map((judgeId) => foundJudges.find((judge) => judge.id === judgeId)!);
+      const nonJudges = judges.filter((judge) => judge.systemRole !== 'JUDGE');
+      if (nonJudges.length) throw new Error('Chỉ có thể thêm tài khoản giám khảo vào cuộc thi.');
+      if (judges.some((judge) => !judge.isActive)) throw new Error('Một hoặc nhiều tài khoản giám khảo đang bị khóa.');
+      const existingAssignments = await tx.judgeAssignment.findMany({ where: { competitionId: id, userId: { in: judgeIds } }, select: { userId: true } });
+      if (existingAssignments.length) throw new Error('Một hoặc nhiều giám khảo đã có trong cuộc thi. Hãy tải lại danh sách rồi thử lại.');
+
+      const assignments = [];
+      for (const judge of judges) {
+        await tx.competitionMember.upsert({
+          where: { competitionId_userId: { competitionId: id, userId: judge.id } },
+          create: { competitionId: id, userId: judge.id },
+          update: {},
+        });
+        const assignment = await tx.judgeAssignment.create({ data: {
+          competitionId: id, roundId: round.id, userId: judge.id, entryId: null,
         } });
+        await tx.auditEvent.create({ data: { competitionId: id, actorId: currentUser.id, action: 'JUDGE_ASSIGNED', entityType: 'JudgeAssignment', entityId: assignment.id, details: { judgeId: judge.id, roundId: round.id, scope: 'COMPETITION' } } });
+        assignments.push(assignment);
       }
-      if (judge.systemRole !== 'JUDGE') throw new Error('Không thể phân công tài khoản Admin làm giám khảo.');
-      await tx.competitionMember.upsert({
-        where: { competitionId_userId: { competitionId: id, userId: judge.id } },
-        create: { competitionId: id, userId: judge.id },
-        update: {},
-      });
-      const entryId = parsed.data.entryId ?? null;
-      const existingAssignments = await tx.judgeAssignment.findMany({ where: { competitionId: id, roundId: round.id, userId: judge.id }, select: { entryId: true } });
-      if (existingAssignments.some((item) => item.entryId === null || entryId === null || item.entryId === entryId)) throw new Error('Giám khảo đã được phân công vào phạm vi này.');
-      const assignment = await tx.judgeAssignment.create({ data: {
-        competitionId: id, roundId: round.id, userId: judge.id, entryId,
-      } });
-      await tx.auditEvent.create({ data: { competitionId: id, actorId: currentUser.id, action: 'JUDGE_ASSIGNED', entityType: 'JudgeAssignment', entityId: assignment.id, details: { judgeId: judge.id, roundId: round.id, entryId } } });
-      return { assignment, judge };
+      return { assignments, judges };
     });
-    return Response.json({ assignment: result.assignment, judge: { id: result.judge.id, fullName: result.judge.fullName, username: result.judge.username, email: result.judge.email } }, { status: 201 });
+    const judges = result.judges.map(({ id: judgeId, fullName, username, email }) => ({ id: judgeId, fullName, username, email }));
+    return Response.json({ assignment: result.assignments[0], judge: judges[0], assignments: result.assignments, judges }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Không thể phân công giám khảo.';
     return Response.json({ error: message }, { status: 409 });

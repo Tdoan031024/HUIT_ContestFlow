@@ -25,7 +25,7 @@ export async function GET() {
       take: 8,
       include: {
         _count: { select: { contestants: true } },
-        rounds: { orderBy: { sequence: 'asc' }, select: { id: true, name: true, sequence: true, status: true, _count: { select: { entries: true } } } },
+        rounds: { where: { sequence: 1 }, orderBy: { sequence: 'asc' }, select: { id: true, name: true, sequence: true, status: true, _count: { select: { entries: true } } } },
       },
     }),
     prisma.competition.count({ where: competitionWhere }),
@@ -37,12 +37,10 @@ export async function GET() {
 
   if (!isAdmin) {
     const assignments = allCompetitionIds.length ? await prisma.judgeAssignment.findMany({
-      where: { userId: user.id, competitionId: { in: allCompetitionIds }, user: { isActive: true } },
+      where: { userId: user.id, competitionId: { in: allCompetitionIds }, user: { isActive: true }, round: { sequence: 1 } },
       select: {
         competitionId: true,
         roundId: true,
-        entryId: true,
-        entry: { select: { id: true, status: true } },
         round: { select: { entries: { where: { status: 'ACTIVE' }, select: { id: true } } } },
       },
     }) : [];
@@ -50,11 +48,7 @@ export async function GET() {
     for (const assignment of assignments) {
       const key = `${assignment.competitionId}:${assignment.roundId}`;
       const set = taskEntries.get(key) ?? new Set<string>();
-      if (assignment.entryId) {
-        if (assignment.entry?.status === 'ACTIVE') set.add(assignment.entryId);
-      } else {
-        for (const entry of assignment.round.entries) set.add(entry.id);
-      }
+      for (const entry of assignment.round.entries) set.add(entry.id);
       taskEntries.set(key, set);
     }
     const allEntryIds = [...new Set([...taskEntries.values()].flatMap((entries) => [...entries]))];
@@ -77,7 +71,8 @@ export async function GET() {
       const rounds = competition.rounds.flatMap((round) => {
         const key = `${competition.id}:${round.id}`;
         const entries = taskEntries.get(key);
-        if (!entries?.size) return [];
+        // Keep an assigned competition visible even while it has no active entries.
+        if (!entries) return [];
         return [{ ...round, _count: { entries: entries.size, scoreSheets: submittedByRound.get(key)?.size ?? 0 } }];
       });
       if (!rounds.length) return [];
@@ -103,7 +98,7 @@ export async function GET() {
 
   const [rounds, submittedGroups, judgeAssignments, activities] = await Promise.all([
     prisma.competitionRound.findMany({
-      where: { competitionId: { in: allCompetitionIds } },
+      where: { competitionId: { in: allCompetitionIds }, sequence: 1 },
       select: {
         id: true, competitionId: true, name: true, sequence: true, status: true, requiredJudgeCount: true,
         session: { select: { state: true } },
@@ -139,18 +134,18 @@ export async function GET() {
   for (const round of rounds) {
     const competition = allCompetitions.find((item) => item.id === round.competitionId);
     if (!competition) continue;
-    const href = `/competitions/${round.competitionId}/live?roundId=${round.id}`;
-    if (round.session?.state === 'LIVE') actionItems.push({ id: `${round.id}-live`, kind: 'live', title: `Đang điều phối · ${round.name}`, detail: competition.name, href });
-    if (round.entries.length && !round.activeRubricVersion?.criteria.length) actionItems.push({ id: `${round.id}-rubric`, kind: 'attention', title: `Chưa có rubric · ${round.name}`, detail: competition.name, href: `/competitions/${round.competitionId}/rubric?roundId=${round.id}` });
+    const href = `/competitions/${round.competitionId}/live`;
+    if (round.session?.state === 'LIVE') actionItems.push({ id: `${round.id}-live`, kind: 'live', title: `Đang điều phối · ${competition.name}`, detail: competition.name, href });
+    if (round.entries.length && !round.activeRubricVersion?.criteria.length) actionItems.push({ id: `${round.id}-rubric`, kind: 'attention', title: `Chưa có tiêu chí chấm`, detail: competition.name, href: `/competitions/${round.competitionId}/rubric` });
     const missingCoverage = round.entries.filter((entry) => {
-      const assigned = new Set(round.assignments.filter((item) => item.entryId === null || item.entryId === entry.id).map((item) => item.userId));
+      const assigned = new Set(round.assignments.map((item) => item.userId));
       return assigned.size < round.requiredJudgeCount;
     });
-    if (missingCoverage.length) actionItems.push({ id: `${round.id}-coverage`, kind: 'attention', title: `Thiếu phân công · ${round.name}`, detail: `${competition.name} · ${missingCoverage.length} lượt thi chưa đủ giám khảo`, href: `/competitions/${round.competitionId}/judges?roundId=${round.id}` });
+    if (missingCoverage.length) actionItems.push({ id: `${round.id}-coverage`, kind: 'attention', title: `Thiếu phân công giám khảo`, detail: `${competition.name} · ${missingCoverage.length} thí sinh chưa đủ người chấm`, href: `/competitions/${round.competitionId}/judges` });
     const submitted = round.scoreSheets.length;
     const expected = round.entries.length * round.requiredJudgeCount;
-    if (round.status === 'COMPLETED' && submitted < expected) actionItems.push({ id: `${round.id}-scores`, kind: 'attention', title: `Còn thiếu phiếu · ${round.name}`, detail: `${competition.name} · ${submitted}/${expected} phiếu`, href: `/competitions/${round.competitionId}/scores?roundId=${round.id}` });
-    if (round.status === 'COMPLETED' && round.snapshots[0] && !round.snapshots[0].published) actionItems.push({ id: `${round.id}-publish`, kind: 'publish', title: `Kết quả chờ công bố · ${round.name}`, detail: `${competition.name} · snapshot v${round.snapshots[0].version}`, href: `/competitions/${round.competitionId}/results?roundId=${round.id}` });
+    if (round.status === 'COMPLETED' && submitted < expected) actionItems.push({ id: `${round.id}-scores`, kind: 'attention', title: `Còn thiếu phiếu chấm`, detail: `${competition.name} · ${submitted}/${expected} phiếu`, href: `/competitions/${round.competitionId}/scores` });
+    if (round.status === 'COMPLETED' && round.snapshots[0] && !round.snapshots[0].published) actionItems.push({ id: `${round.id}-publish`, kind: 'publish', title: `Kết quả chờ công bố`, detail: `${competition.name} · phiên bản ${round.snapshots[0].version}`, href: `/competitions/${round.competitionId}/results` });
   }
   const totalExpected = rounds.reduce((sum, round) => sum + round.entries.length * round.requiredJudgeCount, 0);
   const submittedScores = submittedGroups.reduce((sum, item) => sum + item._count._all, 0);

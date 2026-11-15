@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, canViewCompetition, unauthorized } from '@/lib/api';
 import { refreshCompetitionStatus } from '@/lib/competition-status';
+import { ensureCompetitionWorkspace } from '@/lib/competition-workspace-data';
 import { prisma } from '@/lib/prisma';
 import { inspectRoundReadiness } from '@/lib/round-readiness';
 
@@ -12,13 +13,16 @@ const schema = z.object({
   expectedVersion: z.number().int().min(0),
   overrideReason: z.string().trim().min(10).max(2000).optional(),
 });
-type Context = { params: Promise<{ id: string; roundId: string }> };
+type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: Context) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
-  const { id, roundId } = await context.params;
+  const { id } = await context.params;
   if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Chỉ Admin được xem phiên điều phối.' }, { status: 403 });
+  const workspace = await ensureCompetitionWorkspace(id);
+  if (!workspace) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
+  const roundId = workspace.id;
   const session = await prisma.competitionSession.findUnique({
     where: { roundId },
     include: { round: { select: { id: true, name: true, status: true, competitionId: true, anonymous: true } }, currentEntry: { include: { contestant: true } } },
@@ -35,22 +39,25 @@ export async function GET(_request: Request, context: Context) {
 export async function POST(request: Request, context: Context) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
-  const { id, roundId } = await context.params;
-  if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Chỉ Admin mới được điều phối vòng thi.' }, { status: 403 });
+  const { id } = await context.params;
+  if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Chỉ Admin mới được điều phối cuộc thi.' }, { status: 403 });
+  const workspace = await ensureCompetitionWorkspace(id);
+  if (!workspace) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
+  const roundId = workspace.id;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Lệnh điều phối không hợp lệ.' }, { status: 400 });
   const round = await prisma.competitionRound.findFirst({ where: { id: roundId, competitionId: id }, include: { session: true } }).catch(() => null);
-  if (!round) return Response.json({ error: 'Không tìm thấy vòng thi.' }, { status: 404 });
+  if (!round) return Response.json({ error: 'Không tìm thấy dữ liệu chấm của cuộc thi.' }, { status: 404 });
   const currentVersion = round.session?.version ?? 0;
   if (parsed.data.expectedVersion !== currentVersion) return Response.json({ error: 'Trạng thái điều phối đã thay đổi. Tải lại trước khi gửi lệnh tiếp.' }, { status: 409 });
-  if (round.status === 'COMPLETED' && parsed.data.action !== 'finish') return Response.json({ error: 'Vòng thi đã kết thúc. Mở lại một phiếu để tiếp tục xử lý vòng này.' }, { status: 409 });
+  if (round.status === 'COMPLETED' && parsed.data.action !== 'finish') return Response.json({ error: 'Cuộc thi đã kết thúc. Mở lại phiếu để tiếp tục xử lý.' }, { status: 409 });
   const currentState = round.session?.state ?? 'IDLE';
   if (parsed.data.action === 'start' && currentState !== 'IDLE') return Response.json({ error: 'Phiên đã bắt đầu. Dùng tiếp tục hoặc chọn lượt thi.' }, { status: 409 });
   if (['next', 'previous', 'select'].includes(parsed.data.action) && currentState === 'IDLE') return Response.json({ error: 'Bắt đầu điều phối trước khi chuyển hoặc chọn lượt.' }, { status: 409 });
   if (parsed.data.action === 'finish' && currentState !== 'LIVE' && currentState !== 'PAUSED') return Response.json({ error: 'Chỉ có thể kết thúc phiên đang chạy hoặc tạm dừng.' }, { status: 409 });
   const entries = await prisma.competitionEntry.findMany({ where: { roundId, status: 'ACTIVE' }, orderBy: { sequence: 'asc' }, select: { id: true } });
-  if (!entries.length) return Response.json({ error: 'Thêm ít nhất một thí sinh vào vòng trước khi điều phối.' }, { status: 409 });
-  if (parsed.data.action === 'finish' && round.session?.state === 'COMPLETED') return Response.json({ error: 'Vòng thi đã được kết thúc.' }, { status: 409 });
+  if (!entries.length) return Response.json({ error: 'Thêm ít nhất một thí sinh vào cuộc thi trước khi điều phối.' }, { status: 409 });
+  if (parsed.data.action === 'finish' && round.session?.state === 'COMPLETED') return Response.json({ error: 'Phiên chấm đã được kết thúc.' }, { status: 409 });
 
   let currentEntryId = round.session?.currentEntryId ?? null;
   let state = round.session?.state ?? 'IDLE';
@@ -120,8 +127,8 @@ export async function POST(request: Request, context: Context) {
     return Response.json({ session });
   } catch (error) {
     if (error instanceof Error && error.message === 'SESSION_VERSION_CONFLICT') return Response.json({ error: 'Trạng thái điều phối vừa được cập nhật. Tải lại và thử lại.' }, { status: 409 });
-    if (error instanceof Error && error.message === 'PREFLIGHT_NO_ENTRIES') return Response.json({ error: 'Vòng chưa có lượt thi đang hoạt động. Thêm thí sinh trước khi bắt đầu.' }, { status: 409 });
-    if (error instanceof Error && error.message === 'PREFLIGHT_NO_RUBRIC') return Response.json({ error: 'Vòng chưa có rubric đang hoạt động. Hoàn thiện rubric trước khi bắt đầu.' }, { status: 409 });
+    if (error instanceof Error && error.message === 'PREFLIGHT_NO_ENTRIES') return Response.json({ error: 'Cuộc thi chưa có thí sinh đang hoạt động. Thêm thí sinh trước khi bắt đầu.' }, { status: 409 });
+    if (error instanceof Error && error.message === 'PREFLIGHT_NO_RUBRIC') return Response.json({ error: 'Cuộc thi chưa có tiêu chí chấm đang hoạt động. Hoàn thiện tiêu chí trước khi bắt đầu.' }, { status: 409 });
     if (error instanceof Error && error.message.startsWith('PREFLIGHT_COVERAGE:')) return Response.json({ error: `Chưa đủ giám khảo được phân công cho các lượt: ${error.message.slice('PREFLIGHT_COVERAGE:'.length)}.`, needsOverrideReason: round.allowAdvanceWithGaps }, { status: 409 });
     if (error instanceof Error && error.message.startsWith('PREFLIGHT_REASON:')) return Response.json({ error: `Nhập lý do ít nhất 10 ký tự để tiếp tục với phân công còn thiếu: ${error.message.slice('PREFLIGHT_REASON:'.length)}.`, needsOverrideReason: true }, { status: 409 });
     return Response.json({ error: 'Không thể cập nhật phiên điều phối.' }, { status: 500 });

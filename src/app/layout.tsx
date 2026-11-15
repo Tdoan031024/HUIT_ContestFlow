@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { Viewport } from 'next';
 import type { ReactNode } from 'react';
+import { NotificationProvider } from '@/components/notification-provider';
 import './globals.css';
 import './workspace.css';
 
@@ -19,7 +20,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="vi" data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body><NotificationProvider>{children}</NotificationProvider></body>
     </html>
   );
 }

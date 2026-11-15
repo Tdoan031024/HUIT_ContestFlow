@@ -9,7 +9,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
   const rounds = await prisma.competitionRound.findMany({
-    where: user.systemRole === 'ADMIN' ? {} : { competition: { members: { some: { userId: user.id } } } },
+    where: user.systemRole === 'ADMIN' ? { sequence: 1 } : { sequence: 1, competition: { members: { some: { userId: user.id } } } },
     orderBy: [{ competition: { updatedAt: 'desc' } }, { sequence: 'asc' }],
     include: {
       competition: { select: { id: true, name: true, status: true } },

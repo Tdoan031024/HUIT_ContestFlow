@@ -8,6 +8,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "test:e2e": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/e2e-check.ps1",
+    "test:scoring": "node --experimental-strip-types --test tests/scoring.test.mjs",
     "db:backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-backup.ps1",
     "db:restore": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-restore.ps1",
     "db:generate": "prisma generate",

@@ -4,9 +4,10 @@ import { canManageCompetition, unauthorized } from '@/lib/api';
 import { prisma } from '@/lib/prisma';
 import { previewContestantCsv } from '@/lib/contestant-csv';
 import { roundEditLockReason } from '@/lib/round-editability';
+import { ensureCompetitionWorkspace } from '@/lib/competition-workspace-data';
 
 export const runtime = 'nodejs';
-const schema = z.object({ roundId: z.string().uuid(), csv: z.string().min(1).max(1_000_000), confirm: z.boolean().optional().default(false) });
+const schema = z.object({ csv: z.string().min(1).max(1_000_000), confirm: z.boolean().optional().default(false) });
 type Context = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, context: Context) {
@@ -16,8 +17,8 @@ export async function POST(request: Request, context: Context) {
   if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Bạn không có quyền nhập danh sách thí sinh.' }, { status: 403 });
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Tệp CSV trống hoặc vượt quá 1 MB.' }, { status: 400 });
-  const round = await prisma.competitionRound.findFirst({ where: { id: parsed.data.roundId, competitionId: id }, select: { id: true } });
-  if (!round) return Response.json({ error: 'Vòng thi không thuộc cuộc thi này.' }, { status: 400 });
+  const round = await ensureCompetitionWorkspace(id);
+  if (!round) return Response.json({ error: 'Không tìm thấy khu vực chấm của cuộc thi.' }, { status: 400 });
   const lockReason = await roundEditLockReason(prisma, id, round.id);
   if (lockReason) return Response.json({ error: lockReason }, { status: 409 });
   const preview = previewContestantCsv(parsed.data.csv);
@@ -26,7 +27,7 @@ export async function POST(request: Request, context: Context) {
     const existing = await prisma.contestant.findMany({ where: { competitionId: id, email: { in: emails } }, select: { email: true } });
     const existingEmails = new Set(existing.map((item) => item.email?.toLocaleLowerCase('en-US')).filter(Boolean));
     for (const row of preview.rows) if (row.email && existingEmails.has(row.email.toLocaleLowerCase('en-US'))) {
-      preview.issues.push({ rowNumber: row.rowNumber, message: 'Email này đã có hồ sơ trong cuộc thi; hãy đăng ký hồ sơ hiện có vào vòng.' });
+      preview.issues.push({ rowNumber: row.rowNumber, message: 'Email này đã có hồ sơ trong cuộc thi; hãy dùng hồ sơ hiện có.' });
     }
   }
   if (!parsed.data.confirm) return Response.json({ preview });

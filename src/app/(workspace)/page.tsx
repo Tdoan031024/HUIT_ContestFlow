@@ -28,8 +28,8 @@ export default function DashboardPage() {
         <div className={`judge-dashboard-next${pendingScores === 0 && data.stats.expectedScores > 0 ? ' is-complete' : ''}`}>
           <div className="judge-dashboard-next-copy">
             <span className="judge-dashboard-kicker">VIỆC CẦN LÀM</span>
-            <h2>{data.stats.expectedScores === 0 ? 'Chưa có lượt chấm được giao' : pendingScores > 0 ? `Bạn còn ${pendingScores} lượt cần chấm` : 'Bạn đã hoàn tất các lượt chấm'}</h2>
-            <p>{data.stats.expectedScores === 0 ? 'Các lượt được phân công sẽ xuất hiện tại đây.' : pendingScores > 0 ? 'Mở danh sách để tiếp tục theo thứ tự Ban tổ chức sắp xếp.' : 'Bạn có thể xem lại các phiếu đã nộp bất cứ lúc nào.'}</p>
+            <h2>{data.stats.expectedScores === 0 ? data.stats.competitionCount > 0 ? 'Chưa có thí sinh để chấm' : 'Chưa có cuộc thi được phân công' : pendingScores > 0 ? `Bạn còn ${pendingScores} lượt cần chấm` : 'Bạn đã hoàn tất các lượt chấm'}</h2>
+            <p>{data.stats.expectedScores === 0 ? data.stats.competitionCount > 0 ? 'Cuộc thi đã xuất hiện bên dưới. Lượt chấm sẽ có khi Ban tổ chức thêm thí sinh.' : 'Khi Ban tổ chức thêm bạn vào cuộc thi, thông tin sẽ xuất hiện tại đây.' : pendingScores > 0 ? 'Mở danh sách để tiếp tục theo thứ tự Ban tổ chức sắp xếp.' : 'Bạn có thể xem lại các phiếu đã nộp bất cứ lúc nào.'}</p>
           </div>
           <div className="judge-dashboard-progress" role="group" aria-label="Tiến độ chấm của bạn">
             <div className="judge-dashboard-progress-label"><strong>{data.stats.submittedScores}<span>/{data.stats.expectedScores}</span></strong><span>phiếu đã nộp</span></div>
@@ -43,7 +43,7 @@ export default function DashboardPage() {
           const entryTotal = competition.rounds.reduce((sum, round) => sum + round._count.entries, 0);
           const submitted = competition.progress.submitted;
           return <Link className="judge-dashboard-competition" href={`/judge?competitionId=${encodeURIComponent(competition.id)}`} key={competition.id}>
-            <span className="judge-dashboard-competition-copy"><strong>{competition.name}</strong><span>{entryTotal} lượt chấm · {submitted}/{entryTotal} phiếu đã nộp</span><span className="judge-dashboard-track" role="progressbar" aria-label={`Tiến độ ${competition.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={competition.progress.percent}><span style={{ width: `${competition.progress.percent}%` }} /></span></span>
+            <span className="judge-dashboard-competition-copy"><strong>{competition.name}</strong><span>{entryTotal === 0 ? 'Chưa có thí sinh để chấm' : `${entryTotal} lượt chấm · ${submitted}/${entryTotal} phiếu đã nộp`}</span><span className="judge-dashboard-track" role="progressbar" aria-label={`Tiến độ ${competition.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={competition.progress.percent}><span style={{ width: `${competition.progress.percent}%` }} /></span></span>
             <span className="judge-dashboard-competition-end"><StatusPill value={competition.status} /><span aria-hidden="true">→</span></span>
           </Link>;
         })}</div> : <div className="judge-dashboard-empty">Chưa có cuộc thi nào được phân công cho bạn.</div>}
@@ -52,7 +52,7 @@ export default function DashboardPage() {
           <div className="dashboard-progress-topline"><span>TIẾN ĐỘ CHẤM</span><span>{data.systemRole === 'ADMIN' ? 'TOÀN HỆ THỐNG' : 'CÁ NHÂN'}</span></div>
           <div className="dashboard-progress-main">
             <div className="dashboard-progress-value">{data.stats.percent}<small>%</small></div>
-            <p>{data.systemRole === 'ADMIN' ? 'Phiếu chấm đã hoàn tất trên các vòng đang quản lý.' : 'Lượt được giao đã có phiếu chấm hoàn tất.'}</p>
+            <p>{data.systemRole === 'ADMIN' ? 'Phiếu chấm đã hoàn tất trên các cuộc thi đang quản lý.' : 'Lượt được giao đã có phiếu chấm hoàn tất.'}</p>
           </div>
           <div className="dashboard-progress-track" role="progressbar" aria-label="Tiến độ phiếu chấm" aria-valuemin={0} aria-valuemax={100} aria-valuenow={data.stats.percent}><span style={{ width: `${data.stats.percent}%` }} /></div>
           <div className="dashboard-progress-foot"><span>{data.stats.submittedScores} / {data.stats.expectedScores} phiếu đã nộp</span><Link href={data.systemRole === 'ADMIN' ? '/results' : '/judge'}>{data.systemRole === 'ADMIN' ? 'Theo dõi kết quả' : 'Tiếp tục chấm'} <span aria-hidden="true">→</span></Link></div>
@@ -69,7 +69,7 @@ export default function DashboardPage() {
           <span className="action-mark" aria-hidden="true"><Icon name={item.kind === 'live' ? 'clock' : item.kind === 'publish' ? 'chart' : 'alert'} /></span>
           <span className="action-copy"><strong>{item.title}</strong><small>{item.detail}</small></span>
           <span className="action-open">Mở <span aria-hidden="true">→</span></span>
-        </Link>)}</div> : <div className="action-empty"><span aria-hidden="true">✓</span><div><strong>Không có việc cần xử lý</strong><p>Các vòng thi đang đủ điều kiện theo dõi.</p></div></div>}
+        </Link>)}</div> : <div className="action-empty"><span aria-hidden="true">✓</span><div><strong>Không có việc cần xử lý</strong><p>Các cuộc thi đang đủ điều kiện theo dõi.</p></div></div>}
       </section>}
       <div className={`dashboard-grid${data.systemRole === 'JUDGE' ? ' judge-dashboard-activity' : ''}`}>
         {data.systemRole === 'ADMIN' && <section className="surface-card">
@@ -77,9 +77,9 @@ export default function DashboardPage() {
           {data.competitions.length ? <div className="competition-list">{data.competitions.map((competition) => {
             const entryTotal = competition.rounds.reduce((sum, round) => sum + round._count.entries, 0);
             return <Link className="competition-row" href={data.systemRole === 'ADMIN' ? `/competitions/${competition.id}` : '/judge'} key={competition.id}>
-            <span className="competition-symbol" aria-hidden="true"><Icon name="trophy" /></span><span className="competition-copy"><h3>{competition.name}</h3><p>{formatDate(competition.startsAt)} · {data.systemRole === 'ADMIN' ? `${competition._count.contestants} thí sinh` : `${entryTotal} lượt thi được giao`} · {competition.rounds.length} vòng thi</p><span className="progress-line"><span className="progress-track"><span style={{ width: `${competition.progress.percent}%` }} /></span><span>{competition.progress.submitted}/{competition.progress.expected} phiếu · {competition.progress.percent}%</span></span></span><span className="row-end"><StatusPill value={competition.status} /><span className="nav-arrow" aria-hidden="true"><Icon name="arrow" size={16} /></span></span>
+            <span className="competition-symbol" aria-hidden="true"><Icon name="trophy" /></span><span className="competition-copy"><h3>{competition.name}</h3><p>{formatDate(competition.startsAt)} · {data.systemRole === 'ADMIN' ? `${competition._count.contestants} thí sinh` : `${entryTotal} lượt thi được giao`}</p><span className="progress-line"><span className="progress-track"><span style={{ width: `${competition.progress.percent}%` }} /></span><span>{competition.progress.submitted}/{competition.progress.expected} phiếu · {competition.progress.percent}%</span></span></span><span className="row-end"><StatusPill value={competition.status} /><span className="nav-arrow" aria-hidden="true"><Icon name="arrow" size={16} /></span></span>
             </Link>;
-          })}</div> : <EmptyState title={data.systemRole === 'ADMIN' ? 'Chưa có cuộc thi' : 'Chưa có lượt thi được giao'} description={data.systemRole === 'ADMIN' ? 'Tạo cuộc thi đầu tiên để bắt đầu cấu hình vòng thi, thí sinh và giám khảo.' : 'Khi Admin phân công bạn vào lượt thi, tiến độ sẽ xuất hiện ở đây.'} action={data.systemRole === 'ADMIN' ? <Link className="button primary-button" href="/competitions/new">Tạo cuộc thi</Link> : undefined} />}
+          })}</div> : <EmptyState title={data.systemRole === 'ADMIN' ? 'Chưa có cuộc thi' : 'Chưa có lượt thi được giao'} description={data.systemRole === 'ADMIN' ? 'Tạo cuộc thi đầu tiên để bắt đầu thêm tiêu chí chấm, thí sinh và giám khảo.' : 'Khi Admin phân công bạn vào lượt thi, tiến độ sẽ xuất hiện ở đây.'} action={data.systemRole === 'ADMIN' ? <Link className="button primary-button" href="/competitions/new">Tạo cuộc thi</Link> : undefined} />}
         </section>}
         <section className="surface-card">
           <div className="surface-heading"><div><h2>Hoạt động gần đây</h2><p>{data.systemRole === 'ADMIN' ? 'Các thay đổi mới nhất trong cuộc thi' : 'Chỉ các thao tác của bạn'}</p></div></div>

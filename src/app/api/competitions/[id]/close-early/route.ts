@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, unauthorized } from '@/lib/api';
+import { ensureCompetitionWorkspace } from '@/lib/competition-workspace-data';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
@@ -15,16 +16,18 @@ export async function POST(request: Request, context: Context) {
   if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Chỉ Admin được đóng sớm cuộc thi.' }, { status: 403 });
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Nhập lý do đóng sớm từ 10 đến 2.000 ký tự.' }, { status: 400 });
+  const workspace = await ensureCompetitionWorkspace(id);
+  if (!workspace) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
 
   const result = await prisma.$transaction(async (tx) => {
     const competition = await tx.competition.findUnique({ where: { id }, select: { id: true, name: true, status: true } });
     if (!competition) return { error: 'Không tìm thấy cuộc thi.', status: 404 as const };
     if (competition.status === 'ARCHIVED' || competition.status === 'COMPLETED') return { error: 'Cuộc thi đã được lưu trữ hoặc hoàn tất.', status: 409 as const };
-    const rounds = await tx.competitionRound.findMany({ where: { competitionId: id }, select: { id: true, status: true, session: { select: { id: true, state: true } } } });
-    await tx.competitionRound.updateMany({ where: { competitionId: id }, data: { status: 'COMPLETED' } });
-    await tx.competitionSession.updateMany({ where: { roundId: { in: rounds.map((round) => round.id) } }, data: { state: 'COMPLETED', currentEntryId: null, version: { increment: 1 } } });
+    const session = await tx.competitionSession.findUnique({ where: { roundId: workspace.id }, select: { state: true } });
+    await tx.competitionRound.update({ where: { id: workspace.id }, data: { status: 'COMPLETED' } });
+    await tx.competitionSession.updateMany({ where: { roundId: workspace.id }, data: { state: 'COMPLETED', currentEntryId: null, version: { increment: 1 } } });
     const updated = await tx.competition.update({ where: { id }, data: { status: 'COMPLETED' } });
-    await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'COMPETITION_CLOSED_EARLY', entityType: 'Competition', entityId: id, details: { reason: parsed.data.reason, stoppedLiveRounds: rounds.filter((round) => round.session?.state === 'LIVE').map((round) => round.id), completedRounds: rounds.length } } });
+    await tx.auditEvent.create({ data: { competitionId: id, actorId: user.id, action: 'COMPETITION_CLOSED_EARLY', entityType: 'Competition', entityId: id, details: { reason: parsed.data.reason, stoppedScoring: session?.state === 'LIVE' } } });
     return { competition: updated };
   });
   if ('error' in result) return Response.json({ error: result.error }, { status: result.status });

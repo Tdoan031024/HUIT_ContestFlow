@@ -13,7 +13,6 @@ enum SystemRole {
 }
 
 enum CompetitionStatus {
-  DRAFT
   REGISTRATION
   READY
   LIVE
@@ -100,7 +99,7 @@ model Competition {
   organizingUnit String?              @map("organizing_unit") @db.VarChar(180)
   location       String?              @db.VarChar(240)
   modality       CompetitionModality   @default(ONSITE)
-  status         CompetitionStatus    @default(DRAFT)
+  status         CompetitionStatus    @default(READY)
   startsAt       DateTime?             @map("starts_at") @db.DateTime(3)
   endsAt         DateTime?             @map("ends_at") @db.DateTime(3)
   createdAt      DateTime              @default(now()) @map("created_at") @db.DateTime(3)
@@ -243,9 +242,12 @@ model RubricVersion {
   version     Int
   name        String             @db.VarChar(160)
   description String?            @db.Text
+  status      String             @default("PUBLISHED") @db.VarChar(16)
+  scoringConfig Json?             @map("scoring_config")
   createdAt   DateTime           @default(now()) @map("created_at") @db.DateTime(3)
   rubric      Rubric             @relation(fields: [rubricId], references: [id], onDelete: Cascade)
   criteria    RubricCriterion[]
+  groups      RubricCriterionGroup[]
   activeFor   CompetitionRound[] @relation("ActiveRubricVersion")
   scoreSheets ScoreSheet[]
 
@@ -256,19 +258,37 @@ model RubricVersion {
 model RubricCriterion {
   id              String        @id @default(uuid()) @db.Char(36)
   rubricVersionId String        @map("rubric_version_id") @db.Char(36)
+  groupId         String?       @map("group_id") @db.Char(36)
   name            String        @db.VarChar(160)
   description     String?       @db.Text
-  minimum         Decimal       @default(0) @db.Decimal(8, 2)
-  maximum         Decimal       @default(10) @db.Decimal(8, 2)
-  step            Decimal       @default(1) @db.Decimal(8, 2)
-  weight          Decimal       @default(1) @db.Decimal(8, 4)
+  type            String        @default("NUMERIC") @db.VarChar(24)
+  config          Json?
+  required        Boolean       @default(true)
+  minimum         Decimal       @default(0) @db.Decimal(12, 4)
+  maximum         Decimal       @default(10) @db.Decimal(12, 4)
+  step            Decimal       @default(1) @db.Decimal(12, 4)
+  weight          Decimal       @default(1) @db.Decimal(12, 4)
   commentRequired Boolean       @default(false) @map("comment_required")
   sequence        Int
   rubricVersion   RubricVersion @relation(fields: [rubricVersionId], references: [id], onDelete: Cascade)
+  group           RubricCriterionGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   scoreDetails    ScoreDetail[]
 
   @@unique([rubricVersionId, sequence])
+  @@index([groupId])
   @@map("rubric_criteria")
+}
+
+model RubricCriterionGroup {
+  id              String          @id @default(uuid()) @db.Char(36)
+  rubricVersionId String          @map("rubric_version_id") @db.Char(36)
+  name            String          @db.VarChar(160)
+  sequence        Int
+  rubricVersion   RubricVersion   @relation(fields: [rubricVersionId], references: [id], onDelete: Cascade)
+  criteria        RubricCriterion[]
+
+  @@unique([rubricVersionId, sequence])
+  @@map("rubric_criterion_groups")
 }
 
 model CompetitionSession {
@@ -293,7 +313,8 @@ model ScoreSheet {
   judgeId         String           @map("judge_id") @db.Char(36)
   rubricVersionId String           @map("rubric_version_id") @db.Char(36)
   status          ScoreSheetStatus @default(DRAFT)
-  totalScore      Decimal?         @map("total_score") @db.Decimal(10, 4)
+  totalScore      Decimal?         @map("total_score") @db.Decimal(12, 4)
+  outcome         String?           @db.VarChar(16)
   submittedAt     DateTime?        @map("submitted_at") @db.DateTime(3)
   reopenedReason  String?          @map("reopened_reason") @db.Text
   createdAt       DateTime         @default(now()) @map("created_at") @db.DateTime(3)
@@ -314,7 +335,8 @@ model ScoreDetail {
   id           String          @id @default(uuid()) @db.Char(36)
   scoreSheetId String          @map("score_sheet_id") @db.Char(36)
   criterionId  String          @map("criterion_id") @db.Char(36)
-  score        Decimal         @db.Decimal(8, 2)
+  score        Decimal?        @db.Decimal(12, 4)
+  value        Json?
   comment      String?         @db.Text
   scoreSheet   ScoreSheet      @relation(fields: [scoreSheetId], references: [id], onDelete: Cascade)
   criterion    RubricCriterion @relation(fields: [criterionId], references: [id], onDelete: Restrict)

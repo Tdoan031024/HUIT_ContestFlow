@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { canManageCompetition, canViewCompetition, unauthorized } from '@/lib/api';
 import { prisma } from '@/lib/prisma';
+import { ensureCompetitionWorkspace } from '@/lib/competition-workspace-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,16 +13,17 @@ export async function GET(request: Request, context: Context) {
   const { id } = await context.params;
   if (!(await canViewCompetition(user, id))) return Response.json({ error: 'Bạn không có quyền xem cuộc thi.' }, { status: 403 });
   if (!(await canManageCompetition(user, id))) return Response.json({ error: 'Chỉ Admin được xem trạng thái toàn bộ phiếu chấm.' }, { status: 403 });
-  const roundId = new URL(request.url).searchParams.get('roundId');
-  if (!roundId) return Response.json({ error: 'Chọn vòng thi.' }, { status: 400 });
-  const round = await prisma.competitionRound.findFirst({ where: { id: roundId, competitionId: id }, select: { id: true, name: true, requiredJudgeCount: true, entries: { where: { status: 'ACTIVE' }, orderBy: { sequence: 'asc' }, include: { contestant: true } } } });
-  if (!round) return Response.json({ error: 'Không tìm thấy vòng thi.' }, { status: 404 });
+  const workspace = await ensureCompetitionWorkspace(id);
+  if (!workspace) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
+  const roundId = workspace.id;
+  const round = await prisma.competitionRound.findUnique({ where: { id: roundId }, select: { id: true, name: true, requiredJudgeCount: true, entries: { where: { status: 'ACTIVE' }, orderBy: { sequence: 'asc' }, include: { contestant: true } } } });
+  if (!round) return Response.json({ error: 'Chưa có dữ liệu chấm cho cuộc thi.' }, { status: 404 });
   const [assignments, sheets] = await Promise.all([
-    prisma.judgeAssignment.findMany({ where: { roundId, user: { isActive: true, systemRole: 'JUDGE' } }, include: { user: { select: { id: true, fullName: true, email: true } }, entry: { select: { id: true } } } }),
+    prisma.judgeAssignment.findMany({ where: { roundId, user: { isActive: true, systemRole: 'JUDGE' } }, include: { user: { select: { id: true, fullName: true, email: true } } } }),
     prisma.scoreSheet.findMany({ where: { roundId }, include: { judge: { select: { id: true, fullName: true, email: true } }, entry: { select: { id: true, entryCode: true } } } }),
   ]);
   const rows = round.entries.map((entry) => {
-    const eligible = assignments.filter((assignment) => assignment.entryId === null || assignment.entryId === entry.id);
+    const eligible = [...new Map(assignments.map((assignment) => [assignment.userId, assignment])).values()];
     const related = sheets.filter((sheet) => sheet.entryId === entry.id);
     const eligibleIds = new Set(eligible.map((assignment) => assignment.userId));
     return {

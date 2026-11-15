@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Icon } from '@/components/icons';
+import { Notification, type NotificationTone } from '@/components/notification-provider';
 
-export function PageHeader({ eyebrow, title, description, action, className }: { eyebrow?: string; title: string; description?: string; action?: ReactNode; className?: string }) {
-  return <div className={`page-heading${className ? ` ${className}` : ''}`}><div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1>{description && <p>{description}</p>}</div>{action && <div className="page-heading-action">{action}</div>}</div>;
+export function PageHeader({ eyebrow, title, description, action, titleAction, className }: { eyebrow?: string; title: string; description?: string; action?: ReactNode; titleAction?: ReactNode; className?: string }) {
+  return <div className={`page-heading${className ? ` ${className}` : ''}`}><div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}{titleAction ? <div className="page-heading-title-row"><h1>{title}</h1>{titleAction}</div> : <h1>{title}</h1>}{description && <p>{description}</p>}</div>{action && <div className="page-heading-action">{action}</div>}</div>;
 }
 
-export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'success' | 'warning' | 'error' }) {
-  return <div className={`notice notice-${tone}`} role={tone === 'error' ? 'alert' : 'status'}>{children}</div>;
+export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?: NotificationTone }) {
+  return <Notification tone={tone}>{children}</Notification>;
 }
 
 export function Loading({ label = 'Đang tải dữ liệu…' }: { label?: string }) {
@@ -21,7 +22,7 @@ export function EmptyState({ title, description, action }: { title: string; desc
 }
 
 export function StatusPill({ value }: { value: string }) {
-  const map: Record<string, string> = { DRAFT: 'Nháp', REGISTRATION: 'Mở đăng ký', READY: 'Sẵn sàng', LIVE: 'Đang diễn ra', COMPLETED: 'Đã hoàn tất', ARCHIVED: 'Đã lưu trữ', ACTIVE: 'Đang hoạt động', WITHDRAWN: 'Đã rút', DISQUALIFIED: 'Bị loại', ADVANCED: 'Vào vòng sau', ELIMINATED: 'Dừng cuộc thi', SUBMITTED: 'Đã nộp', REOPENED: 'Đã mở lại', PAUSED: 'Tạm dừng', IDLE: 'Chưa bắt đầu', WAITING: 'Đang chờ', UNAVAILABLE: 'Chưa khả dụng', MISSING: 'Chưa có phiếu', LOCKED: 'Đã khóa' };
+  const map: Record<string, string> = { DRAFT: 'Nháp', REGISTRATION: 'Mở đăng ký', READY: 'Sẵn sàng', LIVE: 'Đang diễn ra', COMPLETED: 'Đã hoàn tất', ARCHIVED: 'Đã lưu trữ', ACTIVE: 'Đang hoạt động', WITHDRAWN: 'Đã rút', DISQUALIFIED: 'Bị loại', ADVANCED: 'Được chọn', ELIMINATED: 'Dừng cuộc thi', SUBMITTED: 'Đã nộp', REOPENED: 'Đã mở lại', PAUSED: 'Tạm dừng', IDLE: 'Chưa bắt đầu', WAITING: 'Đang chờ', UNAVAILABLE: 'Chưa khả dụng', MISSING: 'Chưa có phiếu', LOCKED: 'Đã khóa' };
   return <span className={`status-pill status-${value.toLowerCase()}`}><i />{map[value] ?? value}</span>;
 }
 

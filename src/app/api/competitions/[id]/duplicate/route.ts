@@ -19,7 +19,7 @@ export async function POST(request: Request, context: Context) {
   if (!parsed.success) return Response.json({ error: 'Tên cuộc thi mới cần từ 3 đến 180 ký tự.' }, { status: 400 });
   const source = await prisma.competition.findUnique({
     where: { id },
-    include: { rounds: { orderBy: { sequence: 'asc' }, include: { activeRubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } } } } },
+    include: { rounds: { orderBy: { sequence: 'asc' }, include: { activeRubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } }, groups: { orderBy: { sequence: 'asc' } } } } } } },
   });
   if (!source) return Response.json({ error: 'Không tìm thấy cuộc thi.' }, { status: 404 });
 
@@ -32,7 +32,7 @@ export async function POST(request: Request, context: Context) {
         organizingUnit: source.organizingUnit,
         location: source.location,
         modality: source.modality,
-        status: 'DRAFT',
+        status: 'READY',
         startsAt: null,
         endsAt: null,
       } });
@@ -52,28 +52,30 @@ export async function POST(request: Request, context: Context) {
           roundingPrecision: original.roundingPrecision,
         } });
         const criteria = original.activeRubricVersion?.criteria ?? [];
-        const rubric = await tx.rubric.create({ data: {
-          competitionId: copy.id,
-          roundId: round.id,
-          name: original.activeRubricVersion?.name ?? 'Rubric chấm điểm',
-          versions: { create: {
-            version: 1,
-            name: original.activeRubricVersion?.name ?? 'Phiên bản 1',
+        if (criteria.length) {
+          const rubric = await tx.rubric.create({ data: {
+            competitionId: copy.id,
+            roundId: round.id,
+            name: original.activeRubricVersion?.name ?? 'Bộ tiêu chí chấm',
+          } });
+          const version = await tx.rubricVersion.create({ data: {
+            rubricId: rubric.id, version: 1, status: 'PUBLISHED',
+            name: original.activeRubricVersion?.name ?? 'Bộ tiêu chí chấm',
             description: original.activeRubricVersion?.description ?? null,
-            criteria: { create: criteria.map((criterion) => ({
-              name: criterion.name,
-              description: criterion.description,
-              minimum: criterion.minimum,
-              maximum: criterion.maximum,
-              step: criterion.step,
-              weight: criterion.weight,
-              commentRequired: criterion.commentRequired,
-              sequence: criterion.sequence,
-            })) },
-          } },
-        } });
-        const version = await tx.rubricVersion.findFirstOrThrow({ where: { rubricId: rubric.id }, select: { id: true } });
-        await tx.competitionRound.update({ where: { id: round.id }, data: { activeRubricVersionId: version.id } });
+            scoringConfig: original.activeRubricVersion?.scoringConfig ?? undefined,
+          } });
+          const copiedGroups = await Promise.all((original.activeRubricVersion?.groups ?? []).map((group) => tx.rubricCriterionGroup.create({ data: { rubricVersionId: version.id, name: group.name, sequence: group.sequence } })));
+          const groupIds = new Map((original.activeRubricVersion?.groups ?? []).map((group, index) => [group.id, copiedGroups[index].id]));
+          await tx.rubricCriterion.createMany({ data: criteria.map((criterion) => ({
+            rubricVersionId: version.id,
+            groupId: criterion.groupId ? groupIds.get(criterion.groupId) ?? null : null,
+            name: criterion.name, description: criterion.description, type: criterion.type,
+            config: criterion.config as never, required: criterion.required,
+            minimum: criterion.minimum, maximum: criterion.maximum, step: criterion.step,
+            weight: criterion.weight, commentRequired: criterion.commentRequired, sequence: criterion.sequence,
+          })) });
+          await tx.competitionRound.update({ where: { id: round.id }, data: { activeRubricVersionId: version.id } });
+        }
         await tx.competitionSession.create({ data: { roundId: round.id } });
       }
 

@@ -14,7 +14,7 @@ export default function NewCompetitionPage() {
     const form = new FormData(event.currentTarget);
     const start = String(form.get('startsAt') || '');
     const end = String(form.get('endsAt') || '');
-    const body = { name: form.get('name'), description: form.get('description'), organizingUnit: form.get('organizingUnit'), location: form.get('location'), modality: form.get('modality'), firstRoundName: form.get('firstRoundName'), startsAt: start ? new Date(start).toISOString() : '', endsAt: end ? new Date(end).toISOString() : '' };
+    const body = { name: form.get('name'), description: form.get('description'), organizingUnit: form.get('organizingUnit'), location: form.get('location'), modality: 'ONSITE', startsAt: start ? new Date(start).toISOString() : '', endsAt: end ? new Date(end).toISOString() : '' };
     try {
       const response = await fetch('/api/competitions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không tạo được cuộc thi.');
@@ -22,7 +22,7 @@ export default function NewCompetitionPage() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Có lỗi xảy ra.'); } finally { setBusy(false); }
   }
   return <>
-    <PageHeader eyebrow="THIẾT LẬP" title="Tạo cuộc thi mới" description="Thông tin cơ bản và vòng đầu tiên." action={<Link href="/competitions" className="button secondary-button">← Danh sách</Link>} />
+    <PageHeader eyebrow="THIẾT LẬP" title="Tạo cuộc thi mới" description="Khai báo thông tin cuộc thi trước khi thêm thí sinh, tiêu chí và giám khảo." action={<Link href="/competitions" className="button secondary-button">← Danh sách</Link>} />
     <div className="card-grid creation-workspace">
       <SectionCard title="Thông tin cuộc thi" subtitle="Có thể chỉnh sửa sau.">
         {error && <Notice tone="error">{error}</Notice>}
@@ -30,15 +30,12 @@ export default function NewCompetitionPage() {
           <label className="field-label">Tên cuộc thi *<input className="field-input" name="name" required minLength={3} maxLength={180} placeholder="Ví dụ: HUIT Startup 2026" /></label>
           <label className="field-label">Mô tả<textarea className="field-textarea" name="description" maxLength={5000} placeholder="Mục tiêu, đối tượng tham gia và thông tin giới thiệu…" /></label>
           <div className="form-grid"><label className="field-label">Đơn vị tổ chức<input className="field-input" name="organizingUnit" maxLength={180} placeholder="Trường / khoa / đơn vị" /></label><label className="field-label">Địa điểm<input className="field-input" name="location" maxLength={240} placeholder="Địa điểm hoặc đường dẫn trực tuyến" /></label></div>
-          <label className="field-label">Hình thức<select className="field-select" name="modality" defaultValue="ONSITE"><option value="ONSITE">Trực tiếp</option><option value="ONLINE">Trực tuyến</option><option value="HYBRID">Kết hợp</option></select></label>
-          <label className="field-label">Vòng thi đầu tiên *<input className="field-input" name="firstRoundName" required defaultValue="Vòng sơ khảo" maxLength={160} /></label>
           <div className="form-grid"><label className="field-label">Ngày bắt đầu<input className="field-input" name="startsAt" type="datetime-local" /></label><label className="field-label">Ngày kết thúc<input className="field-input" name="endsAt" type="datetime-local" /></label></div>
-          <div className="notice notice-info">Tạo sẵn rubric 3 tiêu chí; có thể chỉnh trước khi chấm.</div>
           <div className="form-actions"><Link className="button secondary-button" href="/competitions">Hủy</Link><button className="button primary-button" type="submit" disabled={busy}>{busy ? 'Đang tạo…' : 'Tạo cuộc thi'}</button></div>
         </form>
       </SectionCard>
       <SectionCard title="Tiếp theo">
-        <div className="quick-links"><div className="quick-link"><span className="quick-icon">1</span><span className="quick-link-copy"><strong>Thêm thí sinh</strong><small>Nhập danh sách dự thi</small></span></div><div className="quick-link"><span className="quick-icon">2</span><span className="quick-link-copy"><strong>Phân công giám khảo</strong><small>Gán theo từng vòng</small></span></div><div className="quick-link"><span className="quick-icon">3</span><span className="quick-link-copy"><strong>Rà soát rubric</strong><small>Tiêu chí và trọng số</small></span></div><div className="quick-link"><span className="quick-icon">4</span><span className="quick-link-copy"><strong>Điều phối</strong><small>Bắt đầu vòng thi</small></span></div></div>
+        <div className="quick-links"><div className="quick-link"><span className="quick-icon">1</span><span className="quick-link-copy"><strong>Thêm thí sinh</strong><small>Nhập danh sách dự thi</small></span></div><div className="quick-link"><span className="quick-icon">2</span><span className="quick-link-copy"><strong>Phân công giám khảo</strong><small>Gán giám khảo cho cuộc thi</small></span></div><div className="quick-link"><span className="quick-icon">3</span><span className="quick-link-copy"><strong>Rà soát tiêu chí</strong><small>Tiêu chí và trọng số</small></span></div><div className="quick-link"><span className="quick-icon">4</span><span className="quick-link-copy"><strong>Điều phối chấm</strong><small>Bắt đầu phiên chấm thi</small></span></div></div>
       </SectionCard>
     </div>
   </>;

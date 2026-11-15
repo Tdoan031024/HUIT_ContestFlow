@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { isAssignedJudge, unauthorized, writeAudit } from '@/lib/api';
-import { validateScoreInput, weightedScore, type ScoreInput } from '@/lib/scoring';
+import { evaluateScoreSheet, isSafeScoreDecimal, type ConfiguredCriterion, type ScoreInput, type ScoringConfig } from '@/lib/scoring';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 const saveSchema = z.object({
-  details: z.array(z.object({ criterionId: z.string().uuid(), score: z.number().finite(), comment: z.string().max(5000).optional().nullable() })).max(40),
+  details: z.array(z.object({ criterionId: z.string().uuid(), value: z.unknown().optional(), score: z.number().finite().refine(isSafeScoreDecimal).optional(), comment: z.string().max(5000).optional().nullable() })).max(40),
   submit: z.boolean().optional().default(false),
 });
 type Context = { params: Promise<{ entryId: string }> };
@@ -17,7 +17,7 @@ export async function GET(_request: Request, context: Context) {
   const { entryId } = await context.params;
   const entry = await prisma.competitionEntry.findUnique({ where: { id: entryId }, include: { round: true, contestant: true } });
   if (!entry) return Response.json({ error: 'Không tìm thấy lượt thi.' }, { status: 404 });
-  if (!(await isAssignedJudge(user, entry.roundId, entry.id))) return Response.json({ error: 'Bạn chưa được phân công chấm lượt thi này.' }, { status: 403 });
+  if (!(await isAssignedJudge(user, entry.roundId))) return Response.json({ error: 'Bạn chưa được phân công chấm cuộc thi này.' }, { status: 403 });
   const sheet = await prisma.scoreSheet.findUnique({
     where: { entryId_judgeId: { entryId, judgeId: user.id } },
     include: { rubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } }, details: true },
@@ -29,7 +29,7 @@ export async function GET(_request: Request, context: Context) {
     : entry.round.activeRubricVersionId
     ? await prisma.rubricVersion.findUnique({ where: { id: entry.round.activeRubricVersionId }, include: { criteria: { orderBy: { sequence: 'asc' } } } })
     : null);
-  if (!rubricVersion) return Response.json({ error: 'Vòng thi chưa có rubric được kích hoạt.' }, { status: 409 });
+  if (!rubricVersion) return Response.json({ error: 'Cuộc thi chưa có tiêu chí chấm được kích hoạt.' }, { status: 409 });
   return Response.json({
     entry: {
       id: entry.id, code: entry.entryCode, title: entry.round.anonymous ? null : entry.title,
@@ -38,7 +38,7 @@ export async function GET(_request: Request, context: Context) {
     },
     round: { id: entry.round.id, name: entry.round.name, status: entry.round.status, anonymous: entry.round.anonymous, roundingPrecision: entry.round.roundingPrecision },
     rubric: rubricVersion,
-    scoreSheet: sheet ? { id: sheet.id, status: sheet.status, totalScore: sheet.totalScore, submittedAt: sheet.submittedAt, details: sheet.details, locked: Boolean(latestSnapshot && sheet.status !== 'REOPENED') } : null,
+    scoreSheet: sheet ? { id: sheet.id, status: sheet.status, totalScore: sheet.totalScore, outcome: sheet.outcome, submittedAt: sheet.submittedAt, details: sheet.details.map((detail) => ({ ...detail, score: detail.score === null ? null : Number(detail.score), value: detail.value ?? (detail.score === null ? null : Number(detail.score)) })), locked: Boolean(latestSnapshot && sheet.status !== 'REOPENED') } : null,
   });
 }
 
@@ -50,36 +50,25 @@ export async function PUT(request: Request, context: Context) {
   if (!parsed.success) return Response.json({ error: 'Dữ liệu phiếu chấm không hợp lệ.' }, { status: 400 });
   const entry = await prisma.competitionEntry.findUnique({ where: { id: entryId }, include: { round: true } });
   if (!entry) return Response.json({ error: 'Không tìm thấy lượt thi.' }, { status: 404 });
-  if (!(await isAssignedJudge(user, entry.roundId, entry.id))) return Response.json({ error: 'Bạn chưa được phân công chấm lượt thi này.' }, { status: 403 });
+  if (!(await isAssignedJudge(user, entry.roundId))) return Response.json({ error: 'Bạn chưa được phân công chấm cuộc thi này.' }, { status: 403 });
   const existing = await prisma.scoreSheet.findUnique({ where: { entryId_judgeId: { entryId, judgeId: user.id } }, select: { id: true, status: true, rubricVersionId: true } });
   if (existing?.status === 'SUBMITTED') return Response.json({ error: 'Phiếu đã nộp. Chỉ Admin mới có thể mở lại phiếu.' }, { status: 409 });
   const latestSnapshot = await prisma.resultSnapshot.findFirst({ where: { roundId: entry.roundId }, orderBy: { version: 'desc' }, select: { id: true } });
   if (latestSnapshot && existing?.status !== 'REOPENED') return Response.json({ error: 'Kết quả đã khóa. Liên hệ Admin để mở lại phiếu trước khi chỉnh sửa.' }, { status: 409 });
-  if (entry.round.status === 'COMPLETED' && !existing) return Response.json({ error: 'Vòng thi đã kết thúc; cần Admin mở lại phiếu trước khi tạo điểm mới.' }, { status: 409 });
-
-  const assignment = await prisma.judgeAssignment.findFirst({ where: { userId: user.id, roundId: entry.roundId } });
-  const session = await prisma.competitionSession.findUnique({ where: { roundId: entry.roundId }, select: { currentEntryId: true, state: true } });
-  const continuingWork = existing?.status === 'DRAFT' || existing?.status === 'REOPENED';
-  if (assignment?.entryId === null && !continuingWork && session?.currentEntryId !== entryId) {
-    return Response.json({ error: 'Bạn chỉ được bắt đầu chấm lượt đang được điều phối trực tiếp. Bản nháp hiện có vẫn có thể tiếp tục sau khi đổi lượt.' }, { status: 409 });
-  }
-  if (assignment?.entryId === null && !continuingWork && session?.state !== 'LIVE') {
-    return Response.json({ error: 'Phiên chấm chưa hoạt động. Chờ Admin bắt đầu điều phối lượt thi.' }, { status: 409 });
-  }
+  if (entry.round.status === 'COMPLETED' && !existing) return Response.json({ error: 'Cuộc thi đã kết thúc; cần Admin mở lại phiếu trước khi tạo điểm mới.' }, { status: 409 });
 
   const pinnedSheet = existing ?? await prisma.scoreSheet.findFirst({ where: { entryId }, orderBy: { createdAt: 'asc' }, select: { rubricVersionId: true } });
   const rubricVersionId = pinnedSheet?.rubricVersionId ?? entry.round.activeRubricVersionId;
-  if (!rubricVersionId) return Response.json({ error: 'Vòng thi chưa có rubric được kích hoạt.' }, { status: 409 });
+  if (!rubricVersionId) return Response.json({ error: 'Cuộc thi chưa có tiêu chí chấm được kích hoạt.' }, { status: 409 });
   const rubricVersion = await prisma.rubricVersion.findUnique({ where: { id: rubricVersionId }, include: { criteria: true } });
   if (!rubricVersion) return Response.json({ error: 'Không tìm thấy phiên bản rubric.' }, { status: 409 });
-  const details: ScoreInput[] = parsed.data.details;
-  const validationMessage = validateScoreInput(rubricVersion.criteria.map((criterion) => ({
-    id: criterion.id, minimum: Number(criterion.minimum), maximum: Number(criterion.maximum), step: Number(criterion.step), weight: Number(criterion.weight), commentRequired: criterion.commentRequired,
-  })), details, parsed.data.submit);
-  if (validationMessage) return Response.json({ error: validationMessage }, { status: 400 });
-  const totalScore = weightedScore(rubricVersion.criteria.map((criterion) => ({
-    id: criterion.id, minimum: Number(criterion.minimum), maximum: Number(criterion.maximum), step: Number(criterion.step), weight: Number(criterion.weight), commentRequired: criterion.commentRequired,
-  })), details);
+  const details: ScoreInput[] = parsed.data.details.map((detail) => ({ criterionId: detail.criterionId, value: detail.value !== undefined ? detail.value : detail.score, comment: detail.comment }));
+  const criteria: ConfiguredCriterion[] = rubricVersion.criteria.map((criterion) => ({ id: criterion.id, name: criterion.name, type: criterion.type as ConfiguredCriterion['type'], config: criterion.config ?? { minimum: Number(criterion.minimum), maximum: Number(criterion.maximum), step: Number(criterion.step) }, minimum: Number(criterion.minimum), maximum: Number(criterion.maximum), step: Number(criterion.step), weight: Number(criterion.weight), required: criterion.required, commentRequired: criterion.commentRequired }));
+  const policy = (rubricVersion.scoringConfig as unknown as ScoringConfig | null) ?? { resultMinimum: 0, resultMaximum: 10, legacyWeightedAverage: true };
+  const evaluation = evaluateScoreSheet(criteria, details, policy, entry.round.roundingPrecision, parsed.data.submit);
+  if (evaluation.error) return Response.json({ error: evaluation.error }, { status: 400 });
+  const resultById = new Map(evaluation.criteria.map((result) => [result.criterionId, result]));
+  const totalScore = evaluation.totalScore;
 
   try {
     const sheet = await prisma.$transaction(async (tx) => {
@@ -89,21 +78,22 @@ export async function PUT(request: Request, context: Context) {
         update: {},
       });
       if (saved.status === 'SUBMITTED') throw new Error('Phiếu đã được nộp trước đó.');
-      const previousDetails = await tx.scoreDetail.findMany({ where: { scoreSheetId: saved.id }, select: { criterionId: true, score: true, comment: true } });
+      if (saved.rubricVersionId !== rubricVersionId) throw new Error('Phiếu đang dùng phiên bản tiêu chí khác.');
+      const previousDetails = await tx.scoreDetail.findMany({ where: { scoreSheetId: saved.id }, select: { criterionId: true, score: true, value: true, comment: true } });
       await tx.scoreDetail.deleteMany({ where: { scoreSheetId: saved.id } });
       if (details.length) await tx.scoreDetail.createMany({ data: details.map((detail) => ({
-        scoreSheetId: saved.id, criterionId: detail.criterionId, score: detail.score, comment: detail.comment?.trim() || null,
+        scoreSheetId: saved.id, criterionId: detail.criterionId, score: resultById.get(detail.criterionId)?.score ?? null, value: detail.value as never, comment: detail.comment?.trim() || null,
       })) });
       if (parsed.data.submit) {
         const changed = await tx.scoreSheet.updateMany({
           where: { id: saved.id, status: { in: ['DRAFT', 'REOPENED'] } },
-          data: { status: 'SUBMITTED', totalScore, submittedAt: new Date() },
+          data: { status: 'SUBMITTED', totalScore, outcome: evaluation.outcome, submittedAt: new Date() },
         });
         if (!changed.count) throw new Error('Phiếu đã được nộp trước đó.');
-        await tx.auditEvent.create({ data: { competitionId: entry.competitionId, actorId: user.id, action: 'SCORE_SUBMITTED', entityType: 'ScoreSheet', entityId: saved.id, details: { entryId, totalScore, before: previousDetails.map((detail) => ({ ...detail, score: Number(detail.score) })), after: details } } });
+        await tx.auditEvent.create({ data: { competitionId: entry.competitionId, actorId: user.id, action: 'SCORE_SUBMITTED', entityType: 'ScoreSheet', entityId: saved.id, details: { entryId, totalScore, outcome: evaluation.outcome, before: previousDetails.map((detail) => ({ ...detail, score: detail.score === null ? null : Number(detail.score) })), after: details } as never } });
       } else {
-        await tx.scoreSheet.update({ where: { id: saved.id }, data: { status: saved.status === 'REOPENED' ? 'REOPENED' : 'DRAFT', totalScore, submittedAt: null } });
-        await tx.auditEvent.create({ data: { competitionId: entry.competitionId, actorId: user.id, action: 'SCORE_DRAFT_SAVED', entityType: 'ScoreSheet', entityId: saved.id, details: { entryId, totalScore, before: previousDetails.map((detail) => ({ ...detail, score: Number(detail.score) })), after: details } } });
+        await tx.scoreSheet.update({ where: { id: saved.id }, data: { status: saved.status === 'REOPENED' ? 'REOPENED' : 'DRAFT', totalScore, outcome: evaluation.outcome, submittedAt: null } });
+        await tx.auditEvent.create({ data: { competitionId: entry.competitionId, actorId: user.id, action: 'SCORE_DRAFT_SAVED', entityType: 'ScoreSheet', entityId: saved.id, details: { entryId, totalScore, outcome: evaluation.outcome, before: previousDetails.map((detail) => ({ ...detail, score: detail.score === null ? null : Number(detail.score) })), after: details } as never } });
       }
       return tx.scoreSheet.findUniqueOrThrow({ where: { id: saved.id }, include: { details: true } });
     });
