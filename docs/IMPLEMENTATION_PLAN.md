@@ -1,6 +1,6 @@
 # HUIT ContestFlow — Trạng thái hoàn thiện MVP
 
-Cập nhật ngày 05/11/2026. Phạm vi MVP là một ứng dụng Next.js full-stack, một tiến trình Node.js và MySQL; gồm hai vai trò Admin và Giám khảo. Không tạo tài khoản hoặc dữ liệu demo trên màn hình thật.
+Cập nhật ngày 09/11/2026. Phạm vi MVP là một ứng dụng Next.js full-stack, một tiến trình Node.js và MySQL; gồm hai vai trò Admin và Giám khảo. Không tạo tài khoản hoặc dữ liệu demo trên màn hình thật.
 
 ## Phần đã hoàn thành
 
@@ -8,9 +8,9 @@ Cập nhật ngày 05/11/2026. Phạm vi MVP là một ứng dụng Next.js full
 |---|---|---|
 | 0. Môi trường và quy tắc | Hoàn tất cho môi trường phát triển | MySQL cô lập; số phiếu yêu cầu, trung bình/trung vị, ẩn danh, cho phép thiếu phiếu, quyền xem điểm và mở lại phiếu cấu hình theo vòng. |
 | 1. Mô hình và migration | Hoàn tất | Schema Prisma, ràng buộc dữ liệu và hai migration; có thể triển khai bằng `npm run db:deploy`. |
-| 2. Đăng nhập và phân quyền | Hoàn tất | Khởi tạo Admin một lần, mật khẩu scrypt, session HttpOnly, phân quyền ở Route Handler, tài khoản Judge; Admin có thể đặt lại mật khẩu Judge và thu hồi session cũ. |
+| 2. Đăng nhập và phân quyền | Hoàn tất | Khởi tạo Admin một lần, mật khẩu scrypt, session HttpOnly, phân quyền ở Route Handler; sau đăng nhập Judge được đưa thẳng vào danh sách Chấm thi. Admin tạo tài khoản Judge mới hoặc chọn tài khoản có sẵn ngay khi phân công, đồng thời đặt lại mật khẩu và thu hồi session cũ. |
 | 3. Quản lý cuộc thi | Hoàn tất | Tạo, sửa, lưu trữ và nhân bản cuộc thi; lưu thời gian, đơn vị, địa điểm, hình thức; tạo và cấu hình vòng thi. Nhân bản chỉ sao chép cấu hình và rubric. |
-| 4. Thí sinh và phân công | Hoàn tất | CRUD hồ sơ/tham gia vòng, CSV tối đa 500 dòng, mã và thứ tự tự cấp; phân công Judge theo vòng hoặc lượt thi. |
+| 4. Thí sinh và phân công | Hoàn tất | CRUD hồ sơ/tham gia vòng, CSV tối đa 500 dòng, mã và thứ tự tự cấp; Admin sắp xếp thứ tự trước khi bắt đầu. Queue Giám khảo giữ thứ tự vòng và lượt thi đã cấu hình; phân công Judge theo vòng hoặc lượt thi. |
 | 5. Rubric Builder | Hoàn tất cho MVP | Tiêu chí, hướng dẫn, thang điểm, bước điểm, trọng số, nhận xét bắt buộc, xem trước và phiên bản bất biến sau khi có phiếu. |
 | 6. Điều phối và chấm điểm | Hoàn tất cho MVP | Bắt đầu, tạm dừng, tiếp tục, chọn/chuyển lượt, kết thúc; trạng thái được kiểm soát bằng version để từ chối lệnh cũ; Judge lưu nháp phía máy chủ và nộp phiếu độc lập. |
 | 7. Tổng hợp và công bố | Hoàn tất cho MVP | Tính điểm có trọng số, trung bình/trung vị giữa Judge, đồng hạng khi bằng điểm, chặn khóa nếu thiếu phiếu theo quy tắc, snapshot bất biến, mở lại có lý do và công bố. |

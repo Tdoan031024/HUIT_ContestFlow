@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_admin_tab" name="shell-type"/><title>HUIT ContestFlow</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface": "#f6f9ff", "surface-container-highest": "#cfe5fb", "tertiary-fixed-dim": "#00d9ff", "on-surface-variant": "#424752", "secondary-fixed-dim": "#9dcaff", "on-surface": "#061d2d", "error-container": "#ffdad6", "outline": "#737783", "on-secondary-container": "#004676", "error": "#ba1a1a", "surface-container-low": "#ecf5ff", "on-secondary": "#ffffff", "tertiary-container": "#005869", "tertiary": "#003f4c", "primary-container": "#034ea2", "inverse-surface": "#1d3343", "on-error-container": "#93000a", "on-secondary-fixed": "#001d35", "secondary": "#0062a2", "on-primary-fixed": "#001a40", "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#acc7ff", "surface-container-high": "#d6ebff", "surface-dim": "#c6ddf2", "inverse-primary": "#acc7ff", "surface-bright": "#f6f9ff", "primary": "#003878", "on-error": "#ffffff", "outline-variant": "#c2c6d3", "on-primary": "#ffffff", "on-tertiary-fixed-variant": "#004e5d", "on-secondary-fixed-variant": "#00497c", "secondary-container": "#70b5fe", "on-background": "#061d2d", "surface-variant": "#cfe5fb", "on-tertiary-fixed": "#001f26", "on-tertiary": "#ffffff", "on-primary-container": "#a6c3ff", "background": "#f6f9ff", "secondary-fixed": "#d1e4ff", "on-primary-fixed-variant": "#004591", "primary-fixed": "#d7e2ff", "tertiary-fixed": "#aeecff", "inverse-on-surface": "#e6f2ff", "surface-container": "#e1f0ff", "on-tertiary-container": "#00d4fa", "surface-tint": "#215db1" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xl": "2.5rem", "gutter-desktop": "2rem", "margin-desktop": "3rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "space-md": "1rem", "gutter-tablet": "1.5rem", "margin": "1rem", "space-xs": "0.25rem", "gutter": "1rem" }, fontFamily: { "headline-lg-mobile": ["Be Vietnam Pro"], "headline-sm": ["Be Vietnam Pro"], "body-lg": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "label-lg": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "numeric-score": ["Be Vietnam Pro"], "display-lg-mobile": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "display-lg": ["Be Vietnam Pro"] }, fontSize: { "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "numeric-score": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1.5"><div class="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm text-headline-sm font-bold tracking-tight shadow-sm">H</div><div class="flex flex-col"><div class="flex items-center leading-none"><span class="font-label-lg text-label-lg font-bold text-primary-container">HUIT</span><span class="font-label-lg text-label-lg font-bold text-tertiary-fixed-dim ml-0.5">Flow</span></div><span class="font-label-sm text-[10px] text-outline leading-tight tracking-wider uppercase">Contest</span></div></div><div class="h-4 w-px bg-outline-variant/60 ml-0.5"></div><span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-label-sm uppercase tracking-wider">Admin</span></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-20 bg-surface"><div class="flex flex-col w-full pb-28">
+<!-- Top Tracker Context Bar -->
+<section class="px-gutter pt-space-md pb-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+        Vòng Bán Kết 2025
+      </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim">sync</span>
+<span>Cập nhật tức thời</span>
+</div>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight mt-1">
+      Coverage Phiếu Chấm
+    </h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+      Kiểm soát tiến độ chấm điểm, xử lý phiếu nháp và mở lại phiếu phúc khảo.
+    </p>
+</section>
+<!-- Summary Bento Grid -->
+<section class="px-gutter mb-space-md">
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Metric 1: Coverage Rate -->
+<div class="col-span-2 bg-surface-container-lowest p-space-md rounded-xl shadow-sm relative overflow-hidden flex items-center justify-between">
+<div class="flex flex-col z-10">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Tiến độ nộp phiếu</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-numeric-score text-numeric-score text-primary">14<span class="text-on-surface-variant font-normal">/15</span></span>
+<span class="font-label-lg text-label-lg text-primary font-bold">93.3%</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">5 đội thi · 3 Giám khảo / đội</span>
+</div>
+<div class="relative w-16 h-16 flex items-center justify-center shrink-0 z-10">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-container-highest stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="3.5"></path>
+<path class="text-primary stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-dasharray="93.3, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<span class="material-symbols-outlined absolute text-primary text-[20px]">grading</span>
+</div>
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-surface-container opacity-40 pointer-events-none"></div>
+</div>
+<!-- Metric 2: Completed Teams -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Đủ điều kiện</span>
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+</div>
+</div>
+<div class="mt-2">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">3 <span class="font-body-sm text-body-sm text-on-surface-variant">/ 5 đội</span></span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Hoàn tất 100%</p>
+</div>
+</div>
+<!-- Metric 3: Pending Drafts -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Bản nháp chờ</span>
+<div class="w-6 h-6 rounded-full bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[15px]">pending_actions</span>
+</div>
+</div>
+<div class="mt-2">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-error">1 <span class="font-body-sm text-body-sm text-on-surface-variant">phiếu</span></span>
+<p class="font-body-sm text-body-sm text-error mt-0.5">Cần nhắc nhở</p>
+</div>
+</div>
+</div>
+<!-- Lock Status Warning Card -->
+<div class="mt-space-sm bg-error-container/60 p-space-md rounded-xl flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-[22px] shrink-0 mt-0.5">lock_clock</span>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-error-container font-bold">Chưa đủ điều kiện khóa kết quả</span>
+<p class="font-body-sm text-body-sm text-on-error-container/90 mt-0.5 leading-snug">
+          Còn <strong class="font-semibold">1 phiếu DRAFT chưa nộp</strong> (#ENT-011). Cần tất cả phiếu trạng thái SUBMITTED hoặc REOPENED giải quyết xong trước khi xuất báo cáo.
+        </p>
+</div>
+</div>
+</section>
+<!-- Filter Ribbon (Horizontal Scrollable Tabs) -->
+<section class="px-gutter mb-space-sm">
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 no-scrollbar" id="statusFilterRibbon">
+<button class="filter-tab active px-3.5 py-1.5 rounded-full font-label-md text-label-md shrink-0 transition-all bg-primary text-on-primary shadow-sm" data-filter="all">
+        Tất cả (5)
+      </button>
+<button class="filter-tab px-3.5 py-1.5 rounded-full font-label-md text-label-md shrink-0 transition-all bg-surface-container-high text-on-surface-variant hover:text-on-surface" data-filter="ready">
+        Đủ phiếu (3)
+      </button>
+<button class="filter-tab px-3.5 py-1.5 rounded-full font-label-md text-label-md shrink-0 transition-all bg-surface-container-high text-on-surface-variant hover:text-on-surface" data-filter="missing">
+        Thiếu phiếu (1)
+      </button>
+<button class="filter-tab px-3.5 py-1.5 rounded-full font-label-md text-label-md shrink-0 transition-all bg-surface-container-high text-on-surface-variant hover:text-on-surface" data-filter="draft">
+        Có bản nháp (1)
+      </button>
+</div>
+</section>
+<!-- Contestant Entry Cards List -->
+<section class="px-gutter flex flex-col gap-space-sm" id="entriesList">
+<!-- ENTRY 1: Đủ điều kiện (#ENT-012) -->
+<article class="entry-item bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all" data-status="ready">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-bold tracking-wider">
+            #ENT-012
+          </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            3/3 Phiếu
+          </span>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Điểm TB</span>
+<span class="font-title-md text-title-md font-bold text-primary">86.17</span>
+</div>
+</div>
+<div class="mt-2">
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">
+          Hệ thống Smart IoT Nông Nghiệp
+        </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Nhóm AgriTech HUIT · Khoa Công Nghệ Thông Tin
+        </p>
+</div>
+<!-- Micro Visual Indicator -->
+<div class="mt-3 py-2 px-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">task_alt</span>
+<span class="font-label-md text-label-md text-on-surface">Đã đầy đủ điều kiện chốt điểm</span>
+</div>
+<button class="toggle-detail-btn text-primary font-label-sm text-label-sm flex items-center gap-0.5 focus:outline-none" onclick="toggleDetails('detail-ent-012', this)">
+<span>Chi tiết</span>
+<span class="material-symbols-outlined text-[16px] transition-transform duration-200">expand_more</span>
+</button>
+</div>
+<!-- Accordion Content -->
+<div class="hidden mt-3 flex flex-col gap-2 pt-2 bg-surface-container-lowest" id="detail-ent-012">
+<!-- Judge 1 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              TH
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">TS. Nguyễn Văn Hùng</p>
+<p class="font-body-sm text-[11px] text-on-surface-variant">Nộp lúc 14:15 · 26/10</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-lg text-label-lg font-bold text-primary">88.0</span>
+<button class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm transition-colors" onclick="openReopenModal('ENT-012', 'TS. Nguyễn Văn Hùng', '88.0')">
+              Mở lại
+            </button>
+</div>
+</div>
+<!-- Judge 2 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              LQ
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">ThS. Lê Quốc Tuấn</p>
+<p class="font-body-sm text-[11px] text-on-surface-variant">Nộp lúc 14:28 · 26/10</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-lg text-label-lg font-bold text-primary">84.5</span>
+<button class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm transition-colors" onclick="openReopenModal('ENT-012', 'ThS. Lê Quốc Tuấn', '84.5')">
+              Mở lại
+            </button>
+</div>
+</div>
+<!-- Judge 3 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              TL
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">ThS. Trần Mai Lan</p>
+<p class="font-body-sm text-[11px] text-on-surface-variant">Nộp lúc 14:32 · 26/10</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-lg text-label-lg font-bold text-primary">86.0</span>
+<button class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm transition-colors" onclick="openReopenModal('ENT-012', 'ThS. Trần Mai Lan', '86.0')">
+              Mở lại
+            </button>
+</div>
+</div>
+</div>
+</article>
+<!-- ENTRY 2: Thiếu phiếu & Có bản nháp (#ENT-011) -->
+<article class="entry-item bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all" data-status="draft missing">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-bold tracking-wider">
+            #ENT-011
+          </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+            2/3 Phiếu
+          </span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-error font-label-sm text-label-sm font-bold uppercase tracking-wider">
+          Chờ nộp
+        </span>
+</div>
+<div class="mt-2">
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">
+          Nền tảng Tái chế Rác thải Đô thị
+        </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Nhóm GreenPulse · Khoa Công Nghệ Hóa Học &amp; Môi Trường
+        </p>
+</div>
+<!-- Warning Callout Card inside Entry -->
+<div class="mt-3 p-2.5 rounded-lg bg-error-container/40 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-error text-[18px] shrink-0 mt-0.5">warning</span>
+<div class="flex-1">
+<p class="font-label-md text-label-md text-on-error-container font-bold">
+            Còn 1 bản nháp của ThS. Trần Mai Lan
+          </p>
+<p class="font-body-sm text-[12px] text-on-surface-variant mt-0.5">
+            Lần lưu nháp gần nhất: 12 phút trước. Điểm chưa đồng bộ chính thức.
+          </p>
+<div class="mt-2 flex items-center gap-2">
+<button class="px-2.5 py-1 rounded bg-error text-on-error font-label-sm text-label-sm font-semibold flex items-center gap-1 active:scale-95 transition-transform shadow-xs" onclick="sendJudgeReminder('ThS. Trần Mai Lan', '#ENT-011')">
+<span class="material-symbols-outlined text-[14px]">notifications_active</span>
+              Nhắc nhở GK
+            </button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm hover:text-on-surface" onclick="toggleDetails('detail-ent-011', this)">
+              Xem chi tiết
+            </button>
+</div>
+</div>
+</div>
+<!-- Accordion Content -->
+<div class="mt-3 flex flex-col gap-2 pt-2 bg-surface-container-lowest" id="detail-ent-011">
+<!-- Judge 1 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              TH
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">TS. Nguyễn Văn Hùng</p>
+<span class="inline-flex items-center gap-1 text-[11px] text-tertiary font-medium">
+<span class="material-symbols-outlined text-[13px]">check_circle</span> Đã nộp
+              </span>
+</div>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-primary">82.5</span>
+</div>
+<!-- Judge 2 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              LQ
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">ThS. Lê Quốc Tuấn</p>
+<span class="inline-flex items-center gap-1 text-[11px] text-tertiary font-medium">
+<span class="material-symbols-outlined text-[13px]">check_circle</span> Đã nộp
+              </span>
+</div>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-primary">79.0</span>
+</div>
+<!-- Judge 3 (DRAFT) -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-error-container/30">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-error text-on-error flex items-center justify-center font-label-sm text-label-sm font-bold">
+              TL
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">ThS. Trần Mai Lan</p>
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] text-error font-bold">
+<span class="material-symbols-outlined text-[13px]">edit_document</span> DRAFT (Chưa nộp)
+              </span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-error">-- / 100</span>
+</div>
+</div>
+</article>
+<!-- ENTRY 3: Admin Đã Mở Lại (#ENT-009) -->
+<article class="entry-item bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all" data-status="ready">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-bold tracking-wider">
+            #ENT-009
+          </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error text-on-error font-label-sm text-label-sm font-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-[12px]">replay</span>
+            Reopened
+          </span>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Điểm hiện hành</span>
+<span class="font-title-md text-title-md font-bold text-primary">89.60</span>
+</div>
+</div>
+<div class="mt-2">
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">
+          Robot Tự Hành Khử Khuẩn Bệnh Viện
+        </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Nhóm MedTech Nova · Khoa Cơ Khí - Cơ Điện Tử
+        </p>
+</div>
+<!-- Reopen Explanation Panel -->
+<div class="mt-3 p-3 rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-error">info</span>
+<span class="font-label-md text-label-md font-bold">Lý do mở lại bởi Admin:</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant">Hôm nay 11:20</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          “Bổ sung nhận xét chi tiết cho Tiêu chí 2 theo đơn yêu cầu phúc khảo mã số #PK-104”
+        </p>
+<div class="mt-1 pt-1.5 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">GK thao tác: <strong>TS. Nguyễn Văn Hùng</strong></span>
+<button class="text-primary font-label-sm text-label-sm font-semibold flex items-center gap-0.5 hover:underline" onclick="viewAuditLog('ENT-009')">
+<span class="material-symbols-outlined text-[14px]">history</span>
+            Biên bản audit
+          </button>
+</div>
+</div>
+<div class="mt-3 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Giám khảo đang cập nhật lại...</span>
+<button class="toggle-detail-btn text-primary font-label-sm text-label-sm flex items-center gap-0.5 focus:outline-none" onclick="toggleDetails('detail-ent-009', this)">
+<span>Chi tiết</span>
+<span class="material-symbols-outlined text-[16px] transition-transform duration-200">expand_more</span>
+</button>
+</div>
+<div class="hidden mt-3 flex flex-col gap-2 pt-2 bg-surface-container-lowest" id="detail-ent-009">
+<!-- Judge 1 (Reopened) -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-high/60">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              TH
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">TS. Nguyễn Văn Hùng</p>
+<span class="text-[11px] text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">lock_open</span> Đang mở lại chỉnh sửa
+              </span>
+</div>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-on-surface-variant">88.5</span>
+</div>
+<!-- Judge 2 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              LQ
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">ThS. Lê Quốc Tuấn</p>
+<span class="text-[11px] text-tertiary">Đã khóa phiếu</span>
+</div>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-primary">91.0</span>
+</div>
+<!-- Judge 3 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-label-sm text-label-sm font-bold">
+              TL
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">ThS. Trần Mai Lan</p>
+<span class="text-[11px] text-tertiary">Đã khóa phiếu</span>
+</div>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-primary">89.3</span>
+</div>
+</div>
+</article>
+</section>
+<!-- Sticky Bottom Bar (Administrative Next Step) -->
+<div class="fixed bottom-16 inset-x-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md px-gutter py-3 shadow-[0_-4px_24px_rgba(21,43,59,0.08)] flex items-center justify-between gap-3">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Trạng thái vòng</span>
+<span class="font-title-md text-title-md font-bold text-on-surface">14/15 Phiếu Đã Nộp</span>
+</div>
+<button class="flex-1 max-w-[210px] min-h-[46px] rounded-lg bg-primary text-on-primary font-label-lg text-label-lg font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform shadow-md" onclick="proceedToResults()">
+<span>Chuyển sang Kết quả</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Reopen Modal Sheet (Backdrop & Content) -->
+<div class="fixed inset-0 z-50 hidden bg-inverse-surface/60 backdrop-blur-xs flex items-end sm:items-center sm:justify-center p-0 sm:p-4 transition-opacity" id="reopenModal">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-t-2xl sm:rounded-2xl p-gutter shadow-2xl flex flex-col gap-space-sm max-h-[795px] overflow-y-auto">
+<!-- Modal Header -->
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-error-container text-error flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">lock_open</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Mở Lại Phiếu Chấm</h2>
+</div>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" onclick="closeReopenModal()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Target Info Card -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-on-surface-variant">Mã dự án:</span>
+<span class="font-bold text-primary" id="modalEntryId">#ENT-012</span>
+</div>
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-on-surface-variant">Giám khảo:</span>
+<span class="font-bold text-on-surface" id="modalJudgeName">TS. Nguyễn Văn Hùng</span>
+</div>
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-on-surface-variant">Điểm đã nộp:</span>
+<span class="font-bold text-primary" id="modalCurrentScore">88.0 / 100</span>
+</div>
+</div>
+<!-- Compliance Notice WF-05 -->
+<div class="p-2.5 rounded-lg bg-surface-container flex items-start gap-2 text-on-surface-variant font-body-sm text-[12px] leading-tight">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">policy</span>
+<span>Theo quy chế WF-05: Mọi thao tác mở lại phiếu được ghi vào hệ thống kiểm toán (Audit Trail) và yêu cầu lý do hợp lệ tối thiểu 10 ký tự.</span>
+</div>
+<!-- Textarea Input -->
+<div class="flex flex-col gap-1.5 mt-1">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<label class="font-bold text-on-surface" for="reopenReason">Lý do mở lại (Bắt buộc) *</label>
+<span class="text-on-surface-variant" id="charCount">0/10 ký tự</span>
+</div>
+<textarea class="w-full p-space-sm rounded-lg bg-surface text-on-surface placeholder:text-outline font-body-md text-body-md focus:outline-none focus:bg-surface-container-lowest transition-all" id="reopenReason" oninput="handleReasonInput(this)" placeholder="Nhập lý do chi tiết (ví dụ: Tiếp nhận đơn phúc khảo, yêu cầu chuẩn hóa điểm chí số 2...)" rows="3"></textarea>
+</div>
+<!-- Quick Preset Chips -->
+<div class="flex flex-wrap gap-1.5">
+<button class="px-2 py-1 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-[11px] hover:bg-surface-container-high transition-colors" onclick="setPresetReason('Phúc khảo theo đơn khiếu nại thí sinh')" type="button">
+          + Phúc khảo thí sinh
+        </button>
+<button class="px-2 py-1 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-[11px] hover:bg-surface-container-high transition-colors" onclick="setPresetReason('Bổ sung nhận xét chi tiết cho tiêu chí')" type="button">
+          + Bổ sung nhận xét
+        </button>
+<button class="px-2 py-1 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-[11px] hover:bg-surface-container-high transition-colors" onclick="setPresetReason('Điều chỉnh lỗi nhập liệu kỹ thuật')" type="button">
+          + Lỗi nhập liệu
+        </button>
+</div>
+<!-- Modal Action Buttons -->
+<div class="flex items-center gap-space-sm pt-2">
+<button class="flex-1 min-h-[44px] rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg font-semibold hover:bg-surface-container-high transition-colors" onclick="closeReopenModal()" type="button">
+          Hủy bỏ
+        </button>
+<button class="flex-1 min-h-[44px] rounded-lg bg-error text-on-error font-label-lg text-label-lg font-semibold opacity-50 cursor-not-allowed transition-all flex items-center justify-center gap-1" disabled="" id="confirmReopenBtn" onclick="confirmReopenAction()" type="button">
+<span class="material-symbols-outlined text-[18px]">lock_reset</span>
+          Xác nhận Mở
+        </button>
+</div>
+</div>
+</div>
+<!-- Notification Toast -->
+<div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 hidden bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-full shadow-lg items-center gap-2 font-label-sm text-label-sm transition-all" id="toastMessage">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-[18px]" id="toastIcon">check_circle</span>
+<span id="toastText">Thao tác thành công</span>
+</div>
+</div>
+<script>
+  // Tab Filter Handling
+  const filterTabs = document.querySelectorAll('.filter-tab');
+  const entryItems = document.querySelectorAll('.entry-item');
+
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      filterTabs.forEach(t => {
+        t.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+        t.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+      });
+      tab.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+      tab.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+
+      const filter = tab.getAttribute('data-filter');
+      entryItems.forEach(item => {
+        const statuses = item.getAttribute('data-status');
+        if (filter === 'all' || statuses.includes(filter)) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+    });
+  });
+
+  // Accordion Expand/Collapse
+  function toggleDetails(contentId, triggerBtn) {
+    const content = document.getElementById(contentId);
+    const icon = triggerBtn.querySelector('.material-symbols-outlined');
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+      if (icon) icon.style.transform = 'rotate(180deg)';
+    } else {
+      content.classList.add('hidden');
+      if (icon) icon.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  // Toast Helper
+  function showToast(text, icon = 'check_circle') {
+    const toast = document.getElementById('toastMessage');
+    const toastText = document.getElementById('toastText');
+    const toastIcon = document.getElementById('toastIcon');
+    toastText.textContent = text;
+    toastIcon.textContent = icon;
+    toast.classList.remove('hidden');
+    toast.classList.add('flex');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+      toast.classList.remove('flex');
+    }, 2800);
+  }
+
+  // Remind Judge Interaction
+  function sendJudgeReminder(judgeName, entryId) {
+    showToast(`Đã gửi thông báo hối thúc tới ${judgeName} cho ${entryId}!`, 'send');
+  }
+
+  // View Audit Logs
+  function viewAuditLog(entryId) {
+    showToast(`Đang tải nhật ký kiểm toán cho ${entryId}...`, 'history');
+  }
+
+  // Modal State Logic
+  const modal = document.getElementById('reopenModal');
+  const reasonInput = document.getElementById('reopenReason');
+  const confirmBtn = document.getElementById('confirmReopenBtn');
+  const charCount = document.getElementById('charCount');
+
+  function openReopenModal(entryId, judgeName, score) {
+    document.getElementById('modalEntryId').textContent = entryId;
+    document.getElementById('modalJudgeName').textContent = judgeName;
+    document.getElementById('modalCurrentScore').textContent = score + ' / 100';
+    reasonInput.value = '';
+    handleReasonInput(reasonInput);
+    modal.classList.remove('hidden');
+  }
+
+  function closeReopenModal() {
+    modal.classList.add('hidden');
+  }
+
+  function handleReasonInput(textarea) {
+    const len = textarea.value.trim().length;
+    charCount.textContent = `${len}/10 ký tự`;
+    if (len >= 10) {
+      charCount.classList.remove('text-on-surface-variant');
+      charCount.classList.add('text-primary');
+      confirmBtn.removeAttribute('disabled');
+      confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+      charCount.classList.add('text-on-surface-variant');
+      charCount.classList.remove('text-primary');
+      confirmBtn.setAttribute('disabled', 'true');
+      confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+  }
+
+  function setPresetReason(text) {
+    reasonInput.value = text;
+    handleReasonInput(reasonInput);
+  }
+
+  function confirmReopenAction() {
+    const entryId = document.getElementById('modalEntryId').textContent;
+    closeReopenModal();
+    showToast(`Đã mở lại quyền chấm cho phiếu thuộc ${entryId}`, 'lock_open');
+  }
+
+  // Proceed Navigation check
+  function proceedToResults() {
+    showToast('Chuyển hướng đến màn hình SCR-12: Bảng Kết Quả...', 'arrow_forward');
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(21,43,59,0.06)]" data-active-classes="text-primary font-bold"><div class="h-16 px-gutter flex items-center justify-around"><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="dieu-phoi" href="#"><span class="material-symbols-outlined text-[24px]">tune</span><span class="font-label-sm text-label-sm mt-0.5">Điều phối</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="theo-doi" href="#"><span class="material-symbols-outlined text-[24px]">radar</span><span class="font-label-sm text-label-sm mt-0.5">Theo dõi</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="ket-qua" href="#"><span class="material-symbols-outlined text-[24px]">leaderboard</span><span class="font-label-sm text-label-sm mt-0.5">Kết quả</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="tong-quan" href="#"><span class="material-symbols-outlined text-[24px]">grid_view</span><span class="font-label-sm text-label-sm mt-0.5">Tổng quan</span></a></div></nav></body></html>

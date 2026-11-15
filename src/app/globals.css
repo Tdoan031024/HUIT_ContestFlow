@@ -6,18 +6,18 @@
 
 :root {
   color-scheme: light;
-  --ink: #152b3b;
-  --muted: #607381;
-  --subtle: #8796a0;
-  --line: #dce5e9;
-  --canvas: #f4f7f8;
+  --ink: #061d2d;
+  --muted: #424752;
+  --subtle: #424752;
+  --line: #d9e5f1;
+  --canvas: #f6f9ff;
   --surface: #fff;
-  --navy: #102f48;
-  --navy-soft: #1b435e;
-  --blue: #0b659b;
-  --blue-dark: #084d78;
-  --blue-wash: #eaf4f8;
-  --warm: #e8a35a;
+  --navy: #003878;
+  --navy-soft: #034ea2;
+  --blue: #034ea2;
+  --blue-dark: #003878;
+  --blue-wash: #ecf5ff;
+  --warm: #00d9ff;
   --green: #197458;
   --red: #ad4148;
   --amber: #a66622;

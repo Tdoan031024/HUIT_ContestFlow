@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Icon } from '@/components/icons';
 
-export function PageHeader({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: string; action?: ReactNode }) {
-  return <div className="page-heading"><div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1>{description && <p>{description}</p>}</div>{action && <div className="page-heading-action">{action}</div>}</div>;
+export function PageHeader({ eyebrow, title, description, action, className }: { eyebrow?: string; title: string; description?: string; action?: ReactNode; className?: string }) {
+  return <div className={`page-heading${className ? ` ${className}` : ''}`}><div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1>{description && <p>{description}</p>}</div>{action && <div className="page-heading-action">{action}</div>}</div>;
 }
 
 export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'success' | 'warning' | 'error' }) {
@@ -10,7 +10,10 @@ export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?
 }
 
 export function Loading({ label = 'Đang tải dữ liệu…' }: { label?: string }) {
-  return <div className="loading-state"><span className="spinner" />{label}</div>;
+  return <div className="loading-state" role="status" aria-live="polite">
+    <div className="loading-copy"><span className="spinner" aria-hidden="true" /><span>{label}</span></div>
+    <div className="loading-skeleton" aria-hidden="true"><i /><i /><i /></div>
+  </div>;
 }
 
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {

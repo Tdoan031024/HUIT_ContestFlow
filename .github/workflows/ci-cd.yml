@@ -45,6 +45,15 @@ jobs:
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
         run: tar -czf hcf-cpanel-release.tar.gz app.cjs .next public package.json package-lock.json prisma prisma.config.ts next.config.ts src/generated/prisma
 
+      - name: Verify docs are excluded from cPanel release
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+        run: |
+          tar -tzf hcf-cpanel-release.tar.gz > /tmp/hcf-cpanel-release-files.txt
+          if grep -Eq '(^|/)docs(/|$)' /tmp/hcf-cpanel-release-files.txt; then
+            echo "::error::The cPanel release archive must not contain a docs directory."
+            exit 1
+          fi
+
       - name: Upload cPanel release artifact
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
         uses: actions/upload-artifact@v7

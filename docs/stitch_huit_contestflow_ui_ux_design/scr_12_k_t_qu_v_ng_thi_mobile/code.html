@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_admin_tab" name="shell-type"/><title>HUIT ContestFlow</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface": "#f6f9ff", "surface-container-highest": "#cfe5fb", "tertiary-fixed-dim": "#00d9ff", "on-surface-variant": "#424752", "secondary-fixed-dim": "#9dcaff", "on-surface": "#061d2d", "error-container": "#ffdad6", "outline": "#737783", "on-secondary-container": "#004676", "error": "#ba1a1a", "surface-container-low": "#ecf5ff", "on-secondary": "#ffffff", "tertiary-container": "#005869", "tertiary": "#003f4c", "primary-container": "#034ea2", "inverse-surface": "#1d3343", "on-error-container": "#93000a", "on-secondary-fixed": "#001d35", "secondary": "#0062a2", "on-primary-fixed": "#001a40", "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#acc7ff", "surface-container-high": "#d6ebff", "surface-dim": "#c6ddf2", "inverse-primary": "#acc7ff", "surface-bright": "#f6f9ff", "primary": "#003878", "on-error": "#ffffff", "outline-variant": "#c2c6d3", "on-primary": "#ffffff", "on-tertiary-fixed-variant": "#004e5d", "on-secondary-fixed-variant": "#00497c", "secondary-container": "#70b5fe", "on-background": "#061d2d", "surface-variant": "#cfe5fb", "on-tertiary-fixed": "#001f26", "on-tertiary": "#ffffff", "on-primary-container": "#a6c3ff", "background": "#f6f9ff", "secondary-fixed": "#d1e4ff", "on-primary-fixed-variant": "#004591", "primary-fixed": "#d7e2ff", "tertiary-fixed": "#aeecff", "inverse-on-surface": "#e6f2ff", "surface-container": "#e1f0ff", "on-tertiary-container": "#00d4fa", "surface-tint": "#215db1" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xl": "2.5rem", "gutter-desktop": "2rem", "margin-desktop": "3rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "space-md": "1rem", "gutter-tablet": "1.5rem", "margin": "1rem", "space-xs": "0.25rem", "gutter": "1rem" }, fontFamily: { "headline-lg-mobile": ["Be Vietnam Pro"], "headline-sm": ["Be Vietnam Pro"], "body-lg": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "label-lg": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "numeric-score": ["Be Vietnam Pro"], "display-lg-mobile": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "display-lg": ["Be Vietnam Pro"] }, fontSize: { "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "numeric-score": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1.5"><div class="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm text-headline-sm font-bold tracking-tight shadow-sm">H</div><div class="flex flex-col"><div class="flex items-center leading-none"><span class="font-label-lg text-label-lg font-bold text-primary-container">HUIT</span><span class="font-label-lg text-label-lg font-bold text-tertiary-fixed-dim ml-0.5">Flow</span></div><span class="font-label-sm text-[10px] text-outline leading-tight tracking-wider uppercase">Contest</span></div></div><div class="h-4 w-px bg-outline-variant/60 ml-0.5"></div><span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-label-sm uppercase tracking-wider">Admin</span></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-20 bg-surface"><div class="flex flex-col w-full">
+<div class="px-margin pt-space-md pb-space-lg flex flex-col gap-space-lg">
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs text-primary mb-1">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">Vòng Bán kết 2026</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface truncate">Kết quả chính thức</h1>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-high px-2.5 py-1 rounded-full text-on-secondary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="font-label-sm text-label-sm font-bold">v1.0</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">ĐÃ KHÓA SNAPSHOT v1.0</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Khóa lúc 11:30 · 12/11/2026</span>
+</div>
+</div>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+</div>
+<div class="bg-surface-container rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex flex-col pr-2">
+<span class="font-label-md text-label-md font-bold text-on-surface">Công bố cho Giám khảo</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Tất cả ban giám khảo được phép đối chiếu</span>
+</div>
+<button aria-pressed="true" class="w-12 h-6 rounded-full bg-primary-container p-0.5 transition-colors relative flex items-center shrink-0 focus:outline-none" id="togglePublish" type="button">
+<span class="w-5 h-5 rounded-full bg-on-primary shadow-sm transform translate-x-6 transition-transform" id="toggleKnob"></span>
+</button>
+</div>
+</section>
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">emoji_events</span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">Top 3 Đề án Dẫn đầu</h2>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-bold uppercase tracking-wider">Xuất sắc</span>
+</div>
+<div class="grid grid-cols-1 gap-2.5">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col gap-space-sm">
+<div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-tertiary-fixed-dim/20 flex items-end justify-start pl-3 pb-3">
+<span class="material-symbols-outlined text-tertiary-container text-[26px]">military_tech</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-label-sm text-label-sm font-bold">Hạng 1 · Vàng</span>
+<span class="font-label-md text-label-md font-bold text-primary">#ENT-010</span>
+</div>
+<div class="flex items-end justify-between gap-space-sm">
+<div class="flex flex-col min-w-0">
+<h3 class="font-title-md text-title-md font-bold text-on-surface leading-snug line-clamp-2">Ứng dụng Học tiếng Anh Qua Game AI</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Khoa Công nghệ Thông tin</p>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-label-sm text-label-sm text-outline uppercase">Điểm TB</span>
+<span class="font-numeric-score text-numeric-score text-primary-container font-bold">88.40</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="px-2 py-0.5 rounded-full bg-slate-200 text-on-surface font-label-sm text-label-sm font-bold">Hạng 2</span>
+<span class="font-label-sm text-label-sm text-outline">Bạc</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-primary">#ENT-012</span>
+<h4 class="font-label-md text-label-md font-bold text-on-surface line-clamp-2 mt-1">Smart IoT Nông Nghiệp HUIT</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate text-[11px] mt-0.5">Khoa Điện - Điện tử</p>
+</div>
+<div class="mt-3 pt-2 bg-surface-container-low rounded-lg p-1.5 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">Điểm</span>
+<span class="font-title-md text-title-md font-bold text-primary">86.17</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="px-2 py-0.5 rounded-full bg-amber-700/15 text-amber-900 font-label-sm text-label-sm font-bold">Hạng 3</span>
+<span class="font-label-sm text-label-sm text-outline">Đồng</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-primary">#ENT-014</span>
+<h4 class="font-label-md text-label-md font-bold text-on-surface line-clamp-2 mt-1">Xe Lăn Điện Tự Cân Bằng</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate text-[11px] mt-0.5">Khoa Cơ khí</p>
+</div>
+<div class="mt-3 pt-2 bg-surface-container-low rounded-lg p-1.5 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">Điểm</span>
+<span class="font-title-md text-title-md font-bold text-primary">83.50</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<h2 class="font-title-md text-title-md font-bold text-on-surface">Bảng Xếp Hạng Chi Tiết</h2>
+<span class="font-body-sm text-body-sm text-outline font-medium">6/6 Đề án hợp lệ</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-primary font-bold flex items-center justify-center shrink-0">
+<span class="font-title-md text-title-md">1</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-primary">#ENT-010</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-sm text-[10px]">3/3 Giám khảo</span>
+</div>
+<h3 class="font-label-lg text-label-lg font-bold text-on-surface truncate">Ứng dụng Học tiếng Anh Qua Game AI</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Khoa Công nghệ Thông tin</span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-title-md text-title-md font-bold text-primary">88.40</span>
+<span class="font-label-sm text-label-sm text-outline">Trung bình</span>
+</div>
+</div>
+<button class="w-full h-10 rounded-lg bg-surface-container-low text-primary flex items-center justify-center gap-1 font-label-sm text-label-sm font-bold active:scale-[0.99] transition-transform" onclick="toggleDetails('breakdown-10')" type="button">
+<span>Xem phân rã điểm</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<div class="hidden flex-col gap-2 pt-2 bg-surface-container/60 rounded-lg p-2.5" id="breakdown-10">
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.1 (TS. Nguyễn Văn A):</span>
+<span class="font-bold text-on-surface">89.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.2 (ThS. Trần Thị B):</span>
+<span class="font-bold text-on-surface">88.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.3 (Chuyên gia Lê C):</span>
+<span class="font-bold text-on-surface">88.20</span>
+</div>
+<div class="mt-1 pt-1.5 bg-surface-container-lowest rounded p-2 flex justify-between items-center text-label-sm">
+<span class="text-on-surface-variant">Độ lệch chuẩn (SD):</span>
+<span class="font-bold text-tertiary">0.41 (Đồng thuận cao)</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-primary font-bold flex items-center justify-center shrink-0">
+<span class="font-title-md text-title-md">2</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-primary">#ENT-012</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-sm text-[10px]">3/3 Giám khảo</span>
+</div>
+<h3 class="font-label-lg text-label-lg font-bold text-on-surface truncate">Hệ thống Smart IoT Nông Nghiệp HUIT</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Khoa Điện - Điện tử</span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-title-md text-title-md font-bold text-primary">86.17</span>
+<span class="font-label-sm text-label-sm text-outline">Trung bình</span>
+</div>
+</div>
+<button class="w-full h-10 rounded-lg bg-surface-container-low text-primary flex items-center justify-center gap-1 font-label-sm text-label-sm font-bold active:scale-[0.99] transition-transform" onclick="toggleDetails('breakdown-12')" type="button">
+<span>Xem phân rã điểm</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<div class="hidden flex-col gap-2 pt-2 bg-surface-container/60 rounded-lg p-2.5" id="breakdown-12">
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.1 (TS. Nguyễn Văn A):</span>
+<span class="font-bold text-on-surface">87.50</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.2 (ThS. Trần Thị B):</span>
+<span class="font-bold text-on-surface">85.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.3 (Chuyên gia Lê C):</span>
+<span class="font-bold text-on-surface">86.00</span>
+</div>
+<div class="mt-1 pt-1.5 bg-surface-container-lowest rounded p-2 flex justify-between items-center text-label-sm">
+<span class="text-on-surface-variant">Độ lệch chuẩn (SD):</span>
+<span class="font-bold text-tertiary">1.03 (Phù hợp)</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-primary font-bold flex items-center justify-center shrink-0">
+<span class="font-title-md text-title-md">3</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-primary">#ENT-014</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-sm text-[10px]">3/3 Giám khảo</span>
+</div>
+<h3 class="font-label-lg text-label-lg font-bold text-on-surface truncate">Xe Lăn Điện Tự Cân Bằng</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Khoa Cơ khí</span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-title-md text-title-md font-bold text-primary">83.50</span>
+<span class="font-label-sm text-label-sm text-outline">Trung bình</span>
+</div>
+</div>
+<button class="w-full h-10 rounded-lg bg-surface-container-low text-primary flex items-center justify-center gap-1 font-label-sm text-label-sm font-bold active:scale-[0.99] transition-transform" onclick="toggleDetails('breakdown-14')" type="button">
+<span>Xem phân rã điểm</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<div class="hidden flex-col gap-2 pt-2 bg-surface-container/60 rounded-lg p-2.5" id="breakdown-14">
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.1 (TS. Nguyễn Văn A):</span>
+<span class="font-bold text-on-surface">84.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.2 (ThS. Trần Thị B):</span>
+<span class="font-bold text-on-surface">83.50</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.3 (Chuyên gia Lê C):</span>
+<span class="font-bold text-on-surface">83.00</span>
+</div>
+<div class="mt-1 pt-1.5 bg-surface-container-lowest rounded p-2 flex justify-between items-center text-label-sm">
+<span class="text-on-surface-variant">Độ lệch chuẩn (SD):</span>
+<span class="font-bold text-tertiary">0.41 (Đồng thuận cao)</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant font-bold flex items-center justify-center shrink-0">
+<span class="font-title-md text-title-md">4</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-primary">#ENT-008</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-sm text-[10px]">3/3 Giám khảo</span>
+</div>
+<h3 class="font-label-lg text-label-lg font-bold text-on-surface truncate">Nền tảng Tái chế Rác thải Nhựa Sinh học</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Khoa Sinh học Môi trường</span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-title-md text-title-md font-bold text-on-surface">81.80</span>
+<span class="font-label-sm text-label-sm text-outline">Trung bình</span>
+</div>
+</div>
+<button class="w-full h-10 rounded-lg bg-surface-container-low text-primary flex items-center justify-center gap-1 font-label-sm text-label-sm font-bold active:scale-[0.99] transition-transform" onclick="toggleDetails('breakdown-08')" type="button">
+<span>Xem phân rã điểm</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<div class="hidden flex-col gap-2 pt-2 bg-surface-container/60 rounded-lg p-2.5" id="breakdown-08">
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.1 (TS. Nguyễn Văn A):</span>
+<span class="font-bold text-on-surface">82.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.2 (ThS. Trần Thị B):</span>
+<span class="font-bold text-on-surface">81.50</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant font-medium">GK.3 (Chuyên gia Lê C):</span>
+<span class="font-bold text-on-surface">81.90</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">admin_panel_settings</span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">Thao tác Quản trị Vòng thi</h2>
+</div>
+<div class="flex flex-col gap-2.5">
+<button class="w-full h-12 rounded-lg bg-surface-container-high text-primary flex items-center justify-center gap-2 font-label-lg text-label-lg font-bold active:scale-[0.98] transition-transform" id="btnExportCsv" type="button">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span>Xuất file CSV kết quả</span>
+</button>
+<button class="w-full h-12 rounded-lg bg-error-container text-on-error-container flex items-center justify-center gap-2 font-label-lg text-label-lg font-bold active:scale-[0.98] transition-transform" id="btnReopenRound" type="button">
+<span class="material-symbols-outlined text-[20px]">restart_alt</span>
+<span>Mở lại vòng thi</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-outline text-center">
+        Dữ liệu đã mã hóa và lưu trữ tại nút mạng trường HUIT. Mọi thay đổi sau công bố đều được kiểm toán.
+      </p>
+</section>
+</div>
+<div class="fixed inset-0 z-50 bg-inverse-surface/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4" id="modalReopen">
+<div class="bg-surface-container-lowest w-full max-w-md rounded-t-2xl sm:rounded-2xl p-space-lg flex flex-col gap-space-md shadow-2xl">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2 text-error">
+<span class="material-symbols-outlined text-[24px]">warning</span>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Cảnh báo Mở lại Vòng thi</h3>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant" onclick="closeReopenModal()" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="bg-error-container/40 rounded-lg p-3 flex flex-col gap-1 text-on-surface">
+<span class="font-label-md text-label-md font-bold text-error">Lưu ý bắt buộc:</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Hệ thống sẽ vô hiệu hóa Snapshot hiện tại (v1.0) và tự động tạo Snapshot phiên bản mới <strong>v2.0</strong> sau khi chấm lại.
+        </p>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md font-bold text-on-surface" for="reopenReason">Lý do điều chỉnh kết quả *</label>
+<textarea class="w-full rounded-lg bg-surface-container-low p-space-sm text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none" id="reopenReason" placeholder="Nhập lý do chi tiết (VD: Khiếu nại tiêu chí Sáng tạo #ENT-012)..." rows="3"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-space-sm pt-2">
+<button class="w-full h-11 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md font-bold" onclick="closeReopenModal()" type="button">
+          Hủy bỏ
+        </button>
+<button class="w-full h-11 rounded-lg bg-error text-on-error font-label-md text-label-md font-bold active:scale-[0.98] transition-transform" onclick="confirmReopen()" type="button">
+          Xác nhận Mở lại
+        </button>
+</div>
+</div>
+</div>
+<div class="fixed bottom-24 left-4 right-4 z-50 transform translate-y-32 opacity-0 transition-all duration-300 pointer-events-none" id="toastNotification">
+<div class="bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-lg flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-[20px]" id="toastIcon">check_circle</span>
+<span class="font-label-md text-label-md" id="toastMessage">Đã tải về file CSV kết quả chính thức!</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function toggleDetails(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    if (el.classList.contains('hidden')) {
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    } else {
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+  }
+
+  function showToast(message, icon = 'check_circle') {
+    const toast = document.getElementById('toastNotification');
+    const toastMsg = document.getElementById('toastMessage');
+    const toastIco = document.getElementById('toastIcon');
+    if (!toast || !toastMsg) return;
+    toastMsg.textContent = message;
+    if (toastIco) toastIco.textContent = icon;
+    toast.classList.remove('translate-y-32', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+    setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-32', 'opacity-0');
+    }, 2600);
+  }
+
+  const toggleBtn = document.getElementById('togglePublish');
+  const toggleKnob = document.getElementById('toggleKnob');
+  let isPublished = true;
+
+  if (toggleBtn && toggleKnob) {
+    toggleBtn.addEventListener('click', () => {
+      isPublished = !isPublished;
+      if (isPublished) {
+        toggleBtn.classList.remove('bg-surface-container-highest');
+        toggleBtn.classList.add('bg-primary-container');
+        toggleKnob.classList.remove('translate-x-1');
+        toggleKnob.classList.add('translate-x-6');
+        showToast('Đã BẬT công bố kết quả cho Ban Giám khảo');
+      } else {
+        toggleBtn.classList.remove('bg-primary-container');
+        toggleBtn.classList.add('bg-surface-container-highest');
+        toggleKnob.classList.remove('translate-x-6');
+        toggleKnob.classList.add('translate-x-1');
+        showToast('Đã TẮT chế độ công bố cho Ban Giám khảo', 'visibility_off');
+      }
+    });
+  }
+
+  const btnExport = document.getElementById('btnExportCsv');
+  if (btnExport) {
+    btnExport.addEventListener('click', () => {
+      showToast('Đang tạo và tải tệp HUIT_KetQua_BanKet_v1.0.csv');
+    });
+  }
+
+  const modalReopen = document.getElementById('modalReopen');
+  const btnReopen = document.getElementById('btnReopenRound');
+  const reopenReasonInput = document.getElementById('reopenReason');
+
+  function openReopenModal() {
+    if (modalReopen) modalReopen.classList.remove('hidden');
+  }
+
+  function closeReopenModal() {
+    if (modalReopen) modalReopen.classList.add('hidden');
+    if (reopenReasonInput) reopenReasonInput.value = '';
+  }
+
+  function confirmReopen() {
+    const val = reopenReasonInput ? reopenReasonInput.value.trim() : '';
+    if (!val) {
+      alert('Vui lòng nhập lý do mở lại vòng thi để lưu vết kiểm toán.');
+      return;
+    }
+    closeReopenModal();
+    showToast('Vòng thi đã mở lại! Snapshot v2.0 đang ở chế độ DRAFT.', 'edit_document');
+  }
+
+  if (btnReopen) {
+    btnReopen.addEventListener('click', openReopenModal);
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(21,43,59,0.06)]" data-active-classes="text-primary font-bold"><div class="h-16 px-gutter flex items-center justify-around"><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="dieu-phoi" href="#"><span class="material-symbols-outlined text-[24px]">tune</span><span class="font-label-sm text-label-sm mt-0.5">Điều phối</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="theo-doi" href="#"><span class="material-symbols-outlined text-[24px]">radar</span><span class="font-label-sm text-label-sm mt-0.5">Theo dõi</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="ket-qua" href="#"><span class="material-symbols-outlined text-[24px]">leaderboard</span><span class="font-label-sm text-label-sm mt-0.5">Kết quả</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="tong-quan" href="#"><span class="material-symbols-outlined text-[24px]">grid_view</span><span class="font-label-sm text-label-sm mt-0.5">Tổng quan</span></a></div></nav></body></html>

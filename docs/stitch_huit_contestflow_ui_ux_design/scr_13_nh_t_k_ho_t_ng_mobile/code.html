@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary": "#ffffff", "on-primary-fixed-variant": "#004591", "background": "#f6f9ff", "on-background": "#061d2d", "on-primary-fixed": "#001a40", "tertiary-fixed": "#aeecff", "tertiary-container": "#005869", "inverse-on-surface": "#e6f2ff", "secondary-container": "#70b5fe", "on-tertiary-fixed-variant": "#004e5d", "primary-fixed": "#d7e2ff", "tertiary-fixed-dim": "#00d9ff", "surface-bright": "#f6f9ff", "outline-variant": "#c2c6d3", "surface-container": "#e1f0ff", "surface-container-highest": "#cfe5fb", "secondary": "#0062a2", "secondary-fixed-dim": "#9dcaff", "on-error-container": "#93000a", "surface-dim": "#c6ddf2", "on-tertiary-fixed": "#001f26", "error-container": "#ffdad6", "on-secondary": "#ffffff", "on-tertiary-container": "#00d4fa", "inverse-surface": "#1d3343", "secondary-fixed": "#d1e4ff", "on-secondary-container": "#004676", "surface": "#f6f9ff", "primary-container": "#034ea2", "primary": "#003878", "on-primary": "#ffffff", "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#acc7ff", "surface-container-high": "#d6ebff", "on-error": "#ffffff", "on-secondary-fixed": "#001d35", "error": "#ba1a1a", "on-surface-variant": "#424752", "inverse-primary": "#acc7ff", "surface-variant": "#cfe5fb", "outline": "#737783", "tertiary": "#003f4c", "on-primary-container": "#a6c3ff", "surface-container-low": "#ecf5ff", "surface-tint": "#215db1", "on-secondary-fixed-variant": "#00497c", "on-surface": "#061d2d" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2.5rem", "gutter-desktop": "2rem", "space-xs": "0.25rem", "gutter": "1rem", "gutter-tablet": "1.5rem", "margin-desktop": "3rem", "margin": "1rem", "margin-tablet": "2rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "space-md": "1rem" }, "fontFamily": { "body-lg": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "display-lg-mobile": ["Be Vietnam Pro"], "headline-sm": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "display-lg": ["Be Vietnam Pro"], "headline-lg-mobile": ["Be Vietnam Pro"], "label-lg": ["Be Vietnam Pro"], "numeric-score": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "numeric-score": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs min-w-0 flex-1"><button aria-label="Quay lại" class="w-11 h-11 flex items-center justify-center text-primary rounded-lg active:scale-95 transition-transform" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider truncate">HUIT ContestFlow - Quản trị</span><h1 class="font-title-md text-title-md text-on-surface truncate">Score Moderation</h1></div></div><div class="flex items-center pl-space-xs shrink-0"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full pb-24">
+<!-- Top Academic Context Banner -->
+<div class="px-gutter pt-space-md pb-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-ping"></span>
+<span class="font-label-sm text-label-sm text-secondary tracking-wider uppercase">Cuộc thi HUIT TechInnovation 2026</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs mt-1">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-[14px]">receipt_long</span>
+<span>142 Sự kiện đã ghi nhận</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] text-primary">token</span>
+<span class="truncate max-w-[170px]">Bảo mật Chuỗi khối HUIT-Node</span>
+</div>
+</div>
+</div>
+<!-- Immutable Principle Guard Card -->
+<div class="px-gutter my-space-xs">
+<div class="p-space-md rounded-xl bg-surface-container-low flex gap-space-sm shadow-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">policy</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-primary font-semibold">Nguyên tắc Audit Bất biến (Immutable)</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-snug">
+          Mọi hành động can thiệp điểm số, mở lại phiếu hoặc hiệu chỉnh phiên thi đều được ghi vết vĩnh viễn (Read-only), gắn kèm khóa băm và không thể chỉnh sửa hay hủy bỏ.
+        </p>
+</div>
+</div>
+</div>
+<!-- Search & Instant Filters Ribbon -->
+<div class="px-gutter pt-space-sm flex flex-col gap-space-sm">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full h-11 pl-10 pr-10 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none shadow-sm" id="auditSearchInput" placeholder="Mã đề tài (#ENT-012), Giám khảo, Hành động..." type="search"/>
+<button aria-label="Xóa bộ lọc tìm kiếm" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-outline hover:text-on-surface rounded-full" onclick="document.getElementById('auditSearchInput').value=''; filterEvents('all');">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Quick Pill Filters -->
+<div class="flex items-center gap-space-xs overflow-x-auto no-scrollbar py-1 -mx-gutter px-gutter">
+<button class="filter-pill shrink-0 h-8 px-3.5 rounded-full font-label-md text-label-md bg-primary text-on-primary shadow-sm active:scale-95 transition-transform flex items-center gap-1" onclick="setActiveFilter(this, 'all')">
+<span>Tất cả</span>
+<span class="text-[10px] opacity-80 px-1 py-0.2 rounded-full bg-white/20">142</span>
+</button>
+<button class="filter-pill shrink-0 h-8 px-3 rounded-full font-label-md text-label-md bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform flex items-center gap-1" onclick="setActiveFilter(this, 'reopen')">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span>Mở lại phiếu (Reopen)</span>
+</button>
+<button class="filter-pill shrink-0 h-8 px-3 rounded-full font-label-md text-label-md bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform flex items-center gap-1" onclick="setActiveFilter(this, 'snapshot')">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Khóa snapshot</span>
+</button>
+<button class="filter-pill shrink-0 h-8 px-3 rounded-full font-label-md text-label-md bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform" onclick="setActiveFilter(this, 'dispatch')">
+<span>Điều phối</span>
+</button>
+<button class="filter-pill shrink-0 h-8 px-3 rounded-full font-label-md text-label-md bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform flex items-center gap-1" onclick="setActiveFilter(this, 'security')">
+<span class="material-symbols-outlined text-[14px]">shield</span>
+<span>Cảnh báo &amp; Bảo mật</span>
+</button>
+</div>
+</div>
+<!-- Timeline Feed Container -->
+<div class="px-gutter pt-space-md flex flex-col">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Nhật ký trực tiếp (Audit Stream)</span>
+<span class="font-label-sm text-label-sm text-outline">Đồng bộ: 11:32:04</span>
+</div>
+<!-- Timeline Wrapper -->
+<div class="relative flex flex-col gap-space-md">
+<!-- Background Connecting Spine Track -->
+<div class="absolute left-[19px] top-4 bottom-4 w-[2px] bg-surface-container-highest z-0"></div>
+<!-- EVENT 1: Khóa Snapshot (Level 1 Card) -->
+<div class="audit-item relative z-10 flex items-start gap-space-sm" data-category="snapshot">
+<!-- Milestone Glyph -->
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-emerald-600/10 text-emerald-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+</div>
+<!-- Event Body -->
+<div class="flex-1 min-w-0 bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="flex items-center justify-between gap-1 mb-1">
+<span class="font-label-md text-label-md text-emerald-800 font-semibold flex items-center gap-1 truncate">
+              Khóa Snapshot Kết quả v1.0
+            </span>
+<span class="font-label-sm text-label-sm text-outline shrink-0">11:30</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-primary">person</span>
+<span class="font-medium text-on-surface">Admin ThS. Trần Văn Hưng</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1.5 leading-relaxed">
+            Chốt bảng điểm toàn diện 24/24 đề án Vòng Bán kết. Đã kết xuất chữ ký kiểm toán.
+          </p>
+<div class="mt-2 p-2 rounded-lg bg-surface-container-low flex items-center justify-between gap-2">
+<div class="flex items-center gap-1 min-w-0">
+<span class="material-symbols-outlined text-[15px] text-outline">key</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate font-mono">SHA-256: 8f9b4c02e...a102</span>
+</div>
+<button aria-label="Sao chép mã hash" class="text-secondary shrink-0 hover:text-primary active:scale-90 transition-transform" onclick="navigator.clipboard?.writeText('8f9b4c02e73d19a2b8e5c1a102')">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+<div class="mt-3 flex items-center justify-between pt-1">
+<span class="font-label-sm text-label-sm text-emerald-700 font-bold uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full">SNAPSHOT_LOCKED</span>
+<button class="h-8 px-3 rounded-lg bg-surface-container text-primary font-label-sm text-label-sm active:scale-95 transition-transform flex items-center gap-1" onclick="alert('Chi tiết Snapshot v1.0:\n- Số lượng: 24 Đề tài\n- Giám khảo đã chốt: 6/6\n- Chữ ký xác thực: HUIT-BLOCK-TX#99281')">
+<span>Xem snapshot</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- EVENT 2: Mở lại phiếu chấm (Reopen - Critical Alert) -->
+<div class="audit-item relative z-10 flex items-start gap-space-sm" data-category="reopen">
+<!-- Milestone Glyph -->
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">lock_open</span>
+</div>
+</div>
+<!-- Event Body -->
+<div class="flex-1 min-w-0 bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="flex items-center justify-between gap-1 mb-1">
+<span class="font-label-md text-label-md text-error font-semibold flex items-center gap-1 truncate">
+              Mở lại phiếu chấm (Reopen)
+            </span>
+<span class="font-label-sm text-label-sm text-outline shrink-0">11:20</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-primary">admin_panel_settings</span>
+<span class="font-medium text-on-surface">Admin ThS. Trần Văn Hưng</span>
+</div>
+<!-- Target Pill -->
+<div class="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container font-label-sm text-label-sm text-primary">
+<span class="material-symbols-outlined text-[14px]">assignment</span>
+<span>Mục tiêu: <strong>#ENT-009</strong> (TS. Nguyễn Văn Hùng)</span>
+</div>
+<!-- Reason block -->
+<div class="mt-2.5 p-space-sm rounded-lg bg-error-container/30 text-on-surface">
+<span class="font-label-sm text-label-sm text-error font-bold block mb-0.5">Lý do can thiệp bắt buộc:</span>
+<p class="font-body-sm text-body-sm leading-snug">
+              Bổ sung nhận xét chi tiết cho Tiêu chí 2 theo đơn yêu cầu phúc khảo mã số <strong>#PK-104</strong> được phê duyệt bởi Trưởng ban Giám khảo.
+            </p>
+</div>
+<div class="mt-2.5 flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Trạng thái: <strong>PAUSED</strong></span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-sm text-label-sm font-bold">REOPENED</span>
+</div>
+</div>
+</div>
+<!-- EVENT 3: Nộp phiếu chấm chính thức -->
+<div class="audit-item relative z-10 flex items-start gap-space-sm" data-category="dispatch">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">assignment_turned_in</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="flex items-center justify-between gap-1 mb-1">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">
+              Nộp phiếu chấm thi chính thức
+            </span>
+<span class="font-label-sm text-label-sm text-outline shrink-0">10:45</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-secondary">rate_review</span>
+<span class="font-medium text-on-surface">TS. Lê Hoàng Nam (Giám khảo)</span>
+</div>
+<div class="mt-2 flex items-center justify-between gap-2 p-2 rounded-lg bg-surface-container-low">
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-outline">Đề tài đánh giá</span>
+<span class="font-title-md text-title-md text-primary truncate">#ENT-012 (BioPolymer)</span>
+</div>
+<div class="text-right shrink-0">
+<span class="font-label-sm text-label-sm text-outline block">Tổng điểm</span>
+<span class="font-numeric-score text-numeric-score text-primary font-bold">88.5<span class="font-body-sm text-body-sm text-outline">/100</span></span>
+</div>
+</div>
+<div class="mt-2 flex items-center gap-1.5 text-outline font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">fingerprint</span>
+<span>Khóa ký số thiết bị cá nhân: #DEV-NAM-IPAD-01</span>
+</div>
+</div>
+</div>
+<!-- EVENT 4: Chuyển lượt thi sang Lượt 02 -->
+<div class="audit-item relative z-10 flex items-start gap-space-sm" data-category="dispatch">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="flex items-center justify-between gap-1 mb-1">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">
+              Chuyển phiên sang Lượt 02
+            </span>
+<span class="font-label-sm text-label-sm text-outline shrink-0">10:15</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-primary">sensors</span>
+<span class="font-medium text-on-surface">Admin Điều phối phòng thi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1.5">
+            Kích hoạt đồng hồ bấm giờ (Pitching Timer - 15 phút) cho nhóm <strong>AgriTech HUIT</strong> tại Hội trường A3. Đồng bộ 6 màn hình chấm.
+          </p>
+<div class="mt-2.5 flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">STAGE_RUNNING</span>
+<span class="font-label-sm text-label-sm text-outline">Thời lượng: 15:00</span>
+</div>
+</div>
+</div>
+<!-- EVENT 5: Thu hồi Session & Cấp lại mật khẩu (Bảo mật) -->
+<div class="audit-item relative z-10 flex items-start gap-space-sm" data-category="security">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">vpn_key_alert</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="flex items-center justify-between gap-1 mb-1">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">
+              Thu hồi Session &amp; Cấp lại Auth
+            </span>
+<span class="font-label-sm text-label-sm text-outline shrink-0">09:00</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-primary">security</span>
+<span class="font-medium text-on-surface">Admin Hệ thống</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1.5 leading-snug">
+            Thu hồi quyền truy cập (Revoked 2 thiết bị tablet lạ) của Giám khảo <strong>ThS. Trần Mai Lan</strong> và gửi mã kích hoạt 2FA khẩn cấp qua kênh nội bộ SMS HUIT.
+          </p>
+<div class="mt-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-label-sm text-label-sm font-bold">REVOKED_SESSION</span>
+<span class="font-label-sm text-label-sm text-outline">IP: 14.161.42.***</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- End of Stream Indicator -->
+<div class="px-gutter pt-space-lg pb-space-sm text-center flex flex-col items-center justify-center">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-outline mb-1">
+<span class="material-symbols-outlined text-[18px]">history_toggle_off</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Đã tải 5/142 sự kiện gần nhất trong 24 giờ qua</span>
+</div>
+<!-- Sticky Tactical Footer Actions -->
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(21,43,59,0.08)] px-gutter py-2.5 flex items-center gap-space-sm">
+<!-- Live Sync Trigger -->
+<button aria-label="Làm mới dữ liệu tức thì" class="w-12 h-12 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center shrink-0 active:scale-95 transition-transform" id="liveSyncBtn" onclick="handleLiveSync()" title="Đồng bộ trực tiếp">
+<span class="material-symbols-outlined text-[22px]" id="syncIcon">sync</span>
+</button>
+<!-- Export Action Button -->
+<button class="flex-1 h-12 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-transform" onclick="showExportOptions()">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+<span>Tải Audit Log (.CSV / .JSON)</span>
+</button>
+</div>
+</div>
+<script>
+  function setActiveFilter(btn, category) {
+    const pills = document.querySelectorAll('.filter-pill');
+    pills.forEach(p => {
+      p.classList.remove('bg-primary', 'text-on-primary');
+      p.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+    });
+
+    btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+    btn.classList.add('bg-primary', 'text-on-primary');
+
+    filterEvents(category);
+  }
+
+  function filterEvents(category) {
+    const items = document.querySelectorAll('.audit-item');
+    items.forEach(item => {
+      if (category === 'all' || item.getAttribute('data-category') === category) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('auditSearchInput').addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    const items = document.querySelectorAll('.audit-item');
+    
+    items.forEach(item => {
+      const text = item.innerText.toLowerCase();
+      if (text.includes(query)) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  });
+
+  function handleLiveSync() {
+    const icon = document.getElementById('syncIcon');
+    icon.classList.add('animate-spin');
+    setTimeout(() => {
+      icon.classList.remove('animate-spin');
+      alert('Đã cập nhật trạng thái Audit Trail mới nhất từ HUIT-Node!');
+    }, 800);
+  }
+
+  function showExportOptions() {
+    const choice = confirm('Bạn muốn tải file Audit Trail đã ký mã hóa:\n- Nhấn OK để tải định dạng .CSV (Excel tương thích)\n- Nhấn Cancel để xuất gói JSON có kèm SHA-256 Hash.');
+    if (choice) {
+      alert('Đang kết xuất: HUIT_TechInnovation2026_Audit_1130.csv');
+    } else {
+      alert('Đang kết xuất: HUIT_TechInnovation2026_Audit_1130.json (Blockchain Verified)');
+    }
+  }
+</script></main></body></html>

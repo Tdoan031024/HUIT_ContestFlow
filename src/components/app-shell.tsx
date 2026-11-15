@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { SessionUser } from '@/lib/auth';
 import { Icon, type IconName } from '@/components/icons';
 
@@ -19,9 +19,19 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const visibleLinks = links.filter((item) => item.href === '/judge' ? user.systemRole === 'JUDGE' : item.href === '/competitions' ? user.systemRole === 'ADMIN' : true);
+  const mobileLinks = user.systemRole === 'JUDGE'
+    ? ['/judge', '/results', '/']
+    : ['/', '/competitions', '/results'];
   const section = pathname === '/competitions/new' ? 'new' : pathname.startsWith('/competitions/') ? pathname.split('/')[3] ?? 'overview' : '';
   const currentLabel = links.find((item) => item.href === pathname)?.label ?? (pathname.startsWith('/judge/') ? 'Chấm điểm' : section ? sectionLabel(section) : 'Tổng quan');
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+  const mobileMode = pathname.startsWith('/judge/') ? 'score' : pathname.startsWith('/competitions/') && pathname !== '/competitions/new' ? 'detail' : 'workspace';
+
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 680px)').matches) return;
+    const content = document.getElementById('main-content');
+    if (content) content.scrollTop = 0;
+  }, [pathname]);
 
   async function logout() {
     if (busy) return;
@@ -32,7 +42,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-mobile-mode={mobileMode}>
       <a className="skip-link" href="#main-content">Bỏ qua điều hướng</a>
       <aside className="sidebar">
         <Link className="brand" href="/" aria-label="HUIT ContestFlow trang chủ">
@@ -59,16 +69,16 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         <header className="topbar">
           <Link className="mobile-brand" href="/" aria-label="HUIT ContestFlow, trang chủ">
             <span className="mobile-brand-mark" aria-hidden="true">CF</span>
-            <span>ContestFlow</span>
+            <span className="mobile-brand-copy"><strong>ContestFlow</strong><small>HUIT</small></span>
           </Link>
           <div className="breadcrumbs"><span>HUIT ContestFlow</span><b>/</b><strong>{currentLabel}</strong></div>
-          <div className="topbar-right"><span className="live-indicator"><i /> Hệ thống quản lý</span><span className="topbar-role">{user.systemRole === 'ADMIN' ? 'BAN TỔ CHỨC' : 'GIÁM KHẢO'}</span><span className="top-avatar" aria-label={user.fullName}>{initials(user.fullName)}</span><button className="mobile-logout" type="button" onClick={logout} disabled={busy}><Icon name="logout" /> <span>Đăng xuất</span></button></div>
+          <div className="topbar-right"><span className="live-indicator"><i /> Hệ thống quản lý</span><span className="topbar-role">{user.systemRole === 'ADMIN' ? 'BAN TỔ CHỨC' : 'GIÁM KHẢO'}</span><span className="top-avatar" aria-label={user.fullName}>{initials(user.fullName)}</span><button className="mobile-logout" type="button" aria-label="Đăng xuất" title="Đăng xuất" onClick={logout} disabled={busy}><Icon name="logout" /> <span>Đăng xuất</span></button></div>
         </header>
         <main className="page-content" id="main-content" tabIndex={-1}>{children}</main>
         <footer className="app-footer"><span>© {new Date().getFullYear()} HUIT ContestFlow · Trường Đại học Công Thương TP. Hồ Chí Minh</span><a className="app-media-credit" href="https://huitmedia.edu.vn" target="_blank" rel="noreferrer"><Image src="/brand/huit-media-logo.png" width={676} height={187} sizes="64px" alt="HUIT Media" /><span>Kênh thông tin và truyền thông HUIT</span></a></footer>
       </div>
       <nav className="mobile-bottom-nav" aria-label="Điều hướng chính trên điện thoại">
-        {visibleLinks.map((item) => {
+        {mobileLinks.map((href) => visibleLinks.find((item) => item.href === href)).filter((item): item is typeof links[number] => Boolean(item)).map((item) => {
           const active = isActive(item.href);
           return <Link key={item.href} className={`mobile-nav-link${active ? ' active' : ''}`} href={item.href} aria-current={active ? 'page' : undefined}>
             <Icon name={item.icon} size={20} />

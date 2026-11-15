@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_admin_tab" name="shell-type"/><title>HUIT ContestFlow</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface": "#f6f9ff", "surface-container-highest": "#cfe5fb", "tertiary-fixed-dim": "#00d9ff", "on-surface-variant": "#424752", "secondary-fixed-dim": "#9dcaff", "on-surface": "#061d2d", "error-container": "#ffdad6", "outline": "#737783", "on-secondary-container": "#004676", "error": "#ba1a1a", "surface-container-low": "#ecf5ff", "on-secondary": "#ffffff", "tertiary-container": "#005869", "tertiary": "#003f4c", "primary-container": "#034ea2", "inverse-surface": "#1d3343", "on-error-container": "#93000a", "on-secondary-fixed": "#001d35", "secondary": "#0062a2", "on-primary-fixed": "#001a40", "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#acc7ff", "surface-container-high": "#d6ebff", "surface-dim": "#c6ddf2", "inverse-primary": "#acc7ff", "surface-bright": "#f6f9ff", "primary": "#003878", "on-error": "#ffffff", "outline-variant": "#c2c6d3", "on-primary": "#ffffff", "on-tertiary-fixed-variant": "#004e5d", "on-secondary-fixed-variant": "#00497c", "secondary-container": "#70b5fe", "on-background": "#061d2d", "surface-variant": "#cfe5fb", "on-tertiary-fixed": "#001f26", "on-tertiary": "#ffffff", "on-primary-container": "#a6c3ff", "background": "#f6f9ff", "secondary-fixed": "#d1e4ff", "on-primary-fixed-variant": "#004591", "primary-fixed": "#d7e2ff", "tertiary-fixed": "#aeecff", "inverse-on-surface": "#e6f2ff", "surface-container": "#e1f0ff", "on-tertiary-container": "#00d4fa", "surface-tint": "#215db1" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xl": "2.5rem", "gutter-desktop": "2rem", "margin-desktop": "3rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "space-md": "1rem", "gutter-tablet": "1.5rem", "margin": "1rem", "space-xs": "0.25rem", "gutter": "1rem" }, fontFamily: { "headline-lg-mobile": ["Be Vietnam Pro"], "headline-sm": ["Be Vietnam Pro"], "body-lg": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "label-lg": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "numeric-score": ["Be Vietnam Pro"], "display-lg-mobile": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "display-lg": ["Be Vietnam Pro"] }, fontSize: { "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "numeric-score": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1.5"><div class="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm text-headline-sm font-bold tracking-tight shadow-sm">H</div><div class="flex flex-col"><div class="flex items-center leading-none"><span class="font-label-lg text-label-lg font-bold text-primary-container">HUIT</span><span class="font-label-lg text-label-lg font-bold text-tertiary-fixed-dim ml-0.5">Flow</span></div><span class="font-label-sm text-[10px] text-outline leading-tight tracking-wider uppercase">Contest</span></div></div><div class="h-4 w-px bg-outline-variant/60 ml-0.5"></div><span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded-full font-label-sm text-label-sm uppercase tracking-wider">Admin</span></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-20 bg-surface"><div class="flex flex-col w-full pb-10">
+<div class="px-gutter pt-space-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1 rounded-full shadow-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-fixed-dim opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Hệ thống sẵn sàng</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm bg-surface-container px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined text-[15px] text-primary">calendar_today</span>
+<span>Hôm nay · 14/04</span>
+</div>
+</div>
+<div class="flex flex-col mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant font-medium">Xin chào, Ban Quản trị HUIT</span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight mt-0.5 flex items-center justify-between">
+<span>HUIT TechInnovation 2026</span>
+<span class="material-symbols-outlined text-primary text-[22px]">verified</span>
+</h1>
+<p class="font-body-sm text-body-sm text-outline mt-0.5">Không gian điều hành trung tâm &amp; kiểm soát dữ liệu chấm thi</p>
+</div>
+</div>
+<div class="px-gutter mt-space-md">
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="col-span-2 bg-surface-container-lowest p-space-md rounded-xl shadow-[0_2px_12px_rgba(3,78,162,0.06)] relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-28 h-28 bg-gradient-to-br from-tertiary-fixed-dim/20 to-primary/5 rounded-full pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[19px]">sensors</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wide">Trạng thái vận hành</span>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-tertiary-fixed-dim/20 text-primary-container font-label-sm text-label-sm tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+            LIVE MEDIA
+          </span>
+</div>
+<div class="mt-space-md flex items-end justify-between">
+<div>
+<div class="font-numeric-score text-numeric-score text-primary leading-none">01</div>
+<p class="font-body-sm text-body-sm text-on-surface font-medium mt-1">Cuộc thi đang diễn ra trực tuyến</p>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-outline">Băng thông đồng bộ</span>
+<div class="font-label-lg text-label-lg text-secondary font-bold flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">bolt</span>
+              99.98%
+            </div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_2px_8px_rgba(3,78,162,0.04)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<div class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">account_tree</span>
+</div>
+<span class="font-numeric-score text-[22px] leading-tight text-on-surface">03</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-2 block">Vòng thi tổng thể</span>
+</div>
+<div class="mt-3 flex flex-col gap-1.5 pt-2 bg-surface-container-low/60 p-2 rounded-lg">
+<div class="flex items-center justify-between font-label-sm text-[10px]">
+<span class="text-on-surface-variant">Sơ khảo</span>
+<span class="text-secondary font-bold">Xong</span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-[10px]">
+<span class="text-primary font-bold">Bán kết</span>
+<span class="inline-flex items-center text-primary-container font-bold gap-0.5">
+<span class="w-1 h-1 rounded-full bg-primary-container"></span>
+              Live
+            </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-[10px]">
+<span class="text-outline">Chung kết</span>
+<span class="text-outline font-medium">Chờ</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_2px_8px_rgba(3,78,162,0.04)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<div class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[18px]">description</span>
+</div>
+<span class="font-numeric-score text-[22px] leading-tight text-on-surface">24</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-2 block">Đề án dự thi</span>
+</div>
+<div class="mt-3 bg-surface-container-low/60 p-2 rounded-lg flex flex-col gap-1">
+<div class="flex items-center justify-between font-label-sm text-[10px]">
+<span class="text-on-surface-variant">Đã nộp bài</span>
+<span class="text-on-surface font-bold">24/24</span>
+</div>
+<div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full w-full"></div>
+</div>
+<span class="font-label-sm text-[10px] text-outline text-right">100% hoàn thành hồ sơ</span>
+</div>
+</div>
+<div class="col-span-2 bg-surface-container-lowest p-space-md rounded-xl shadow-[0_2px_8px_rgba(3,78,162,0.04)] flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[22px]">gavel</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface leading-tight">Hội đồng Giám khảo</span>
+<span class="font-body-sm text-body-sm text-outline">12 Chuyên gia &amp; Giảng viên</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2 overflow-hidden">
+<div class="inline-block h-7 w-7 rounded-full bg-primary-container text-on-primary text-[10px] font-bold flex items-center justify-center shadow-sm">HN</div>
+<div class="inline-block h-7 w-7 rounded-full bg-secondary text-on-secondary text-[10px] font-bold flex items-center justify-center shadow-sm">TT</div>
+<div class="inline-block h-7 w-7 rounded-full bg-surface-container-highest text-primary text-[10px] font-bold flex items-center justify-center shadow-sm">+10</div>
+</div>
+<div class="bg-surface-container-low px-2 py-1 rounded-lg">
+<span class="font-label-sm text-label-sm text-primary font-bold">12/12</span>
+<span class="font-label-sm text-[10px] text-outline block">Có mặt</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-gutter mt-space-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<h2 class="font-title-md text-title-md text-on-surface">Lối tắt thao tác nhanh</h2>
+<span class="font-label-sm text-label-sm text-outline">Quyền Quản trị viên</span>
+</div>
+<a class="group relative overflow-hidden bg-primary-container text-on-primary p-space-md rounded-xl shadow-[0_8px_20px_rgba(3,78,162,0.18)] transition-transform active:scale-[0.98] flex items-center justify-between" href="#">
+<div class="absolute -right-4 -top-8 w-32 h-32 bg-secondary-container/20 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex items-center gap-space-sm z-10">
+<div class="w-12 h-12 rounded-xl bg-on-primary/10 flex items-center justify-center backdrop-blur-md">
+<span class="material-symbols-outlined text-[28px] text-tertiary-fixed-dim">podium</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md font-bold tracking-tight text-on-primary">Điều phối phiên trực tiếp</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-tertiary-fixed-dim text-tertiary font-label-sm text-[10px] font-bold">
+              HOT
+            </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-primary-container mt-0.5">Kiểm soát tiến trình, mở lượt thuyết trình &amp; khóa bảng điểm</span>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-on-primary/15 flex items-center justify-center text-on-primary z-10 shrink-0 ml-2">
+<span class="material-symbols-outlined text-[20px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+</div>
+</a>
+<div class="grid grid-cols-2 gap-space-sm mt-0.5">
+<a class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_2px_8px_rgba(3,78,162,0.04)] active:scale-[0.98] transition-all flex flex-col justify-between" href="#">
+<div class="flex items-center justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</div>
+<span class="font-label-sm text-[10px] text-outline uppercase font-semibold">SCR-06</span>
+</div>
+<div class="mt-3">
+<span class="font-label-lg text-label-lg text-on-surface block leading-snug">Vòng thi &amp; Rubric</span>
+<span class="font-body-sm text-[12px] text-outline mt-0.5 block line-clamp-1">Trọng số 4 tiêu chí chấm</span>
+</div>
+<div class="mt-2.5 flex items-center text-secondary font-label-sm text-label-sm font-semibold">
+<span>Cấu hình</span>
+<span class="material-symbols-outlined text-[16px] ml-0.5">chevron_right</span>
+</div>
+</a>
+<a class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_2px_8px_rgba(3,78,162,0.04)] active:scale-[0.98] transition-all flex flex-col justify-between" href="#">
+<div class="flex items-center justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">assignment_ind</span>
+</div>
+<span class="font-label-sm text-[10px] text-outline uppercase font-semibold">SCR-07</span>
+</div>
+<div class="mt-3">
+<span class="font-label-lg text-label-lg text-on-surface block leading-snug">Phân công Giám khảo</span>
+<span class="font-body-sm text-[12px] text-outline mt-0.5 block line-clamp-1">3 Tiểu ban chuyên môn</span>
+</div>
+<div class="mt-2.5 flex items-center text-secondary font-label-sm text-label-sm font-semibold">
+<span>Phân bổ</span>
+<span class="material-symbols-outlined text-[16px] ml-0.5">chevron_right</span>
+</div>
+</a>
+</div>
+</div>
+<div class="px-gutter mt-space-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">history_toggle_off</span>
+<h2 class="font-title-md text-title-md text-on-surface">Nhật ký nghiệp vụ gần đây</h2>
+</div>
+<span class="font-label-sm text-[11px] text-secondary font-semibold bg-surface-container-low px-2 py-0.5 rounded-full">Thời gian thực</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_2px_8px_rgba(3,78,162,0.04)] p-space-md flex flex-col gap-3">
+<div class="flex items-start gap-space-sm">
+<div class="w-2 h-2 rounded-full bg-primary-container mt-1.5 shrink-0"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-bold">10:45</span>
+<span class="font-label-sm text-[10px] text-outline">Vừa xong</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-0.5 leading-snug">
+            Giám khảo <span class="font-semibold text-primary">TS. Lê Hoàng Nam</span> vừa nộp phiếu đánh giá
+            <span class="bg-surface-container-high px-1.5 py-0.2 rounded font-mono text-[11px] text-on-secondary-container font-semibold">#ENT-012</span>
+</p>
+<span class="font-label-sm text-[11px] text-outline mt-0.5 block">Tiểu ban 01 · Công nghệ Sinh học</span>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<div class="flex items-start gap-space-sm">
+<div class="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1.5"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary font-bold">10:30</span>
+<span class="font-label-sm text-[10px] text-outline">15 phút trước</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-0.5 leading-snug">
+            Admin kích hoạt <span class="font-semibold">Lượt 04 (Smart IoT System)</span> bước vào phiên vấn đáp trực tiếp.
+          </p>
+<span class="font-label-sm text-[11px] text-outline mt-0.5 block">Thời gian quy định: 15 phút</span>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<div class="flex items-start gap-space-sm">
+<div class="w-2 h-2 rounded-full bg-error shrink-0 mt-1.5"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-error font-bold">09:15</span>
+<span class="font-label-sm text-[10px] text-outline">1 giờ trước</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-0.5 leading-snug">
+            Mở lại phiếu chấm <span class="bg-surface-container-high px-1.5 py-0.2 rounded font-mono text-[11px] text-on-secondary-container font-semibold">#ENT-009</span> theo yêu cầu phúc khảo kỹ thuật từ Hội đồng.
+          </p>
+<span class="font-label-sm text-[11px] text-outline mt-0.5 block">Phê duyệt bởi: ThS. Trần Văn Hưng</span>
+</div>
+</div>
+</div>
+<a class="w-full mt-1 bg-surface-container-low hover:bg-surface-container text-primary font-label-lg text-label-lg py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm active:scale-[0.99]" href="#">
+<span>Xem toàn bộ Nhật ký hoạt động</span>
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</a>
+</div>
+<div class="px-gutter mt-space-lg">
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-[0_2px_8px_rgba(3,78,162,0.04)] flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center text-outline">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Đồng bộ socket phiên bản 2.4.0</span>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+<span>Kết nối an toàn</span>
+</div>
+</div>
+</div>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(21,43,59,0.06)]" data-active-classes="text-primary font-bold"><div class="h-16 px-gutter flex items-center justify-around"><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="dieu-phoi" href="#"><span class="material-symbols-outlined text-[24px]">tune</span><span class="font-label-sm text-label-sm mt-0.5">Điều phối</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="theo-doi" href="#"><span class="material-symbols-outlined text-[24px]">radar</span><span class="font-label-sm text-label-sm mt-0.5">Theo dõi</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="ket-qua" href="#"><span class="material-symbols-outlined text-[24px]">leaderboard</span><span class="font-label-sm text-label-sm mt-0.5">Kết quả</span></a><a class="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="tong-quan" href="#"><span class="material-symbols-outlined text-[24px]">grid_view</span><span class="font-label-sm text-label-sm mt-0.5">Tổng quan</span></a></div></nav></body></html>

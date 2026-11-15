@@ -38,8 +38,9 @@ export function CompetitionWorkspace({ id, section }: { id: string; section: str
   const currentSection = sections.some(([key]) => key === section) ? section : 'overview';
   const round = useMemo(() => competition?.rounds.find((item) => item.id === roundId) ?? competition?.rounds[0] ?? null, [competition, roundId]);
 
-  async function reload() {
-    setLoading(true); setError('');
+  async function reload(silent = false) {
+    if (!silent) setLoading(true);
+    setError('');
     try {
       const result = await api<{ competition: Competition; permissions: { manage: boolean } }>(`/api/competitions/${id}`);
       setCompetition(result.competition);
@@ -47,7 +48,7 @@ export function CompetitionWorkspace({ id, section }: { id: string; section: str
       const requestedRound = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('roundId') : null;
       setRoundId((previous) => result.competition.rounds.some((item) => item.id === previous) ? previous : result.competition.rounds.some((item) => item.id === requestedRound) ? requestedRound! : result.competition.rounds[0]?.id ?? '');
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Không tải được cuộc thi.'); }
-    finally { setLoading(false); }
+    finally { if (!silent) setLoading(false); }
   }
   useEffect(() => { void reload(); }, [id]);
 
@@ -56,19 +57,20 @@ export function CompetitionWorkspace({ id, section }: { id: string; section: str
   if (!competition) return <EmptyState title="Không tìm thấy cuộc thi" description={error} action={<Link className="button secondary-button" href="/competitions">Về danh sách cuộc thi</Link>} />;
 
   const visibleSections = canManage ? sections : sections.filter(([key]) => key === 'results');
+  const currentSectionLabel = sections.find(([key]) => key === currentSection)?.[1] ?? 'Cuộc thi';
   return <div className="competition-workspace-page">
-    <PageHeader eyebrow={`CUỘC THI · ${competition.slug}`} title={competition.name} description={competition.description || 'Quản lý vòng thi, thí sinh, giám khảo và kết quả.'} action={<Link className="button secondary-button" href="/competitions">← Danh sách</Link>} />
+    <PageHeader className="competition-workspace-heading" eyebrow={currentSection === 'overview' ? `CUỘC THI · ${competition.slug}` : competition.slug} title={currentSection === 'overview' ? competition.name : currentSectionLabel} description={currentSection === 'overview' ? competition.description || 'Quản lý vòng thi, thí sinh, giám khảo và kết quả.' : competition.name} action={<Link className="button secondary-button" href="/competitions">← Danh sách</Link>} />
     {error && <Notice tone="error">{error}</Notice>}
     {!canManage && currentSection !== 'results' ? <EmptyState title="Trang quản lý dành cho ban tổ chức" description="Tài khoản này chỉ được xem kết quả đã công bố." action={<Link className="button primary-button" href={`/competitions/${id}/results`}>Xem kết quả</Link>} /> : <>
-    {canManage && <section className="competition-context-strip" aria-label="Thông tin nhanh cuộc thi">
-      <div className="competition-context-status"><StatusPill value={competition.status} /><span>{competition.modality === 'ONLINE' ? 'Trực tuyến' : competition.modality === 'HYBRID' ? 'Kết hợp' : 'Trực tiếp'}</span>{competition.startsAt && <span>{formatDate(competition.startsAt)}{competition.endsAt ? ` – ${formatDate(competition.endsAt)}` : ''}</span>}</div>
+    {canManage && <section className="competition-context-strip" data-section={currentSection} aria-label="Thông tin nhanh cuộc thi">
+      <div className="competition-context-status"><span className="competition-context-caption">Cuộc thi</span><StatusPill value={competition.status} /><span className="competition-context-modality"><small>Hình thức</small>{competition.modality === 'ONLINE' ? 'Trực tuyến' : competition.modality === 'HYBRID' ? 'Kết hợp' : 'Trực tiếp'}</span>{competition.startsAt && <span className="competition-context-date"><small>Thời gian</small>{formatDate(competition.startsAt)}{competition.endsAt ? ` – ${formatDate(competition.endsAt)}` : ''}</span>}</div>
       <div className="competition-context-metrics"><span><strong>{competition._count.contestants}</strong> thí sinh</span><span><strong>{competition.rounds.length}</strong> vòng thi</span><span><strong>{competition.rounds.reduce((total, item) => total + item._count.assignments, 0)}</strong> phân công</span></div>
     </section>}
     <nav className="subnav" aria-label="Quản lý cuộc thi">{visibleSections.map(([key, label], index) => <Link key={key} className={key === currentSection ? 'active' : ''} aria-current={key === currentSection ? 'page' : undefined} href={key === 'overview' ? `/competitions/${id}` : `/competitions/${id}/${key}`}><span className="subnav-index">{String(index + 1).padStart(2, '0')}</span>{label}</Link>)}</nav>
     {visibleSections.length > 1 && <label className="mobile-subnav-select"><span>Mục cuộc thi</span><select aria-label="Chuyển mục quản lý cuộc thi" value={currentSection === 'overview' ? `/competitions/${id}` : `/competitions/${id}/${currentSection}`} onChange={(event) => router.push(event.currentTarget.value)}>{visibleSections.map(([key, label]) => <option key={key} value={key === 'overview' ? `/competitions/${id}` : `/competitions/${id}/${key}`}>{label}</option>)}</select></label>}
     {currentSection === 'overview' && canManage && <Overview competition={competition} onReload={reload} onRoundChange={setRoundId} />}
     {currentSection !== 'overview' && <>
-      {competition.rounds.length > 0 && <div className="toolbar"><div className="toolbar-left"><label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 9 }}>Vòng thi<select className="field-select" style={{ width: 'min(320px,65vw)' }} value={round?.id ?? ''} onChange={(event) => setRoundId(event.target.value)}>{competition.rounds.map((item) => <option value={item.id} key={item.id}>{item.sequence}. {item.name}</option>)}</select></label></div><StatusPill value={round?.status ?? 'DRAFT'} /></div>}
+      {competition.rounds.length > 0 && <div className="toolbar"><div className="toolbar-left"><label className="field-label round-selector-label" style={{ display: 'flex', alignItems: 'center', gap: 9 }}>Vòng thi<select className="field-select" style={{ width: 'min(320px,65vw)' }} value={round?.id ?? ''} onChange={(event) => setRoundId(event.target.value)}>{competition.rounds.map((item) => <option value={item.id} key={item.id}>{item.sequence}. {item.name}</option>)}</select></label></div><div className="round-status"><span>Trạng thái vòng</span><StatusPill value={round?.status ?? 'DRAFT'} /></div></div>}
       {!round ? <EmptyState title="Chưa có vòng thi" description="Thêm vòng thi trong trang tổng quan trước khi thiết lập dữ liệu." action={<Link href={`/competitions/${id}`} className="button primary-button">Quản lý vòng thi</Link>} /> : <SectionContent id={id} round={round} section={currentSection} reload={reload} canManage={canManage} />}
     </>}
     </>}
@@ -208,13 +210,13 @@ function RoundSettings({ competitionId, round, onSaved }: { competitionId: strin
   </details>;
 }
 
-function SectionContent({ id, round, section, reload, canManage }: { id: string; round: Round; section: string; reload: () => void; canManage: boolean }) {
+function SectionContent({ id, round, section, reload, canManage }: { id: string; round: Round; section: string; reload: (silent?: boolean) => Promise<void>; canManage: boolean }) {
   switch (section) {
-    case 'contestants': return <Contestants id={id} round={round} />;
-    case 'judges': return <Judges id={id} round={round} />;
-    case 'rubric': return <RubricEditor id={id} round={round} />;
-    case 'live': return <LiveControl id={id} round={round} />;
-    case 'scores': return <ScoreStatus id={id} round={round} />;
+    case 'contestants': return <Contestants id={id} round={round} refreshCompetition={() => reload(true)} />;
+    case 'judges': return <Judges id={id} round={round} refreshCompetition={() => reload(true)} />;
+    case 'rubric': return <RubricEditor id={id} round={round} refreshCompetition={() => reload(true)} />;
+    case 'live': return <LiveControl id={id} round={round} refreshCompetition={() => reload(true)} />;
+    case 'scores': return <ScoreStatus id={id} round={round} refreshCompetition={() => reload(true)} />;
     case 'results': return <Results id={id} round={round} reload={reload} canManage={canManage} />;
     case 'activity': return <CompetitionActivity id={id} />;
     default: return <Notice tone="warning">Không tìm thấy mục quản lý.</Notice>;
@@ -225,7 +227,7 @@ type EntryRow = { id: string; entryCode: string; title: string | null; status: s
 type ContestantItem = { id: string; displayName: string; organization: string | null; email: string | null; phone: string | null; entries: EntryRow[] };
 type CsvPreview = { rows: { rowNumber: number; displayName: string; organization: string; email: string; phone: string; title: string }[]; issues: { rowNumber: number | null; message: string }[]; totalRows: number };
 
-function Contestants({ id, round }: { id: string; round: Round }) {
+function Contestants({ id, round, refreshCompetition }: { id: string; round: Round; refreshCompetition: () => Promise<void> }) {
   const { confirm, dialog: confirmationDialog } = useConfirmDialog();
   const [items, setItems] = useState<ContestantItem[] | null>(null);
   const [error, setError] = useState('');
@@ -244,21 +246,23 @@ function Contestants({ id, round }: { id: string; round: Round }) {
   useEffect(() => { setItems(null); void load(); }, [id, round.id]);
   async function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setNotice(''); setBusy(true);
-    const form = new FormData(event.currentTarget);
+    const targetForm = event.currentTarget;
+    const form = new FormData(targetForm);
     try {
       if (editing) {
         await api(`/api/competitions/${id}/contestants/${editing.id}`, { method: 'PATCH', body: { displayName: form.get('displayName'), organization: form.get('organization'), email: form.get('email'), phone: form.get('phone') } });
         setEditing(null); setNotice('Đã cập nhật hồ sơ thí sinh.');
       } else {
         await api(`/api/competitions/${id}/contestants`, { method: 'POST', body: { roundId: round.id, displayName: form.get('displayName'), organization: form.get('organization'), email: form.get('email'), phone: form.get('phone'), title: form.get('title') } });
-        event.currentTarget.reset(); setNotice('Đã thêm thí sinh vào vòng thi.');
+        targetForm.reset(); setNotice('Đã thêm thí sinh vào vòng thi.');
       }
       await load();
+      await refreshCompetition();
     } catch (reason) { setError(errorText(reason)); } finally { setBusy(false); }
   }
   async function registerExisting(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setNotice('');
-    try { await api(`/api/competitions/${id}/entries`, { method: 'POST', body: { contestantId: existingId, roundId: round.id } }); setNotice('Đã đăng ký hồ sơ vào vòng thi.'); setExistingId(''); await load(); }
+    try { await api(`/api/competitions/${id}/entries`, { method: 'POST', body: { contestantId: existingId, roundId: round.id } }); setNotice('Đã đăng ký hồ sơ vào vòng thi.'); setExistingId(''); await load(); await refreshCompetition(); }
     catch (reason) { setError(errorText(reason)); }
   }
   async function importFile(file?: File) {
@@ -276,7 +280,7 @@ function Contestants({ id, round }: { id: string; round: Round }) {
     setError(''); setImporting(true);
     try {
       const result = await api<{ imported: number }>(`/api/competitions/${id}/contestants/import`, { method: 'POST', body: { roundId: round.id, csv: pendingCsv, confirm: true } });
-      setNotice(`Đã nhập ${result.imported} thí sinh sau khi xác nhận.`); setCsvPreview(null); setPendingCsv(''); await load();
+      setNotice(`Đã nhập ${result.imported} thí sinh sau khi xác nhận.`); setCsvPreview(null); setPendingCsv(''); await load(); await refreshCompetition();
     } catch (reason) { setError(errorText(reason)); }
     finally { setImporting(false); }
   }
@@ -305,7 +309,7 @@ function Contestants({ id, round }: { id: string; round: Round }) {
         <div className="form-actions"><button className="button secondary-button" type="button" onClick={() => { setCsvPreview(null); setPendingCsv(''); }}>Hủy nhập</button><button className="button primary-button" type="button" disabled={importing || csvPreview.issues.length > 0} onClick={() => void confirmImport()}>{importing ? 'Đang nhập…' : `Xác nhận nhập ${csvPreview.totalRows} thí sinh`}</button></div>
       </div>}
       {dataLocked && <Notice tone="warning">Hồ sơ và danh sách lượt thi đã khóa vì điều phối hoặc chấm điểm đã bắt đầu. Lịch sử điểm và kết quả không bị thay đổi.</Notice>}
-      {!items ? <Loading /> : orderedEntries.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>THỨ TỰ</th><th>MÃ</th><th>THÍ SINH / ĐỘI</th><th>ĐƠN VỊ</th><th>TRẠNG THÁI</th><th>PHIẾU</th><th>THAO TÁC</th></tr></thead><tbody>{orderedEntries.map((entry, index) => { const item = contestantByEntry.get(entry.id)!; return <tr key={entry.id}><td data-label="Thứ tự">{entry.sequence}</td><td data-label="Mã"><strong>{entry.entryCode}</strong></td><td data-label="Thí sinh"><strong>{item.displayName}</strong>{entry.title && <div className="field-help">{entry.title}</div>}</td><td data-label="Đơn vị">{item.organization || '—'}</td><td data-label="Trạng thái"><StatusPill value={entry.status} /></td><td data-label="Phiếu">{entry._count.scoreSheets}</td><td data-label="Thao tác"><div className="table-actions"><button className="button secondary-button small-button" type="button" disabled={dataLocked} onClick={() => setEditing(item)}>Sửa</button><button className="button secondary-button small-button" type="button" aria-label={`Đưa ${item.displayName} lên trên`} title="Đưa lên một vị trí" disabled={reordering || dataLocked || index === 0} onClick={() => void moveEntry(entry.id, -1)}>↑</button><button className="button secondary-button small-button" type="button" aria-label={`Đưa ${item.displayName} xuống dưới`} title="Đưa xuống một vị trí" disabled={reordering || dataLocked || index === orderedEntries.length - 1} onClick={() => void moveEntry(entry.id, 1)}>↓</button><button className="button danger-button small-button" type="button" disabled={dataLocked} onClick={async () => { const accepted = await confirm({ title: 'Rút thí sinh khỏi vòng?', description: `Rút ${item.displayName}? Lịch sử điểm vẫn được giữ lại.`, confirmLabel: 'Rút thí sinh', danger: true }); if (!accepted) return; try { await api(`/api/competitions/${id}/contestants/${item.id}`, { method: 'DELETE' }); setNotice('Đã rút thí sinh; lịch sử điểm được giữ lại.'); await load(); } catch (reason) { setError(errorText(reason)); } }}>Rút</button></div></td></tr>; })}</tbody></table></div> : <EmptyState title="Chưa có thí sinh trong vòng này" description="Thêm thí sinh bằng biểu mẫu hoặc nhập danh sách CSV." />}
+      {!items ? <Loading /> : orderedEntries.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>THỨ TỰ</th><th>MÃ</th><th>THÍ SINH / ĐỘI</th><th>ĐƠN VỊ</th><th>TRẠNG THÁI</th><th>PHIẾU</th><th>THAO TÁC</th></tr></thead><tbody>{orderedEntries.map((entry, index) => { const item = contestantByEntry.get(entry.id)!; return <tr key={entry.id}><td data-label="Thứ tự">{entry.sequence}</td><td data-label="Mã"><strong>{entry.entryCode}</strong></td><td data-label="Thí sinh"><strong>{item.displayName}</strong>{entry.title && <div className="field-help">{entry.title}</div>}</td><td data-label="Đơn vị">{item.organization || '—'}</td><td data-label="Trạng thái"><StatusPill value={entry.status} /></td><td data-label="Phiếu">{entry._count.scoreSheets}</td><td data-label="Thao tác"><div className="table-actions"><button className="button secondary-button small-button" type="button" disabled={dataLocked} onClick={() => setEditing(item)}>Sửa</button><button className="button secondary-button small-button" type="button" aria-label={`Đưa ${item.displayName} lên trên`} title="Đưa lên một vị trí" disabled={reordering || dataLocked || index === 0} onClick={() => void moveEntry(entry.id, -1)}>↑</button><button className="button secondary-button small-button" type="button" aria-label={`Đưa ${item.displayName} xuống dưới`} title="Đưa xuống một vị trí" disabled={reordering || dataLocked || index === orderedEntries.length - 1} onClick={() => void moveEntry(entry.id, 1)}>↓</button><button className="button danger-button small-button" type="button" disabled={dataLocked} onClick={async () => { const accepted = await confirm({ title: 'Rút thí sinh khỏi vòng?', description: `Rút ${item.displayName}? Lịch sử điểm vẫn được giữ lại.`, confirmLabel: 'Rút thí sinh', danger: true }); if (!accepted) return; try { await api(`/api/competitions/${id}/contestants/${item.id}`, { method: 'DELETE' }); setNotice('Đã rút thí sinh; lịch sử điểm được giữ lại.'); await load(); await refreshCompetition(); } catch (reason) { setError(errorText(reason)); } }}>Rút</button></div></td></tr>; })}</tbody></table></div> : <EmptyState title="Chưa có thí sinh trong vòng này" description="Thêm thí sinh bằng biểu mẫu hoặc nhập danh sách CSV." />}
     </SectionCard>
     <SectionCard title={editing ? 'Chỉnh sửa hồ sơ' : 'Thêm thí sinh'} subtitle={editing ? 'Cập nhật thông tin liên hệ và đơn vị.' : `Lượt thi mới sẽ được tạo trong vòng “${round.name}”.`}>
       <form className="form-stack" key={editing?.id ?? 'new'} onSubmit={add}>
@@ -324,7 +328,7 @@ function Contestants({ id, round }: { id: string; round: Round }) {
 type Assignment = { id: string; user: { id: string; fullName: string; username: string | null; email: string | null; isActive: boolean }; round: { id: string; name: string }; entry: { id: string; entryCode: string } | null };
 type JudgeEntryOption = { id: string; entryCode: string; sequence: number; status: string; contestant: { displayName: string } };
 
-function Judges({ id, round }: { id: string; round: Round }) {
+function Judges({ id, round, refreshCompetition }: { id: string; round: Round; refreshCompetition: () => Promise<void> }) {
   const { confirm, dialog: confirmationDialog } = useConfirmDialog();
   const [assignments, setAssignments] = useState<Assignment[] | null>(null);
   const [entries, setEntries] = useState<JudgeEntryOption[]>([]);
@@ -352,12 +356,13 @@ function Judges({ id, round }: { id: string; round: Round }) {
   useEffect(() => { setAssignments(null); void load(); }, [id, round.id]);
   async function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('');
-    const form = new FormData(event.currentTarget);
+    const targetForm = event.currentTarget;
+    const form = new FormData(targetForm);
     const body: Record<string, unknown> = { roundId: round.id, identifier: form.get('identifier') };
     const fullName = String(form.get('fullName') || '').trim(); if (fullName) body.fullName = fullName;
     if (entryId) body.entryId = entryId;
     const password = String(form.get('password') || ''); if (password) body.password = password;
-    try { await api(`/api/competitions/${id}/judges`, { method: 'POST', body }); event.currentTarget.reset(); setEntryId(''); setNotice('Đã tạo hoặc cập nhật tài khoản và phân công giám khảo.'); await load(); }
+    try { await api(`/api/competitions/${id}/judges`, { method: 'POST', body }); targetForm.reset(); setEntryId(''); setNotice('Đã tạo hoặc cập nhật tài khoản và phân công giám khảo.'); await load(); await refreshCompetition(); }
     catch (reason) { setError(errorText(reason)); } finally { setBusy(false); }
   }
   async function resetPassword(item: Assignment) {
@@ -374,7 +379,7 @@ function Judges({ id, round }: { id: string; round: Round }) {
   return <><div className="card-grid two-columns">
     <SectionCard title={`Giám khảo · ${round.name}`} subtitle="Phân công theo toàn vòng hoặc theo từng lượt thi.">
       {error && <Notice tone="error">{error}</Notice>}
-      {!assignments ? <Loading /> : assignments.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>GIÁM KHẢO</th><th>USERNAME / EMAIL</th><th>PHẠM VI</th><th>THAO TÁC</th></tr></thead><tbody>{assignments.map((item) => <tr key={item.id}><td data-label="Giám khảo"><strong>{item.user.fullName}</strong></td><td data-label="Tài khoản">{item.user.email ?? item.user.username ?? '—'}</td><td data-label="Phạm vi">{item.entry ? item.entry.entryCode : 'Toàn vòng'}</td><td data-label="Thao tác"><div className="table-actions"><button className="button secondary-button small-button" type="button" disabled={busy} onClick={() => void resetPassword(item)}>Đặt lại mật khẩu</button><button className="button danger-button small-button" type="button" disabled={busy} onClick={async () => { const accepted = await confirm({ title: 'Gỡ phân công?', description: `Gỡ phân công của ${item.user.fullName}? Lịch sử phiếu đã nộp được giữ nguyên.`, confirmLabel: 'Gỡ phân công', danger: true }); if (!accepted) return; try { await api(`/api/competitions/${id}/judges/${item.id}`, { method: 'DELETE' }); await load(); } catch (reason) { setError(errorText(reason)); } }}>Gỡ</button></div></td></tr>)}</tbody></table></div> : <EmptyState title="Chưa phân công giám khảo" description="Thêm tài khoản giám khảo để họ đăng nhập và nhận lượt chấm." />}
+      {!assignments ? <Loading /> : assignments.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>GIÁM KHẢO</th><th>USERNAME / EMAIL</th><th>PHẠM VI</th><th>THAO TÁC</th></tr></thead><tbody>{assignments.map((item) => <tr key={item.id}><td data-label="Giám khảo"><strong>{item.user.fullName}</strong></td><td data-label="Tài khoản">{item.user.email ?? item.user.username ?? '—'}</td><td data-label="Phạm vi">{item.entry ? item.entry.entryCode : 'Toàn vòng'}</td><td data-label="Thao tác"><div className="table-actions"><button className="button secondary-button small-button" type="button" disabled={busy} onClick={() => void resetPassword(item)}>Đặt lại mật khẩu</button><button className="button danger-button small-button" type="button" disabled={busy} onClick={async () => { const accepted = await confirm({ title: 'Gỡ phân công?', description: `Gỡ phân công của ${item.user.fullName}? Lịch sử phiếu đã nộp được giữ nguyên.`, confirmLabel: 'Gỡ phân công', danger: true }); if (!accepted) return; try { await api(`/api/competitions/${id}/judges/${item.id}`, { method: 'DELETE' }); await load(); await refreshCompetition(); } catch (reason) { setError(errorText(reason)); } }}>Gỡ</button></div></td></tr>)}</tbody></table></div> : <EmptyState title="Chưa phân công giám khảo" description="Thêm tài khoản giám khảo để họ đăng nhập và nhận lượt chấm." />}
     </SectionCard>
     <SectionCard title="Tài khoản và phân công" subtitle="Chọn tài khoản hiện có hoặc cấp tài khoản mới, rồi phân công vào toàn vòng hay từng lượt thi.">
       {notice && <Notice tone="success">{notice}</Notice>}{error && <Notice tone="error">{error}</Notice>}
@@ -396,7 +401,7 @@ function Judges({ id, round }: { id: string; round: Round }) {
     {confirmationDialog}</>;
 }
 
-function RubricEditor({ id, round }: { id: string; round: Round }) {
+function RubricEditor({ id, round, refreshCompetition }: { id: string; round: Round; refreshCompetition: () => Promise<void> }) {
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [name, setName] = useState('Rubric chấm điểm');
   const [version, setVersion] = useState<number | null>(null);
@@ -441,7 +446,7 @@ function RubricEditor({ id, round }: { id: string; round: Round }) {
     event.preventDefault(); setError(''); setNotice(''); setBusy(true);
     try {
       const result = await api<{ version: { version: number; name: string } }>(`/api/competitions/${id}/rubric`, { method: 'POST', body: { roundId: round.id, name, criteria: criteria.map((item) => ({ name: item.name, description: item.description ?? '', minimum: Number(item.minimum), maximum: Number(item.maximum), step: Number(item.step), weight: Number(item.weight), commentRequired: item.commentRequired })) } });
-      setVersion(result.version.version); setNotice(`Đã lưu phiên bản ${result.version.version}. Phiên bản rubric hiện được kích hoạt cho vòng này.`);
+      setVersion(result.version.version); setNotice(`Đã lưu phiên bản ${result.version.version}. Phiên bản rubric hiện được kích hoạt cho vòng này.`); await refreshCompetition();
     } catch (reason) { setError(errorText(reason)); } finally { setBusy(false); }
   }
   return <div className="page-section">
@@ -475,7 +480,7 @@ function RubricEditor({ id, round }: { id: string; round: Round }) {
 
 type EntryOption = { id: string; entryCode: string; sequence: number; status: string; title: string | null; contestant: { displayName: string; organization: string | null } };
 
-function LiveControl({ id, round }: { id: string; round: Round }) {
+function LiveControl({ id, round, refreshCompetition }: { id: string; round: Round; refreshCompetition: () => Promise<void> }) {
   const { confirm, dialog: confirmationDialog } = useConfirmDialog();
   const { promptText, dialog: textPromptDialog } = useTextPromptDialog();
   const [session, setSession] = useState<{ id: string; state: string; version: number; currentEntry: { id: string; entryCode: string; title: string | null; contestant?: { displayName: string; organization: string | null } } | null } | null>(null);
@@ -500,7 +505,7 @@ function LiveControl({ id, round }: { id: string; round: Round }) {
   useEffect(() => { let active = true; setSession(null); void load(); const timer = window.setInterval(() => { if (active) void load(); }, 5000); return () => { active = false; window.clearInterval(timer); }; }, [id, round.id]);
   async function action(actionName: string, entryId?: string, overrideReason?: string) {
     setBusy(true); setError('');
-    try { const result = await api<{ session: NonNullable<typeof session> }>(`/api/competitions/${id}/rounds/${round.id}/session`, { method: 'POST', body: { action: actionName, entryId, overrideReason, expectedVersion: session?.version ?? 0 } }); setSession(result.session); setSelectedEntry(result.session.currentEntry?.id ?? ''); void load(); }
+    try { const result = await api<{ session: NonNullable<typeof session> }>(`/api/competitions/${id}/rounds/${round.id}/session`, { method: 'POST', body: { action: actionName, entryId, overrideReason, expectedVersion: session?.version ?? 0 } }); setSession(result.session); setSelectedEntry(result.session.currentEntry?.id ?? ''); await Promise.all([load(), refreshCompetition()]); }
     catch (reason) { setError(errorText(reason)); }
     finally { setBusy(false); }
   }
@@ -528,7 +533,7 @@ function LiveControl({ id, round }: { id: string; round: Round }) {
     <SectionCard title="Điều phối lượt thi" subtitle="Mọi thay đổi được lưu trên máy chủ và xuất hiện ở khu vực giám khảo.">
       {!session ? <Loading /> : <>
         <div className="live-current"><span className="live-number">{session.currentEntry?.entryCode ?? '—'}</span><div><div className="pill-row"><StatusPill value={session.state} /><span className="metric-chip">Phiên bản trạng thái {session.version}</span></div><h3 style={{ marginTop: 8 }}>{session.currentEntry?.contestant?.displayName ?? (session.currentEntry ? 'Danh tính được ẩn' : 'Chưa chọn thí sinh')}</h3><p>{session.currentEntry?.title || (session.currentEntry ? `Đang ở vòng ${round.name}` : 'Bắt đầu phiên để gửi lượt thi hiện tại cho giám khảo.')}</p></div></div>
-        {session.state === 'IDLE' && preflight && <div className="preflight-summary" aria-live="polite"><div className="preflight-heading"><strong>Kiểm tra trước khi bắt đầu</strong><span>{preflight.canStart ? 'Đủ điều kiện' : 'Cần xử lý'}</span></div><ul><li>{preflight.entryCount} lượt thi đang hoạt động</li><li>{preflight.rubricReady ? 'Đã có rubric đang kích hoạt' : 'Chưa có rubric hoặc rubric chưa có tiêu chí'}</li><li>{preflight.missingAssignments.length ? `Thiếu phân công ở ${preflight.missingAssignments.length} lượt: ${preflight.missingAssignments.map((entry) => entry.entryCode).join(', ')}` : `Đủ ${preflight.requiredJudgeCount} giám khảo cho mỗi lượt`}</li></ul><Link href={`/competitions/${id}/judges?roundId=${round.id}`} className="text-button">Kiểm tra phân công →</Link></div>}
+        {session.state === 'IDLE' && preflight && <div className="preflight-summary" aria-live="polite"><div className="preflight-heading"><strong>Kiểm tra trước khi bắt đầu</strong><span>{preflight.canStart ? 'Đủ điều kiện' : 'Cần xử lý'}</span></div><ul><li>{preflight.entryCount} lượt thi đang hoạt động</li><li>{preflight.rubricReady ? 'Đã có tiêu chí chấm đang kích hoạt' : 'Chưa có tiêu chí chấm hoặc chưa có tiêu chí nào'}</li><li>{preflight.missingAssignments.length ? `Thiếu phân công ở ${preflight.missingAssignments.length} lượt: ${preflight.missingAssignments.map((entry) => entry.entryCode).join(', ')}` : `Đã phân công đủ ${preflight.requiredJudgeCount} giám khảo cho mỗi lượt`}</li></ul><Link href={`/competitions/${id}/judges?roundId=${round.id}`} className="text-button">Kiểm tra phân công →</Link></div>}
         <div className="live-controls" style={{ marginTop: 15 }}>
           {session.state === 'IDLE' && <button className="button primary-button" disabled={busy || !preflight || preflight.entryCount === 0 || !preflight.rubricReady || (preflight.missingAssignments.length > 0 && !round.allowAdvanceWithGaps)} onClick={() => void startSession()}>▶ Bắt đầu điều phối</button>}
           {session.state === 'PAUSED' && <button className="button primary-button" disabled={busy} onClick={() => void action('resume')}>▶ Tiếp tục</button>}
@@ -549,7 +554,7 @@ function LiveControl({ id, round }: { id: string; round: Round }) {
 
 type ScoreStatusRow = { entry: { id: string; code: string; name: string }; requiredCount: number; assignedCount: number; submittedCount: number; judges: { id: string; name: string; email: string; status: string; totalScore: number | null; scoreSheetId: string | null }[] };
 
-function ScoreStatus({ id, round }: { id: string; round: Round }) {
+function ScoreStatus({ id, round, refreshCompetition }: { id: string; round: Round; refreshCompetition: () => Promise<void> }) {
   const { promptText, dialog: textPromptDialog } = useTextPromptDialog();
   const [rows, setRows] = useState<ScoreStatusRow[] | null>(null);
   const [error, setError] = useState('');
@@ -559,7 +564,7 @@ function ScoreStatus({ id, round }: { id: string; round: Round }) {
   async function reopen(row: ScoreStatusRow, judgeName: string, scoreSheetId: string) {
     const reason = await promptText({ title: 'Mở lại phiếu chấm', description: `${judgeName} · ${row.entry.code}. Bản kết quả hiện tại sẽ được giữ trong lịch sử; giám khảo cần nộp lại để tạo phiên bản mới.`, label: 'Lý do mở lại (tối thiểu 10 ký tự)', minLength: 10, maxLength: 2000, submitLabel: 'Mở lại phiếu' });
     if (!reason) return;
-    try { await api(`/api/competitions/${id}/results`, { method: 'POST', body: { action: 'reopen-score', roundId: round.id, scoreSheetId, reason } }); setNotice(`Đã mở lại phiếu ${row.entry.code} của ${judgeName}.`); await load(); }
+    try { await api(`/api/competitions/${id}/results`, { method: 'POST', body: { action: 'reopen-score', roundId: round.id, scoreSheetId, reason } }); setNotice(`Đã mở lại phiếu ${row.entry.code} của ${judgeName}.`); await load(); await refreshCompetition(); }
     catch (reasonError) { setError(errorText(reasonError)); }
   }
   const totalSubmitted = rows?.reduce((sum, row) => sum + row.submittedCount, 0) ?? 0;

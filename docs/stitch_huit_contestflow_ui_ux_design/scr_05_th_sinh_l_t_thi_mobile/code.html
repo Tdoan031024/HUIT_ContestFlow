@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary": "#ffffff", "on-primary-fixed-variant": "#004591", "background": "#f6f9ff", "on-background": "#061d2d", "on-primary-fixed": "#001a40", "tertiary-fixed": "#aeecff", "tertiary-container": "#005869", "inverse-on-surface": "#e6f2ff", "secondary-container": "#70b5fe", "on-tertiary-fixed-variant": "#004e5d", "primary-fixed": "#d7e2ff", "tertiary-fixed-dim": "#00d9ff", "surface-bright": "#f6f9ff", "outline-variant": "#c2c6d3", "surface-container": "#e1f0ff", "surface-container-highest": "#cfe5fb", "secondary": "#0062a2", "secondary-fixed-dim": "#9dcaff", "on-error-container": "#93000a", "surface-dim": "#c6ddf2", "on-tertiary-fixed": "#001f26", "error-container": "#ffdad6", "on-secondary": "#ffffff", "on-tertiary-container": "#00d4fa", "inverse-surface": "#1d3343", "secondary-fixed": "#d1e4ff", "on-secondary-container": "#004676", "surface": "#f6f9ff", "primary-container": "#034ea2", "primary": "#003878", "on-primary": "#ffffff", "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#acc7ff", "surface-container-high": "#d6ebff", "on-error": "#ffffff", "on-secondary-fixed": "#001d35", "error": "#ba1a1a", "on-surface-variant": "#424752", "inverse-primary": "#acc7ff", "surface-variant": "#cfe5fb", "outline": "#737783", "tertiary": "#003f4c", "on-primary-container": "#a6c3ff", "surface-container-low": "#ecf5ff", "surface-tint": "#215db1", "on-secondary-fixed-variant": "#00497c", "on-surface": "#061d2d" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2.5rem", "gutter-desktop": "2rem", "space-xs": "0.25rem", "gutter": "1rem", "gutter-tablet": "1.5rem", "margin-desktop": "3rem", "margin": "1rem", "margin-tablet": "2rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "space-md": "1rem" }, "fontFamily": { "body-lg": ["Be Vietnam Pro"], "body-md": ["Be Vietnam Pro"], "display-lg-mobile": ["Be Vietnam Pro"], "headline-sm": ["Be Vietnam Pro"], "title-md": ["Be Vietnam Pro"], "display-lg": ["Be Vietnam Pro"], "headline-lg-mobile": ["Be Vietnam Pro"], "label-lg": ["Be Vietnam Pro"], "numeric-score": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "headline-lg": ["Be Vietnam Pro"], "label-sm": ["Be Vietnam Pro"], "label-md": ["Be Vietnam Pro"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "numeric-score": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs min-w-0 flex-1"><button aria-label="Quay lại" class="w-11 h-11 flex items-center justify-center text-primary rounded-lg active:scale-95 transition-transform" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider truncate">HUIT ContestFlow - Quản trị</span><h1 class="font-title-md text-title-md text-on-surface truncate">Round Configuration</h1></div></div><div class="flex items-center pl-space-xs shrink-0"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full pb-28">
+<!-- Top Context & Competition Summary -->
+<section class="px-gutter pt-space-sm pb-space-md flex flex-col gap-space-sm">
+<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider truncate">HUIT TechInnovation 2026</span>
+</div>
+<div class="px-2 py-0.5 rounded-full bg-secondary-container/30 text-on-secondary-container font-label-sm text-label-sm shrink-0">
+          Bán kết
+        </div>
+</div>
+<div class="flex items-baseline justify-between gap-space-xs">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">Thí sinh &amp; Lượt thi</h2>
+<span class="font-label-md text-label-md text-on-surface-variant">Bảng Công Nghệ</span>
+</div>
+<!-- Quick Metrics Pills -->
+<div class="flex items-center gap-space-xs flex-wrap pt-0.5">
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-primary font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[15px]">folder_special</span>
+<span>24 Đề án</span>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high text-secondary font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>100% Đầy đủ hồ sơ</span>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+<span>Phòng Hội Đồng A2</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Search & Action Toolbar -->
+<section class="px-gutter pb-space-sm flex flex-col gap-space-sm">
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full h-11 pl-10 pr-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:bg-surface-container-low shadow-sm" placeholder="Tìm tên đề tài, SBD, mã #ENT..." type="text"/>
+</div>
+<button aria-label="Lọc theo bảng thi hoặc khoa" class="h-11 w-11 shrink-0 flex items-center justify-center rounded-lg bg-surface-container-low text-secondary active:scale-95 transition-transform shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">tune</span>
+</button>
+</div>
+<!-- Dual Actions: Manual Add & Toggle CSV Import -->
+<div class="grid grid-cols-2 gap-2">
+<button class="h-11 px-3 flex items-center justify-center gap-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md active:scale-98 transition-transform shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>+ Đề án mới</span>
+</button>
+<button class="h-11 px-3 flex items-center justify-center gap-1.5 rounded-lg bg-surface-container-high text-primary font-label-md text-label-md active:scale-98 transition-transform shadow-sm" id="btn-toggle-csv" type="button">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+<span>Nhập CSV</span>
+<span class="material-symbols-outlined text-[16px] transition-transform duration-200" id="csv-chevron">expand_more</span>
+</button>
+</div>
+</section>
+<!-- Collapsible CSV Import Panel -->
+<section class="px-gutter pb-space-sm" id="csv-panel">
+<div class="bg-surface-container-lowest rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">table_view</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Nhập dữ liệu tập trung</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Hỗ trợ .csv (Tối đa 1MB, 500 dòng)</p>
+</div>
+</div>
+<a class="font-label-sm text-label-sm text-secondary hover:underline flex items-center gap-0.5" href="#download-template">
+<span class="material-symbols-outlined text-[14px]">download</span>
+<span>File mẫu</span>
+</a>
+</div>
+<!-- File Validation State Card -->
+<div class="bg-surface-container-low rounded-lg p-3 flex flex-col gap-2">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0" style="font-variation-settings: 'FILL' 1;">description</span>
+<span class="font-label-md text-label-md text-on-surface truncate">danh_sach_vong_ban_ket.csv</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline shrink-0">48.2 KB</span>
+</div>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+<span class="font-label-sm text-label-sm">Kiểm tra hợp lệ: <strong>24/24 hợp lệ</strong> (0 lỗi dòng)</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary-container h-full w-full rounded-full"></div>
+</div>
+</div>
+<!-- Import Panel Controls -->
+<div class="flex items-center justify-end gap-2 pt-1">
+<button class="h-9 px-3 rounded-lg bg-surface-container text-on-surface-variant font-label-md text-label-md active:scale-95 transition-transform" type="button">
+          Thay tệp khác
+        </button>
+<button class="h-9 px-3 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md active:scale-95 transition-transform shadow-sm flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span>Xem trước danh sách</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Lock Notice Banner -->
+<section class="px-gutter pb-space-sm">
+<div class="bg-surface-container-low rounded-lg p-3 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0" style="font-variation-settings: 'FILL' 1;">lock</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Khóa tự động điều chỉnh thứ tự lượt thi khi phiên điều phối đã bắt đầu hoặc đã phát sinh điểm số từ Hội đồng Giám khảo.
+      </p>
+</div>
+</section>
+<!-- Roster & Sequence Section Header -->
+<section class="px-gutter pt-space-xs pb-space-xs flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-on-surface">Thứ tự Lượt thi</span>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2 py-0.5 rounded-full">4 / 24 đang hiển thị</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">touch_app</span>
+      Phím mũi tên 44px
+    </span>
+</section>
+<!-- Roster List -->
+<section class="px-gutter flex flex-col gap-space-sm pt-space-xs">
+<!-- Item 01: Ready State -->
+<article class="bg-surface-container-lowest rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm relative">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="font-numeric-score text-numeric-score text-primary leading-none">01</span>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm font-bold">SBD: BK-01</span>
+<span class="font-label-sm text-label-sm text-outline">#ENT-010</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<!-- Ready Badge -->
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Đã sẵn sàng</span>
+</div>
+<!-- Context menu button -->
+<button aria-label="Tùy chọn cho lượt 01" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant active:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Project Details -->
+<div class="flex flex-col gap-1 pl-1">
+<h4 class="font-title-md text-title-md text-on-surface leading-snug line-clamp-2">
+          Ứng dụng Học tiếng Anh Qua Game AI tương tác thực tế ảo
+        </h4>
+<div class="flex items-center gap-2 flex-wrap text-on-surface-variant font-body-sm text-body-sm pt-0.5">
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+            Nhóm AI Edu
+          </span>
+<span class="text-outline">•</span>
+<span>Khoa Công nghệ Thông tin</span>
+</div>
+</div>
+<!-- Touch Reorder Steppers (44x44px accessible hit zones) -->
+<div class="flex items-center justify-between pt-1 bg-surface-container-low rounded-lg p-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant pl-2">Điều chỉnh vị trí lượt thi:</span>
+<div class="flex items-center gap-1">
+<button aria-label="Chuyển lên trên" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-outline opacity-40 cursor-not-allowed" disabled="" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_up</span>
+</button>
+<button aria-label="Chuyển xuống dưới" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Item 02: LIVE Active State -->
+<article class="bg-surface-container-lowest rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm relative">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="font-numeric-score text-numeric-score text-secondary leading-none">02</span>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm font-bold">SBD: BK-02</span>
+<span class="font-label-sm text-label-sm text-outline">#ENT-012</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<!-- LIVE Badge with Pulse -->
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-ping"></span>
+<span class="font-bold tracking-wide">LIVE ĐANG THI</span>
+</div>
+<button aria-label="Tùy chọn cho lượt 02" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant active:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-1 pl-1">
+<h4 class="font-title-md text-title-md text-on-surface leading-snug line-clamp-2">
+          Hệ thống Smart IoT Nông Nghiệp HUIT giám sát khí canh tự động
+        </h4>
+<div class="flex items-center gap-2 flex-wrap text-on-surface-variant font-body-sm text-body-sm pt-0.5">
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+            Nhóm AgriTech
+          </span>
+<span class="text-outline">•</span>
+<span>Khoa Điện - Điện tử</span>
+</div>
+</div>
+<!-- Touch Reorder Steppers -->
+<div class="flex items-center justify-between pt-1 bg-surface-container-low rounded-lg p-1.5">
+<div class="flex items-center gap-1 text-secondary pl-2">
+<span class="material-symbols-outlined text-[16px]">record_voice_over</span>
+<span class="font-label-sm text-label-sm">Giám khảo đang chấm</span>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Chuyển lên trên" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_up</span>
+</button>
+<button aria-label="Chuyển xuống dưới" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Item 03: Waiting State -->
+<article class="bg-surface-container-lowest rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm relative">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="font-numeric-score text-numeric-score text-on-surface-variant leading-none">03</span>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm font-bold">SBD: BK-03</span>
+<span class="font-label-sm text-label-sm text-outline">#ENT-014</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<!-- Waiting Badge -->
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">hourglass_empty</span>
+<span>Chờ thi</span>
+</div>
+<button aria-label="Tùy chọn cho lượt 03" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant active:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-1 pl-1">
+<h4 class="font-title-md text-title-md text-on-surface leading-snug line-clamp-2">
+          Xe Lăn Điện Tự Cân Bằng Thông Minh hỗ trợ phục hồi chức năng
+        </h4>
+<div class="flex items-center gap-2 flex-wrap text-on-surface-variant font-body-sm text-body-sm pt-0.5">
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+            Nhóm MechaLife
+          </span>
+<span class="text-outline">•</span>
+<span>Khoa Cơ khí</span>
+</div>
+</div>
+<!-- Touch Reorder Steppers -->
+<div class="flex items-center justify-between pt-1 bg-surface-container-low rounded-lg p-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant pl-2">Điều chỉnh vị trí lượt thi:</span>
+<div class="flex items-center gap-1">
+<button aria-label="Chuyển lên trên" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_up</span>
+</button>
+<button aria-label="Chuyển xuống dưới" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Item 04: Waiting State -->
+<article class="bg-surface-container-lowest rounded-lg p-space-md shadow-sm flex flex-col gap-space-sm relative">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="font-numeric-score text-numeric-score text-on-surface-variant leading-none">04</span>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm font-bold">SBD: BK-04</span>
+<span class="font-label-sm text-label-sm text-outline">#ENT-008</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<!-- Waiting Badge -->
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">hourglass_empty</span>
+<span>Chờ thi</span>
+</div>
+<button aria-label="Tùy chọn cho lượt 04" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant active:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-1 pl-1">
+<h4 class="font-title-md text-title-md text-on-surface leading-snug line-clamp-2">
+          Nền tảng Tái chế Rác thải Đô thị dựa trên Chuỗi cung ứng ngược
+        </h4>
+<div class="flex items-center gap-2 flex-wrap text-on-surface-variant font-body-sm text-body-sm pt-0.5">
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+            Nhóm GreenPulse
+          </span>
+<span class="text-outline">•</span>
+<span>Khoa Môi trường</span>
+</div>
+</div>
+<!-- Touch Reorder Steppers -->
+<div class="flex items-center justify-between pt-1 bg-surface-container-low rounded-lg p-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant pl-2">Điều chỉnh vị trí lượt thi:</span>
+<div class="flex items-center gap-1">
+<button aria-label="Chuyển lên trên" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_up</span>
+</button>
+<button aria-label="Chuyển xuống dưới" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[22px]">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+</article>
+</section>
+<!-- Sticky Bottom Coordination & Action Bar -->
+<footer class="fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md shadow-lg pb-safe">
+<div class="px-gutter py-space-sm flex items-center gap-2 max-w-screen-md mx-auto">
+<button class="flex-1 h-12 rounded-lg bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-transform" type="button">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span>Lưu thứ tự</span>
+</button>
+<button class="flex-1 h-12 rounded-lg bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-transform" type="button">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<span>Điều phối Live</span>
+</button>
+</div>
+</footer>
+</div>
+<script>
+  // Simple collapsible toggle for CSV Import preview panel
+  const toggleBtn = document.getElementById('btn-toggle-csv');
+  const csvPanel = document.getElementById('csv-panel');
+  const csvChevron = document.getElementById('csv-chevron');
+
+  if (toggleBtn && csvPanel && csvChevron) {
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = csvPanel.classList.contains('hidden');
+      if (isHidden) {
+        csvPanel.classList.remove('hidden');
+        csvChevron.style.transform = 'rotate(180deg)';
+      } else {
+        csvPanel.classList.add('hidden');
+        csvChevron.style.transform = 'rotate(0deg)';
+      }
+    });
+  }
+</script></main></body></html>

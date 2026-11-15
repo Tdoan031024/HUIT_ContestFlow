@@ -61,7 +61,7 @@ export function CompetitionsList() {
       {filtered.length ? <>
         <div className="table-wrap competition-table-wrap"><table className="data-table"><thead><tr><th>TÊN CUỘC THI</th><th>TRẠNG THÁI</th><th>THỜI GIAN</th><th>VÒNG THI</th><th>THÍ SINH</th><th>THAO TÁC</th></tr></thead><tbody>{filtered.map((item) => <tr key={item.id}><td data-label="Cuộc thi"><strong>{item.name}</strong><div className="field-help">{item.description || 'Chưa có mô tả'}</div></td><td data-label="Trạng thái"><StatusPill value={item.status} /></td><td data-label="Thời gian">{formatDate(item.startsAt)}{item.endsAt ? ` – ${formatDate(item.endsAt)}` : ''}</td><td data-label="Vòng thi">{item._count.rounds}</td><td data-label="Thí sinh">{item._count.contestants}</td><td data-label="Thao tác"><Link className="button secondary-button small-button" href={`/competitions/${item.id}`}>Mở <span aria-hidden="true">→</span></Link></td></tr>)}</tbody></table></div>
         <div className="competition-mobile-list" aria-label="Danh sách cuộc thi">
-          {filtered.map((item) => <article className="competition-mobile-item" key={item.id}>
+          {filtered.map((item) => <article className="competition-mobile-item" data-status={item.status.toLowerCase()} key={item.id}>
             <div className="competition-mobile-heading"><h3>{item.name}</h3><StatusPill value={item.status} /></div>
             <p>{item.description || 'Chưa có mô tả'}</p>
             <div className="competition-mobile-meta">

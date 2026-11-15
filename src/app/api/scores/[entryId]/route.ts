@@ -102,7 +102,7 @@ export async function PUT(request: Request, context: Context) {
         if (!changed.count) throw new Error('Phiếu đã được nộp trước đó.');
         await tx.auditEvent.create({ data: { competitionId: entry.competitionId, actorId: user.id, action: 'SCORE_SUBMITTED', entityType: 'ScoreSheet', entityId: saved.id, details: { entryId, totalScore, before: previousDetails.map((detail) => ({ ...detail, score: Number(detail.score) })), after: details } } });
       } else {
-        await tx.scoreSheet.update({ where: { id: saved.id }, data: { status: 'DRAFT', totalScore, submittedAt: null } });
+        await tx.scoreSheet.update({ where: { id: saved.id }, data: { status: saved.status === 'REOPENED' ? 'REOPENED' : 'DRAFT', totalScore, submittedAt: null } });
         await tx.auditEvent.create({ data: { competitionId: entry.competitionId, actorId: user.id, action: 'SCORE_DRAFT_SAVED', entityType: 'ScoreSheet', entityId: saved.id, details: { entryId, totalScore, before: previousDetails.map((detail) => ({ ...detail, score: Number(detail.score) })), after: details } } });
       }
       return tx.scoreSheet.findUniqueOrThrow({ where: { id: saved.id }, include: { details: true } });
