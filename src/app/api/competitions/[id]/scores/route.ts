@@ -33,7 +33,7 @@ export async function GET(request: Request, context: Context) {
       submittedCount: related.filter((sheet) => sheet.status === 'SUBMITTED' && eligibleIds.has(sheet.judgeId)).length,
       judges: eligible.map((assignment) => {
         const sheet = related.find((item) => item.judgeId === assignment.userId);
-        return { id: assignment.user.id, name: assignment.user.fullName, email: assignment.user.email, status: sheet?.status ?? 'MISSING', totalScore: sheet?.totalScore === null || !sheet ? null : Number(sheet.totalScore), scoreSheetId: sheet?.id ?? null };
+        return { id: assignment.user.id, name: assignment.user.fullName, email: assignment.user.email, status: sheet?.status ?? 'MISSING', totalScore: sheet?.totalScore === null || !sheet ? null : Number(sheet.totalScore), scoreSheetId: sheet?.id ?? null, updatedAt: sheet?.updatedAt.toISOString() ?? null, submittedAt: sheet?.submittedAt?.toISOString() ?? null };
       }),
     };
   });

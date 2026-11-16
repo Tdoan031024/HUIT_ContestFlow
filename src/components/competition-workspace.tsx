@@ -298,10 +298,12 @@ function Contestants({ id, round, refreshCompetition }: { id: string; round: Rou
 
 type Assignment = { id: string; user: { id: string; fullName: string; username: string | null; email: string | null; isActive: boolean } };
 type JudgeDirectoryItem = { id: string; fullName: string; username: string | null; email: string | null; isActive: boolean; _count: { assignments: number } };
+type CompetitionJudgeProgressRow = { entry: { id: string; code: string; name: string }; judges: { id: string; name: string; status: string; updatedAt: string | null; submittedAt: string | null }[] };
 
 function Judges({ id, round, refreshCompetition }: { id: string; round: Round; refreshCompetition: () => Promise<void> }) {
   const { confirm, dialog: confirmationDialog } = useConfirmDialog();
   const [assignments, setAssignments] = useState<Assignment[] | null>(null);
+  const [progressRows, setProgressRows] = useState<CompetitionJudgeProgressRow[] | null>(null);
   const [judges, setJudges] = useState<JudgeDirectoryItem[]>([]);
   const [judgePickerOpen, setJudgePickerOpen] = useState(false);
   const [judgeQuery, setJudgeQuery] = useState('');
@@ -319,17 +321,27 @@ function Judges({ id, round, refreshCompetition }: { id: string; round: Round; r
   function toggleJudge(judgeId: string) {
     setSelectedJudgeIds((selected) => selected.includes(judgeId) ? selected.filter((id) => id !== judgeId) : [...selected, judgeId]);
   }
+  async function loadProgress() {
+    try { setProgressRows((await api<{ rows: CompetitionJudgeProgressRow[] }>(`/api/competitions/${id}/scores`)).rows); }
+    catch (reason) { setError(errorText(reason)); }
+  }
   async function load() {
     try {
-      const [assignmentResult, judgeResult] = await Promise.all([
+      const [assignmentResult, judgeResult, scoreResult] = await Promise.all([
         api<{ assignments: Assignment[] }>(`/api/competitions/${id}/judges`),
         api<{ judges: JudgeDirectoryItem[] }>('/api/judges'),
+        api<{ rows: CompetitionJudgeProgressRow[] }>(`/api/competitions/${id}/scores`),
       ]);
       setAssignments(assignmentResult.assignments);
       setJudges(judgeResult.judges);
+      setProgressRows(scoreResult.rows);
     } catch (reason) { setError(errorText(reason)); }
   }
-  useEffect(() => { setAssignments(null); void load(); }, [id, round.id]);
+  useEffect(() => {
+    setAssignments(null); setProgressRows(null); void load();
+    const timer = window.setInterval(() => { void loadProgress(); }, 15000);
+    return () => window.clearInterval(timer);
+  }, [id, round.id]);
   async function addSelected() {
     if (!selectedJudgeIds.length) return;
     const selectedCount = selectedJudgeIds.length;
@@ -346,11 +358,28 @@ function Judges({ id, round, refreshCompetition }: { id: string; round: Round; r
       <SectionCard title="Danh sách đã thêm" subtitle={`${assignedJudges.length} giám khảo`} action={<button className="button primary-button small-button judge-add-trigger" type="button" onClick={() => { setError(''); setJudgeQuery(''); setSelectedJudgeIds([]); setJudgePickerOpen(true); }} disabled={busy || assignmentLocked}>＋ Thêm giám khảo</button>}>
       {notice && <Notice tone="success">{notice}</Notice>}{error && <Notice tone="error">{error}</Notice>}
       {assignmentLocked && <Notice tone="warning">Không thể thay đổi danh sách giám khảo sau khi hoạt động chấm đã bắt đầu hoặc đã có phiếu.</Notice>}
-      {!assignments ? <Loading /> : assignedJudges.length ? <div className="competition-judge-list">{assignedJudges.map((item) => <article className="competition-judge-row" key={item.user.id}>
+      {!assignments ? <Loading /> : assignedJudges.length ? <div className="competition-judge-list">{assignedJudges.map((item) => {
+        const judgeEntries = (progressRows ?? []).flatMap((row) => {
+          const progress = row.judges.find((judge) => judge.id === item.user.id);
+          return progress ? [{ entry: row.entry, ...progress }] : [];
+        });
+        const submitted = judgeEntries.filter((entry) => entry.status === 'SUBMITTED');
+        const drafts = judgeEntries.filter((entry) => entry.status === 'DRAFT' || entry.status === 'REOPENED').sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
+        const current = drafts[0] ?? null;
+        return <article className="competition-judge-row" key={item.user.id}>
         <span className="judge-directory-avatar" aria-hidden="true">{item.user.fullName.trim().split(/\s+/).slice(-1)[0]?.slice(0, 1).toLocaleUpperCase('vi')}</span>
         <div className="competition-judge-copy"><div className="competition-judge-name"><strong>{item.user.fullName}</strong><span className={`competition-judge-status${item.user.isActive ? ' is-active' : ''}`}><i />{item.user.isActive ? 'Đang hoạt động' : 'Đã khóa'}</span></div><small>{item.user.email ?? item.user.username ?? 'Chưa có tài khoản đăng nhập'}</small></div>
+        <div className="competition-judge-progress" aria-live="polite">
+          {progressRows === null ? <span className="field-help">Đang tải tiến độ chấm…</span> : <>
+            <div className="competition-judge-progress-summary"><span><strong>{submitted.length}</strong>/{judgeEntries.length} thí sinh đã chấm</span><span>{judgeEntries.length - submitted.length} chưa nộp</span></div>
+            {current ? <p className="competition-judge-current"><span>Đang làm gần nhất</span><strong>{current.entry.code} · {current.entry.name}</strong><small>{current.status === 'REOPENED' ? 'Phiếu đã mở lại' : 'Bản nháp đã lưu'}{current.updatedAt ? ` · ${formatDateTime(current.updatedAt)}` : ''}</small></p> : <p className="competition-judge-current is-empty">Chưa có phiếu nháp đang làm.</p>}
+            <details className="competition-judge-progress-details"><summary>Xem danh sách {judgeEntries.length} thí sinh</summary><div className="competition-judge-progress-list">
+              {judgeEntries.map((entry) => <div className="competition-judge-progress-item" key={entry.entry.id}><span><strong>{entry.entry.code} · {entry.entry.name}</strong>{entry.updatedAt && <small>{entry.status === 'SUBMITTED' ? `Nộp ${formatDateTime(entry.submittedAt)}` : `Cập nhật ${formatDateTime(entry.updatedAt)}`}</small>}</span><StatusPill value={entry.status} /></div>)}
+            </div></details>
+          </>}
+        </div>
         <button className="judge-remove-button" type="button" aria-label={`Gỡ ${item.user.fullName} khỏi cuộc thi`} disabled={busy || assignmentLocked} onClick={async () => { const accepted = await confirm({ title: 'Gỡ giám khảo khỏi cuộc thi?', description: `Gỡ ${item.user.fullName} khỏi danh sách giám khảo của cuộc thi? Lịch sử phiếu chấm đã nộp sẽ được giữ nguyên.`, confirmLabel: 'Gỡ khỏi cuộc thi', danger: true }); if (!accepted) return; setBusy(true); setError(''); setNotice(''); try { await api(`/api/competitions/${id}/judges/${item.id}`, { method: 'DELETE' }); setNotice(`Đã gỡ ${item.user.fullName} khỏi cuộc thi.`); await load(); await refreshCompetition(); } catch (reason) { setError(errorText(reason)); } finally { setBusy(false); } }}>Gỡ</button>
-      </article>)}</div> : <EmptyState title="Chưa có giám khảo" description="Thêm giám khảo từ danh sách tài khoản hiện có để bắt đầu phân công chấm." />}
+      </article>})}</div> : <EmptyState title="Chưa có giám khảo" description="Thêm giám khảo từ danh sách tài khoản hiện có để bắt đầu phân công chấm." />}
     </SectionCard>
     <Dialog open={judgePickerOpen} title="Thêm giám khảo" description="Chọn một hoặc nhiều tài khoản để thêm vào cuộc thi." onClose={() => { setJudgePickerOpen(false); setJudgeQuery(''); setSelectedJudgeIds([]); }} className="judge-picker-dialog">
       <div className="judge-picker-search"><Icon name="search" /><input className="field-input" type="search" value={judgeQuery} onChange={(event) => setJudgeQuery(event.target.value)} placeholder="Tìm tên hoặc tài khoản" aria-label="Tìm giám khảo" /></div>
