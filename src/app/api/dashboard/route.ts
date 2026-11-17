@@ -41,6 +41,7 @@ export async function GET() {
       select: {
         competitionId: true,
         roundId: true,
+        entryId: true,
         round: { select: { entries: { where: { status: 'ACTIVE' }, select: { id: true } } } },
       },
     }) : [];
@@ -48,7 +49,9 @@ export async function GET() {
     for (const assignment of assignments) {
       const key = `${assignment.competitionId}:${assignment.roundId}`;
       const set = taskEntries.get(key) ?? new Set<string>();
-      for (const entry of assignment.round.entries) set.add(entry.id);
+      for (const entry of assignment.round.entries) {
+        if (!assignment.entryId || assignment.entryId === entry.id) set.add(entry.id);
+      }
       taskEntries.set(key, set);
     }
     const allEntryIds = [...new Set([...taskEntries.values()].flatMap((entries) => [...entries]))];
@@ -78,7 +81,7 @@ export async function GET() {
       if (!rounds.length) return [];
       const expected = rounds.reduce((sum, round) => sum + round._count.entries, 0);
       const submitted = submittedByCompetition.get(competition.id)?.size ?? 0;
-      return [{ ...competition, rounds, progress: progress(submitted, expected) }];
+      return [{ ...competition, _count: { ...competition._count, contestants: expected }, rounds, progress: progress(submitted, expected) }];
     });
     const visibleCompetitionIds = visibleCompetitions.map(({ id }) => id);
     const activities = visibleCompetitionIds.length ? await prisma.auditEvent.findMany({

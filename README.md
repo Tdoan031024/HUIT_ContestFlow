@@ -9,15 +9,19 @@ The whole product runs as one Next.js application. The browser UI and server-sid
 ## Local development
 
 1. Install Node.js 22 and npm.
-2. Copy `.env.example` to `.env` and replace `ADMIN_SETUP_KEY` with a random value. Keep `.env` private.
+2. Copy `.env.example` to `.env` and set `DATABASE_URL`. Keep `.env` private.
 3. Start MySQL with `docker compose up -d mysql` or use an existing MySQL 8+ instance.
 4. Install packages with `npm install`.
 5. Apply the committed schema with `npm run db:deploy`.
 6. Start the web application with `npm run dev`.
 
-Open `http://localhost:3000/setup` to create the first Admin account using the configured one-time setup key. After that, sign in at `/login`. The login page can keep a device signed in for 30 days; without that option, the browser session ends when the browser closes and the server session expires after 12 hours. Dashboard data is read from MySQL; no sample records are inserted automatically. `GET /api/health` checks the application and database connection.
+Sign in at `http://localhost:3000/login`. The application does not provide a public Admin setup page or endpoint. Create a local Admin with the seed command below. The login page can keep a device signed in for 30 days; without that option, the browser session ends when the browser closes and the server session expires after 12 hours. Dashboard data is read from MySQL; no sample records are inserted automatically. `GET /api/health` checks the application and database connection.
 
 To seed the local Admin account from PowerShell, set `HCF_ADMIN_SEED_PASSWORD` in the current terminal session and run `npm run db:seed-admin`. The seed defaults to the username `ContestFlow.Huitmedia`, stores only a scrypt password hash, and refuses to run against production or a non-local MySQL host. Do not put the seed password in `.env` or source control.
+
+Password recovery links are sent to `HCF_ADMIN_RECOVERY_EMAIL` when configured, otherwise to `SMTP_USER`, and finally to the email saved on the account. Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, and `HCF_APP_BASE_URL` before enabling it. SMTP port 465 uses TLS from connection start; other configured ports require STARTTLS. In production, `HCF_APP_BASE_URL` must be the public HTTPS origin. The shared recovery inbox lets accounts without a saved email receive reset links through the organization mailbox. The reset link expires after 30 minutes, works once, and invalidates the account's existing sessions after the password changes. Apply the additive `20261116010000_add_password_reset_tokens` migration before deploying.
+
+For an existing local Admin, set `HCF_ADMIN_SEED_USERNAME` and `HCF_ADMIN_RECOVERY_EMAIL` in the current PowerShell session, then run `npm run db:set-admin-email` to attach the verified recovery email without changing the password. This command is restricted to local MySQL.
 
 To seed a local Judge account, set `HCF_JUDGE_SEED_PASSWORD` in the current terminal session and run `npm run db:seed-judge`. It defaults to the username `Judge.Huitmedia`, stores only a scrypt password hash, and uses no email address. An Admin can assign this account to a round by entering its username in the Judge assignment form.
 
@@ -31,7 +35,7 @@ The administrator creates and assigns Judge accounts from a competition. Share i
 
 ## Verification
 
-Run `npm run build` to check the production build and TypeScript. For the workflow check, start the app and run `npm run test:e2e` from PowerShell. The E2E script uses the configured `DATABASE_URL` and one-time `ADMIN_SETUP_KEY`; it creates temporary test accounts/competition records and removes them afterward. Run it only against an isolated development or test database where first-Admin setup is still enabled, never against production.
+Run `npm run build` to check the production build and TypeScript. For the workflow check, start the app and run `npm run test:e2e` from PowerShell. The E2E script uses the configured local `DATABASE_URL`, creates temporary test accounts/competition records, and removes them afterward. Run it only against an isolated development or test database, never against production.
 
 ## MySQL backup and restore
 
@@ -45,7 +49,7 @@ The application database user must have the required permissions on the target. 
 
 ## Deployment
 
-Deploy this repository as one Node.js app using the host's Node.js application manager. For cPanel Passenger, set the application startup file to `app.cjs`; it starts the built Next.js server using Passenger's assigned port. Set `DATABASE_URL` and a strong, one-time `ADMIN_SETUP_KEY` in the host's environment, run `npm run db:deploy`, build with `npm run build`, then start with `npm start`. Once the first Admin is created, remove `ADMIN_SETUP_KEY` from the production environment to disable bootstrap. Apply committed migrations before each release and keep a database backup before deployment.
+Deploy this repository as one Node.js app using the host's Node.js application manager. For cPanel Passenger, set the application startup file to `app.cjs`; it starts the built Next.js server using Passenger's assigned port. Set `DATABASE_URL` in the host's environment, ensure the required Admin account has already been provisioned, run `npm run db:deploy`, build with `npm run build`, then start with `npm start`. Apply committed migrations before each release and keep a database backup before deployment.
 
 ### GitHub Actions CI/CD
 

@@ -9,7 +9,6 @@ $server = $null
 $databaseCreated = $false
 $completed = $false
 $oldDatabaseUrl = $env:DATABASE_URL
-$oldSetupKey = $env:ADMIN_SETUP_KEY
 $oldE2eDatabaseUrl = $env:HCF_E2E_DATABASE_URL
 $oldE2eBaseUrl = $env:HCF_E2E_BASE_URL
 $oldKeepData = $env:HCF_E2E_KEEP_DATA
@@ -27,10 +26,6 @@ try {
   $databaseCreated = $true
   $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
   $env:DATABASE_URL = $state.databaseUrl
-  $setupLine = Get-Content -LiteralPath (Join-Path $ProjectRoot '.env') | Where-Object { $_ -match '^ADMIN_SETUP_KEY=' } | Select-Object -First 1
-  if (-not $setupLine) { throw 'Missing ADMIN_SETUP_KEY in local .env.' }
-  $env:ADMIN_SETUP_KEY = $setupLine.Substring($setupLine.IndexOf('=') + 1).Trim().Trim('"')
-
   & npx prisma migrate deploy
   if ($LASTEXITCODE -ne 0) { throw 'Prisma migrations failed on the isolated E2E database.' }
   & node --env-file=.env scripts/local-e2e-database.mjs mark
@@ -78,10 +73,9 @@ try {
       Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
     }
   }
-  foreach ($name in @('DATABASE_URL','ADMIN_SETUP_KEY','HCF_E2E_DATABASE_URL','HCF_E2E_BASE_URL','HCF_E2E_KEEP_DATA','HCF_E2E_SCHEMA','HCF_E2E_STATE_FILE')) {
+  foreach ($name in @('DATABASE_URL','HCF_E2E_DATABASE_URL','HCF_E2E_BASE_URL','HCF_E2E_KEEP_DATA','HCF_E2E_SCHEMA','HCF_E2E_STATE_FILE')) {
     $oldValue = switch ($name) {
       'DATABASE_URL' { $oldDatabaseUrl }
-      'ADMIN_SETUP_KEY' { $oldSetupKey }
       'HCF_E2E_DATABASE_URL' { $oldE2eDatabaseUrl }
       'HCF_E2E_BASE_URL' { $oldE2eBaseUrl }
       'HCF_E2E_KEEP_DATA' { $oldKeepData }

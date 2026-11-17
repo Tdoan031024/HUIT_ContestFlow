@@ -3,11 +3,13 @@ import mariadb from 'mariadb';
 
 const connectionString = process.env.DATABASE_URL;
 const username = (process.env.HCF_ADMIN_SEED_USERNAME || 'ContestFlow.Huitmedia').trim().toLowerCase();
+const email = process.env.HCF_ADMIN_SEED_EMAIL?.trim().toLowerCase() || null;
 const password = process.env.HCF_ADMIN_SEED_PASSWORD;
 
 if (!connectionString) throw new Error('DATABASE_URL is required.');
 if (process.env.NODE_ENV === 'production') throw new Error('Admin seeding is disabled in production.');
 if (!/^[a-z0-9][a-z0-9._-]{2,79}$/.test(username)) throw new Error('Admin username is invalid.');
+if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Admin recovery email is invalid.');
 if (!password || password.length < 12 || password.length > 128) {
   throw new Error('Set HCF_ADMIN_SEED_PASSWORD to a password between 12 and 128 characters.');
 }
@@ -46,15 +48,15 @@ try {
 
   if (account) {
     await connection.query(
-      "UPDATE `users` SET `username` = ?, `password_hash` = ?, `full_name` = 'ContestFlow', `system_role` = 'ADMIN', `is_active` = TRUE, `updated_at` = CURRENT_TIMESTAMP(3) WHERE `id` = ?",
-      [username, passwordHash, account.id],
+      "UPDATE `users` SET `username` = ?, `email` = COALESCE(?, `email`), `password_hash` = ?, `full_name` = 'ContestFlow', `system_role` = 'ADMIN', `is_active` = TRUE, `updated_at` = CURRENT_TIMESTAMP(3) WHERE `id` = ?",
+      [username, email, passwordHash, account.id],
     );
     await connection.commit();
     console.log(`Admin account '${username}' updated.`);
   } else {
     await connection.query(
-      "INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `full_name`, `system_role`, `is_active`, `created_at`, `updated_at`) VALUES (?, ?, NULL, ?, 'ContestFlow', 'ADMIN', TRUE, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))",
-      [randomUUID(), username, passwordHash],
+      "INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `full_name`, `system_role`, `is_active`, `created_at`, `updated_at`) VALUES (?, ?, ?, ?, 'ContestFlow', 'ADMIN', TRUE, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))",
+      [randomUUID(), username, email, passwordHash],
     );
     await connection.commit();
     console.log(`Admin account '${username}' created.`);

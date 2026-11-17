@@ -12,6 +12,7 @@
   --line: #d9e5f1;
   --canvas: #f6f9ff;
   --surface: #fff;
+  --surface-raised: #fff;
   --navy: #003878;
   --navy-soft: #034ea2;
   --blue: #034ea2;
@@ -24,6 +25,26 @@
   --radius: 14px;
   --focus-ring: 0 0 0 4px rgb(11 101 155 / 15%);
   --font-sans: "Be Vietnam Pro", "Segoe UI", sans-serif;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e7eff5;
+  --muted: #a8bac7;
+  --subtle: #91a5b3;
+  --line: #304653;
+  --canvas: #101a22;
+  --surface: #182630;
+  --surface-raised: #20323e;
+  --navy: #0d2434;
+  --navy-soft: #17669a;
+  --blue: #1679bd;
+  --blue-dark: #0d609e;
+  --blue-wash: #1b3546;
+  --green: #72c7a6;
+  --red: #f08e91;
+  --amber: #e9b66f;
+  --focus-ring: 0 0 0 4px rgb(58 157 211 / 26%);
 }
 
 *,

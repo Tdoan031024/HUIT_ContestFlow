@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { SessionUser } from '@/lib/auth';
 import { Icon, type IconName } from '@/components/icons';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const links: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Tổng quan', icon: 'home' },
@@ -95,8 +96,9 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           <Link className="mobile-media-brand" href="/" aria-label="HUIT Media, về trang tổng quan">
             <Image src="/brand/huit-media-logo.png" width={676} height={187} sizes="124px" alt="HUIT Media" priority />
           </Link>
+          <ThemeToggle className="topbar-theme-toggle" />
           <div className="breadcrumbs"><span>HUIT ContestFlow</span><b>/</b><strong>{currentLabel}</strong></div>
-          <div className="topbar-right"><span className="live-indicator"><i /> Hệ thống quản lý</span><span className="topbar-role">{user.systemRole === 'ADMIN' ? 'BAN TỔ CHỨC' : 'GIÁM KHẢO'}</span><span className="top-avatar" aria-label={user.fullName}>{initials(user.fullName)}</span><button className="mobile-logout" type="button" aria-label="Đăng xuất" title="Đăng xuất" onClick={logout} disabled={busy}><Icon name="logout" /> <span>Đăng xuất</span></button></div>
+          <div className="topbar-right"><span className="live-indicator"><i /> Hệ thống quản lý</span><span className="topbar-role">{user.systemRole === 'ADMIN' ? 'BAN TỔ CHỨC' : 'GIÁM KHẢO'}</span><ThemeToggle /><span className="top-avatar" aria-label={user.fullName}>{initials(user.fullName)}</span><button className="mobile-logout" type="button" aria-label="Đăng xuất" title="Đăng xuất" onClick={logout} disabled={busy}><Icon name="logout" /> <span>Đăng xuất</span></button></div>
         </header>
         <main className="page-content" id="main-content" tabIndex={-1}>{children}</main>
         <footer className="app-footer"><span>© {new Date().getFullYear()} HUIT ContestFlow · Trường Đại học Công Thương TP. Hồ Chí Minh</span><a className="app-media-credit" href="https://huitmedia.edu.vn" target="_blank" rel="noreferrer"><Image src="/brand/huit-media-logo.png" width={676} height={187} sizes="64px" alt="HUIT Media" /><span>Kênh thông tin và truyền thông HUIT</span></a></footer>

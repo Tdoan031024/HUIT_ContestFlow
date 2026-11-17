@@ -25,14 +25,26 @@ export async function GET() {
 
   // Keep assigned competitions visible even before contestants are added.
   // The scoring queue below is intentionally one task per active entry.
-  const assignedCompetitions = [...new Map(assignments.map((assignment) => [assignment.competition.id, {
-    ...assignment.competition,
-    contestantCount: assignment.round.entries.length,
-  }])).values()];
+  const competitionScopes = new Map<string, { competition: typeof assignments[number]['competition']; entryIds: Set<string> }>();
+  for (const assignment of assignments) {
+    const scope = competitionScopes.get(assignment.competition.id) ?? {
+      competition: assignment.competition,
+      entryIds: new Set<string>(),
+    };
+    for (const entry of assignment.round.entries) {
+      if (!assignment.entryId || assignment.entryId === entry.id) scope.entryIds.add(entry.id);
+    }
+    competitionScopes.set(assignment.competition.id, scope);
+  }
+  const assignedCompetitions = [...competitionScopes.values()].map(({ competition, entryIds }) => ({
+    ...competition,
+    contestantCount: entryIds.size,
+  }));
 
   const scopes = new Map<string, { assignment: typeof assignments[number]; entry: typeof assignments[number]['round']['entries'][number] }>();
   for (const assignment of assignments) {
     for (const entry of assignment.round.entries) {
+      if (assignment.entryId && assignment.entryId !== entry.id) continue;
       const key = `${assignment.roundId}:${entry.id}`;
       if (!scopes.has(key)) scopes.set(key, { assignment, entry });
     }

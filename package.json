@@ -15,6 +15,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed-admin": "node --env-file=.env scripts/seed-admin.mjs",
+    "db:set-admin-email": "node --env-file=.env scripts/set-admin-email.mjs",
     "db:seed-judge": "node --env-file=.env scripts/seed-judge.mjs",
     "db:studio": "prisma studio"
   },
@@ -23,6 +24,7 @@
     "@prisma/adapter-mariadb": "7.10.1",
     "@prisma/client": "7.10.1",
     "next": "16.4.5",
+    "nodemailer": "^10.6.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "zod": "^4.6.7"

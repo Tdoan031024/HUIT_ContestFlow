@@ -17,7 +17,7 @@ export async function GET(_request: Request, context: Context) {
   const { entryId } = await context.params;
   const entry = await prisma.competitionEntry.findUnique({ where: { id: entryId }, include: { round: true, contestant: true } });
   if (!entry) return Response.json({ error: 'Không tìm thấy lượt thi.' }, { status: 404 });
-  if (!(await isAssignedJudge(user, entry.roundId))) return Response.json({ error: 'Bạn chưa được phân công chấm cuộc thi này.' }, { status: 403 });
+  if (!(await isAssignedJudge(user, entry.roundId, entryId))) return Response.json({ error: 'Bạn chưa được phân công chấm thí sinh này.' }, { status: 403 });
   const sheet = await prisma.scoreSheet.findUnique({
     where: { entryId_judgeId: { entryId, judgeId: user.id } },
     include: { rubricVersion: { include: { criteria: { orderBy: { sequence: 'asc' } } } }, details: true },
@@ -50,7 +50,7 @@ export async function PUT(request: Request, context: Context) {
   if (!parsed.success) return Response.json({ error: 'Dữ liệu phiếu chấm không hợp lệ.' }, { status: 400 });
   const entry = await prisma.competitionEntry.findUnique({ where: { id: entryId }, include: { round: true } });
   if (!entry) return Response.json({ error: 'Không tìm thấy lượt thi.' }, { status: 404 });
-  if (!(await isAssignedJudge(user, entry.roundId))) return Response.json({ error: 'Bạn chưa được phân công chấm cuộc thi này.' }, { status: 403 });
+  if (!(await isAssignedJudge(user, entry.roundId, entryId))) return Response.json({ error: 'Bạn chưa được phân công chấm thí sinh này.' }, { status: 403 });
   const existing = await prisma.scoreSheet.findUnique({ where: { entryId_judgeId: { entryId, judgeId: user.id } }, select: { id: true, status: true, rubricVersionId: true } });
   if (existing?.status === 'SUBMITTED') return Response.json({ error: 'Phiếu đã nộp. Chỉ Admin mới có thể mở lại phiếu.' }, { status: 409 });
   const latestSnapshot = await prisma.resultSnapshot.findFirst({ where: { roundId: entry.roundId }, orderBy: { version: 'desc' }, select: { id: true } });

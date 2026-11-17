@@ -3,10 +3,8 @@ $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $BaseUrl = if ($env:HCF_E2E_BASE_URL) { $env:HCF_E2E_BASE_URL.TrimEnd('/') } else { 'http://localhost:3000' }
 $envFile = Join-Path $ProjectRoot '.env'
 $envLines = Get-Content -LiteralPath $envFile
-$setupLine = $envLines | Where-Object { $_ -match '^ADMIN_SETUP_KEY=' } | Select-Object -First 1
 $databaseLine = $envLines | Where-Object { $_ -match '^DATABASE_URL=' } | Select-Object -First 1
-if (-not $setupLine -or (-not $databaseLine -and -not $env:HCF_E2E_DATABASE_URL)) { throw 'Cần có ADMIN_SETUP_KEY và DATABASE_URL trong .env hoặc HCF_E2E_DATABASE_URL của môi trường kiểm thử riêng.' }
-$setupKey = $setupLine.Substring($setupLine.IndexOf('=') + 1).Trim().Trim('"')
+if (-not $databaseLine -and -not $env:HCF_E2E_DATABASE_URL) { throw 'Cần có DATABASE_URL trong .env hoặc HCF_E2E_DATABASE_URL của môi trường kiểm thử riêng.' }
 $databaseUrl = if ($env:HCF_E2E_DATABASE_URL) { $env:HCF_E2E_DATABASE_URL } else { $databaseLine.Substring($databaseLine.IndexOf('=') + 1).Trim().Trim('"') }
 $databaseUri = [uri]$databaseUrl
 if ($databaseUri.Host -notin @('localhost', '127.0.0.1', '::1', '[::1]')) { throw 'E2E chỉ được chạy với DATABASE_URL trỏ tới database local.' }
@@ -19,9 +17,11 @@ $judgeBEmail = "codex-e2e-judge-b+$suffix@huit.test"
 $adminPassword = 'LocalE2E-Admin-3pw!'
 $judgePassword = 'LocalE2E-Judge-3pw!'
 $initialJudgePassword = $judgePassword
+$oldE2eAdminEmail = $env:HCF_E2E_ADMIN_EMAIL
+$oldE2eAdminPassword = $env:HCF_E2E_ADMIN_PASSWORD
 $competitionId = $null
 $duplicateId = $null
-$setupCreated = $false
+$adminFixtureCreated = $false
 
 function Invoke-Api {
   param([string]$Path, [string]$Method = 'GET', [object]$Body = $null, [Microsoft.PowerShell.Commands.WebRequestSession]$Session)
@@ -122,14 +122,17 @@ function Get-LiveSession([string]$CompetitionId, [string]$RoundId, [Microsoft.Po
 }
 
 try {
-  $bootstrap = Invoke-AuthRequest -Path '/api/auth/setup' -Body @{ setupKey = $setupKey; fullName = 'Temporary E2E Admin'; email = $adminEmail; password = $adminPassword }
-  $adminSession = $bootstrap.Session
-  $setupCreated = $true
+  $env:HCF_E2E_ADMIN_EMAIL = $adminEmail
+  $env:HCF_E2E_ADMIN_PASSWORD = $adminPassword
+  & node (Join-Path $ProjectRoot 'scripts/e2e-create-admin.mjs')
+  if ($LASTEXITCODE -ne 0) { throw 'Could not create the temporary Admin fixture in the local E2E database.' }
+  $adminFixtureCreated = $true
+  $adminSession = (Invoke-AuthRequest -Path '/api/auth/login' -Body @{ email = $adminEmail; password = $adminPassword }).Session
   $sessionCheck = Invoke-Api -Path '/api/auth/me' -Session $adminSession
   Assert-True ($sessionCheck.user.email -eq $adminEmail) 'Admin session cookie is accepted by the API.'
   $emptyDashboard = Invoke-Api -Path '/api/dashboard' -Session $adminSession
   Assert-True ($emptyDashboard.systemRole -eq 'ADMIN' -and $emptyDashboard.stats.percent -eq 0) 'Admin dashboard returns a finite zero progress value when no score is expected.'
-  Test-Phase 'first Admin setup and secure session'
+  Test-Phase 'Admin login and secure session'
 
   $competition = (Invoke-Api -Path '/api/competitions' -Method POST -Session $adminSession -Body @{ name = "E2E Cup $suffix"; description = 'Temporary end-to-end verification'; organizingUnit = 'HUIT'; location = 'Test Hall'; modality = 'HYBRID'; firstRoundName = 'Test Round' }).competition
   $competitionId = $competition.id
@@ -297,7 +300,9 @@ try {
   Test-Phase 'health endpoint with migrated MySQL'
   Write-Output 'E2E RESULT: ALL WORKFLOW ASSERTIONS PASSED'
 } finally {
-  if ($setupCreated -and $env:HCF_E2E_KEEP_DATA -ne '1') {
+  if ($null -eq $oldE2eAdminEmail) { Remove-Item Env:\HCF_E2E_ADMIN_EMAIL -ErrorAction SilentlyContinue } else { $env:HCF_E2E_ADMIN_EMAIL = $oldE2eAdminEmail }
+  if ($null -eq $oldE2eAdminPassword) { Remove-Item Env:\HCF_E2E_ADMIN_PASSWORD -ErrorAction SilentlyContinue } else { $env:HCF_E2E_ADMIN_PASSWORD = $oldE2eAdminPassword }
+  if ($adminFixtureCreated -and $env:HCF_E2E_KEEP_DATA -ne '1') {
     $escapedEmails = @($adminEmail, $judgeAEmail, $judgeBEmail) | ForEach-Object { "'$_'" }
     $emailList = $escapedEmails -join ','
     $competitionIds = @($competitionId, $duplicateId) | Where-Object { $_ } | ForEach-Object { "'$_'" }

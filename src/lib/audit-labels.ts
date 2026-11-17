@@ -3,7 +3,7 @@ const actionLabels: Record<string, string> = {
   ROUND_CREATED: 'Tạo thiết lập chấm', ROUND_UPDATED: 'Cập nhật thiết lập chấm',
   CONTESTANT_CREATED: 'Thêm thí sinh', CONTESTANT_UPDATED: 'Cập nhật hồ sơ thí sinh', CONTESTANT_WITHDRAWN: 'Rút thí sinh', CONTESTANTS_IMPORTED: 'Nhập danh sách thí sinh', ENTRY_CREATED: 'Đăng ký lượt thi', ENTRY_ORDER_UPDATED: 'Đổi thứ tự thi',
   JUDGE_CREATED: 'Tạo tài khoản giám khảo', JUDGE_UPDATED: 'Cập nhật tài khoản giám khảo', JUDGE_DELETED: 'Xóa tài khoản giám khảo', JUDGE_DEACTIVATED: 'Ngừng hoạt động tài khoản giám khảo', JUDGE_ACTIVATED: 'Kích hoạt tài khoản giám khảo',
-  JUDGE_ASSIGNED: 'Phân công giám khảo', JUDGE_UNASSIGNED: 'Thu hồi phân công giám khảo', JUDGE_PASSWORD_RESET: 'Đặt lại mật khẩu giám khảo',
+  JUDGE_ASSIGNED: 'Phân công giám khảo', JUDGE_UNASSIGNED: 'Thu hồi phân công giám khảo', JUDGE_PASSWORD_RESET: 'Đặt lại mật khẩu giám khảo', PASSWORD_RESET_BY_EMAIL: 'Đặt lại mật khẩu qua email',
   RUBRIC_DRAFT_SAVED: 'Lưu bản nháp bộ tiêu chí', RUBRIC_VERSION_ACTIVATED: 'Công bố phiên bản bộ tiêu chí',
   SESSION_START: 'Bắt đầu điều phối', SESSION_PAUSE: 'Tạm dừng điều phối', SESSION_RESUME: 'Tiếp tục điều phối', SESSION_SELECT: 'Chọn lượt thi', SESSION_NEXT: 'Chuyển sang lượt thi tiếp theo', SESSION_PREVIOUS: 'Quay lại lượt thi trước', SESSION_FINISH: 'Kết thúc điều phối',
   SCORE_SUBMITTED: 'Nộp phiếu chấm', SCORE_DRAFT_SAVED: 'Lưu bản nháp phiếu chấm', SCORE_REOPENED: 'Mở lại phiếu chấm',

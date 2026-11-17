@@ -25,9 +25,12 @@ export async function canManageCompetition(user: SessionUser, _competitionId: st
   return user.systemRole === 'ADMIN';
 }
 
-export async function isAssignedJudge(user: SessionUser, roundId: string) {
+export async function isAssignedJudge(user: SessionUser, roundId: string, entryId: string) {
   if (user.systemRole !== 'JUDGE') return false;
-  return Boolean(await prisma.judgeAssignment.findFirst({ where: { userId: user.id, roundId }, select: { id: true } }));
+  return Boolean(await prisma.judgeAssignment.findFirst({
+    where: { userId: user.id, roundId, OR: [{ entryId: null }, { entryId }] },
+    select: { id: true },
+  }));
 }
 
 export function slugify(value: string) {
