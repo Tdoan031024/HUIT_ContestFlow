@@ -10,7 +10,7 @@
 .sidebar { position: fixed; z-index: 30; inset: 0 auto 0 0; display: flex; width: 248px; flex-direction: column; padding: 22px 15px 15px; border-right: 1px solid #25465b; background: var(--navy); color: #eef5f8; }
 .brand { display: flex; min-height: 44px; align-items: center; gap: 10px; margin: 0 3px 32px; }
 .brand-mini-mark { display: grid; width: 36px; height: 36px; flex: none; place-items: center; border: 1px solid #5b788a; border-radius: 10px; background: #1b435e; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: -.04em; }
-.brand-school-logo { display: none; width: 99px; height: auto; filter: brightness(0) invert(1); }
+.brand-school-logo { display: block; width: 74px; height: 32px; flex: none; border-radius: 4px; background: #fff; object-fit: cover; object-position: center 50%; }
 .brand-name { color: #fff; font-size: 14px; font-weight: 650; letter-spacing: -.35px; white-space: nowrap; }
 .workspace-caption { margin: 0 9px 10px; color: #9fb7c5; font-size: 10px; font-weight: 700; letter-spacing: .1em; }
 .sidebar-nav { display: grid; gap: 5px; }
@@ -515,7 +515,8 @@ input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; flex: n
   .sidebar { position: sticky; inset: auto; z-index: 30; width: 100%; height: 58px; flex-direction: row; align-items: center; gap: 12px; padding: 0 14px; border-right: 0; border-bottom: 1px solid #25465b; }
   .brand { flex: none; gap: 7px; margin: 0; }
   .brand-mini-mark { width: 32px; height: 32px; }
-  .brand-school-logo, .workspace-caption, .sidebar-note, .sidebar-spacer, .account-card { display: none; }
+  .brand-school-logo { width: 47px; height: 30px; }
+  .workspace-caption, .sidebar-note, .sidebar-spacer, .account-card { display: none; }
   .brand-name { font-size: 12px; }
   .sidebar-nav { display: flex; min-width: 0; flex: 1; justify-content: flex-end; gap: 3px; }
   .nav-link { min-height: 42px; flex: none; gap: 6px; padding: 0 8px; font-size: 10px; }

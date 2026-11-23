@@ -70,8 +70,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       {sidebarOpen && <button className="sidebar-backdrop" type="button" aria-label="Đóng menu điều hướng" onClick={() => setSidebarOpen(false)} />}
       <aside className={`sidebar${sidebarOpen ? ' is-open' : ''}`} id="app-sidebar">
         <Link className="brand" href="/" aria-label="HUIT ContestFlow trang chủ" onClick={() => setSidebarOpen(false)}>
-          <span className="brand-mini-mark" aria-hidden="true">CF</span>
-          <Image className="brand-school-logo" src="/brand/huit-logo.svg" width={1600} height={350} alt="Trường Đại học Công Thương TP. Hồ Chí Minh" priority />
+          <Image className="brand-school-logo" src="/brand/huit-logo.jpg" width={2048} height={2048} alt="HUIT Media" priority />
           <span className="brand-name">ContestFlow</span>
         </Link>
         <button className="sidebar-mobile-close" type="button" aria-label="Đóng menu" onClick={() => { setSidebarOpen(false); sidebarToggleRef.current?.focus(); }}><Icon name="close" size={20} /></button>
