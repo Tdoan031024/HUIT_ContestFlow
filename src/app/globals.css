@@ -1,50 +1,57 @@
-@import "@fontsource/be-vietnam-pro/400.css";
-@import "@fontsource/be-vietnam-pro/500.css";
-@import "@fontsource/be-vietnam-pro/600.css";
-@import "@fontsource/be-vietnam-pro/700.css";
+@import "@fontsource/be-vietnam-pro/latin-400.css";
+@import "@fontsource/be-vietnam-pro/vietnamese-400.css";
+@import "@fontsource/be-vietnam-pro/latin-500.css";
+@import "@fontsource/be-vietnam-pro/vietnamese-500.css";
+@import "@fontsource/be-vietnam-pro/latin-600.css";
+@import "@fontsource/be-vietnam-pro/vietnamese-600.css";
+@import "@fontsource/be-vietnam-pro/latin-700.css";
+@import "@fontsource/be-vietnam-pro/vietnamese-700.css";
 @import "tailwindcss";
 
 :root {
   color-scheme: light;
-  --ink: #061d2d;
-  --muted: #424752;
-  --subtle: #424752;
-  --line: #d9e5f1;
-  --canvas: #f6f9ff;
+  --ink: #111827;
+  --muted: #64748b;
+  --subtle: #58697d;
+  --line: #e2e8f0;
+  --canvas: #f9fafb;
   --surface: #fff;
   --surface-raised: #fff;
-  --navy: #003878;
-  --navy-soft: #034ea2;
-  --blue: #034ea2;
-  --blue-dark: #003878;
-  --blue-wash: #ecf5ff;
-  --warm: #00d9ff;
-  --green: #197458;
-  --red: #ad4148;
-  --amber: #a66622;
-  --radius: 14px;
-  --focus-ring: 0 0 0 4px rgb(11 101 155 / 15%);
+  --navy: #111827;
+  --navy-soft: #1f3f68;
+  --blue: #465fff;
+  --blue-dark: #3641f5;
+  --blue-wash: #ecf3ff;
+  --warm: #0891a6;
+  --green: #15803d;
+  --red: #b4232f;
+  --amber: #a16207;
+  --radius: 16px;
+  --focus-ring: 0 0 0 3px rgb(29 95 168 / 18%);
+  --focus-outline: #17659b;
   --font-sans: "Be Vietnam Pro", "Segoe UI", sans-serif;
 }
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --ink: #e7eff5;
-  --muted: #a8bac7;
-  --subtle: #91a5b3;
-  --line: #304653;
-  --canvas: #101a22;
-  --surface: #182630;
-  --surface-raised: #20323e;
-  --navy: #0d2434;
-  --navy-soft: #17669a;
-  --blue: #1679bd;
-  --blue-dark: #0d609e;
-  --blue-wash: #1b3546;
-  --green: #72c7a6;
-  --red: #f08e91;
-  --amber: #e9b66f;
-  --focus-ring: 0 0 0 4px rgb(58 157 211 / 26%);
+  --ink: #f3f4f6;
+  --muted: #a3adbd;
+  --subtle: #a3adbd;
+  --line: #293548;
+  --canvas: #101828;
+  --surface: #1d2939;
+  --surface-raised: #253449;
+  --navy: #0b1120;
+  --navy-soft: #1b3556;
+  --blue: #8098f9;
+  --blue-dark: #6172f3;
+  --blue-wash: #26365b;
+  --warm: #32b9c6;
+  --green: #62bd8a;
+  --red: #f07878;
+  --amber: #e5b15e;
+  --focus-ring: 0 0 0 3px rgb(96 165 250 / 28%);
+  --focus-outline: #a4bcfd;
 }
 
 *,
@@ -59,7 +66,7 @@ button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .56; }
 ::selection { background: #cce5f0; color: var(--navy); }
 a, button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
-:is(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid rgb(11 101 155 / 72%); outline-offset: 3px; }
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid var(--focus-outline); outline-offset: 3px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

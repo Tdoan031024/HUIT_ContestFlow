@@ -26,7 +26,6 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       title={dark ? 'Giao diện tối' : 'Giao diện sáng'}
     >
       <span aria-hidden="true">{dark ? '☀' : '☾'}</span>
-      <span className="theme-toggle-label">{dark ? 'Giao diện tối' : 'Giao diện sáng'}</span>
     </button>
   );
 }

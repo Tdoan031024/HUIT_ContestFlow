@@ -1,5 +1,6 @@
 node_modules/
 .next/
+.next-qa/
 out/
 dist/
 coverage/
@@ -10,3 +11,4 @@ coverage/
 src/generated/prisma/
 .local-mysql/
 backups/
+.data/attendance-private/

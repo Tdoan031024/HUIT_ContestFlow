@@ -137,8 +137,8 @@ export async function GET() {
   for (const round of rounds) {
     const competition = allCompetitions.find((item) => item.id === round.competitionId);
     if (!competition) continue;
-    const href = `/competitions/${round.competitionId}/live`;
-    if (round.session?.state === 'LIVE') actionItems.push({ id: `${round.id}-live`, kind: 'live', title: `Đang điều phối · ${competition.name}`, detail: competition.name, href });
+    const href = `/competitions/${round.competitionId}/scores`;
+    if (round.session?.state === 'LIVE') actionItems.push({ id: `${round.id}-live`, kind: 'live', title: 'Theo dõi phiếu chấm đang diễn ra', detail: competition.name, href });
     if (round.entries.length && !round.activeRubricVersion?.criteria.length) actionItems.push({ id: `${round.id}-rubric`, kind: 'attention', title: `Chưa có tiêu chí chấm`, detail: competition.name, href: `/competitions/${round.competitionId}/rubric` });
     const missingCoverage = round.entries.filter((entry) => {
       const assigned = new Set(round.assignments.map((item) => item.userId));

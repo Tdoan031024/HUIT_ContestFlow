@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/icons';
 import { AppSelect } from '@/components/app-select';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { EmptyState, Loading, Notice, PageHeader, StatusPill, useConfirmDialog } from '@/components/ui';
 import { evaluateScoreSheet, type ConfiguredCriterion, type ScoringConfig } from '@/lib/scoring';
@@ -43,11 +43,37 @@ export function JudgeTasks() {
     return () => window.removeEventListener('popstate', syncFromUrl);
   }, []);
   useEffect(() => {
-    let active = true;
-    const refresh = () => request<{ tasks: Task[]; competitions: AssignedCompetition[] }>('/api/judge/tasks').then((result) => { if (active) { setTasks(result.tasks); setAssignedCompetitions(result.competitions); setError(''); } }).catch((reason) => { if (active) { setError(message(reason)); setTasks([]); setAssignedCompetitions([]); } });
+    const controller = new AbortController();
+    let pending = false;
+    const refresh = async () => {
+      if (pending || document.hidden || !navigator.onLine) return;
+      pending = true;
+      try {
+        const result = await request<{ tasks: Task[]; competitions: AssignedCompetition[] }>('/api/judge/tasks', { signal: controller.signal });
+        if (controller.signal.aborted) return;
+        setTasks(result.tasks);
+        setAssignedCompetitions(result.competitions);
+        setError('');
+      } catch (reason) {
+        if (!controller.signal.aborted) setError(message(reason));
+      } finally {
+        pending = false;
+      }
+    };
+    const onOffline = () => setError('Mất kết nối. Danh sách sẽ cập nhật khi có mạng.');
     void refresh();
     const interval = window.setInterval(refresh, 5000);
-    return () => { active = false; window.clearInterval(interval); };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('online', refresh);
+    window.addEventListener('offline', onOffline);
+    if (!navigator.onLine) onOffline();
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('online', refresh);
+      window.removeEventListener('offline', onOffline);
+    };
   }, []);
   const availableTasks = useMemo(() => {
     const selected = (tasks ?? []).filter((task) => !selectedCompetitionId || task.competition.id === selectedCompetitionId);
@@ -73,11 +99,13 @@ export function JudgeTasks() {
     return [...grouped.values()].sort((a, b) => a.competition.name.localeCompare(b.competition.name, 'vi')).map((competition) => ({ ...competition, tasks: competition.tasks.sort((a, b) => a.entry.sequence - b.entry.sequence) }));
   }, [filteredTasks]);
 
-  const firstTask = availableTasks[0];
+  const competitionName = selectedCompetitionId
+    ? assignedCompetitions.find((competition) => competition.id === selectedCompetitionId)?.name
+    : assignedCompetitions.length === 1 ? assignedCompetitions[0].name : undefined;
   return <div className="judge-tasks-screen">
-    <PageHeader className="judge-page-heading" eyebrow={firstTask?.competition.name ?? 'GIÁM KHẢO'} title="Danh sách Chấm thi" description="Các thí sinh được phân công cho bạn" />
+    <PageHeader className="judge-page-heading" eyebrow={competitionName ?? 'GIÁM KHẢO'} title="Danh sách lượt chấm" description="Các thí sinh được phân công cho bạn" />
     {error && <Notice tone="error">{error}</Notice>}
-    {tasks === null ? <Loading /> : !tasks.length ? assignedCompetitions.length ? <div className="judge-assigned-competitions">
+    {tasks === null ? !error && <Loading /> : !tasks.length ? assignedCompetitions.length ? <div className="judge-assigned-competitions">
       {assignedCompetitions.map((competition) => <section className="judge-round-section" key={competition.id}>
         <div className="judge-round-heading"><div><span className="eyebrow">CUỘC THI ĐƯỢC PHÂN CÔNG</span><h2>{competition.name}</h2></div><span className="judge-round-count">{competition.contestantCount} thí sinh</span></div>
         <EmptyState title="Chưa có thí sinh để chấm" description="Bạn đã được thêm vào cuộc thi này. Lượt chấm sẽ xuất hiện tại đây sau khi Ban tổ chức thêm thí sinh." />
@@ -99,7 +127,9 @@ export function JudgeTasks() {
           <div className="judge-task-meta">{task.scoreSheet?.totalScore !== null && task.scoreSheet && <span>Điểm của tôi: {Number(task.scoreSheet.totalScore).toFixed(task.round.roundingPrecision)}</span>}</div>
         <div className="judge-card-bottom">{task.taskStatus !== 'READY' && <p>{task.taskMessage}</p>}{task.canOpen ? <Link className="button primary-button" href={`/judge/${task.entry.id}?competitionId=${encodeURIComponent(task.competition.id)}`}>{task.taskStatus === 'LOCKED' ? 'Xem bản nháp đã khóa' : task.scoreSheet?.status === 'SUBMITTED' ? 'Xem phiếu đã nộp' : task.scoreSheet?.status === 'DRAFT' ? 'Tiếp tục bản nháp' : task.scoreSheet?.status === 'REOPENED' ? 'Sửa phiếu đã mở lại' : task.taskStatus === 'LIVE' ? 'Vào chấm ngay' : 'Mở phiếu chấm'}</Link> : <button className="button secondary-button" type="button" disabled>{task.taskStatus === 'WAITING' ? 'Chờ điều phối' : 'Chưa khả dụng'}</button>}</div>
         </article>)}</div>
-      </section>) : <EmptyState title={statusFilter === 'SUBMITTED' ? 'Chưa có lượt đã chấm' : 'Không có lượt chưa chấm'} description="Thử đổi bộ lọc hoặc tìm bằng tên cuộc thi, đội, thí sinh hay mã dự thi." />}
+      </section>) : statusCounts[statusFilter] > 0
+        ? <EmptyState title="Không tìm thấy lượt chấm" description="Thử tìm bằng tên cuộc thi, tên đề án hoặc mã dự thi." action={<button className="button secondary-button" type="button" onClick={() => setEntrySearch('')}>Xóa tìm kiếm</button>} />
+        : <EmptyState title={statusFilter === 'SUBMITTED' ? 'Chưa có lượt đã chấm' : 'Không có lượt chưa chấm'} action={statusFilter === 'UNSUBMITTED' && statusCounts.SUBMITTED > 0 ? <button className="button secondary-button" type="button" onClick={() => { setEntrySearch(''); setStatusFilter('SUBMITTED'); }}>Xem phiếu đã nộp</button> : undefined} />}
     </>}
   </div>;
 }
@@ -118,6 +148,32 @@ export function JudgeScoreForm({ entryId }: { entryId: string }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const readOnly = payload?.scoreSheet?.status === 'SUBMITTED' || payload?.scoreSheet?.locked === true;
+  const scoreFooter = useRef<HTMLDivElement>(null);
+  const hasScoreForm = payload !== null;
+
+  useEffect(() => {
+    const footer = scoreFooter.current;
+    const viewport = window.visualViewport;
+    if (!footer || !viewport || readOnly || !hasScoreForm) return;
+
+    const updateDock = () => {
+      const coveredHeight = viewport.scale === 1
+        ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+        : 0;
+      footer.style.setProperty('--score-dock-offset', `${Math.round(coveredHeight)}px`);
+    };
+
+    updateDock();
+    viewport.addEventListener('resize', updateDock);
+    viewport.addEventListener('scroll', updateDock);
+    window.addEventListener('resize', updateDock);
+    return () => {
+      viewport.removeEventListener('resize', updateDock);
+      viewport.removeEventListener('scroll', updateDock);
+      window.removeEventListener('resize', updateDock);
+      footer.style.removeProperty('--score-dock-offset');
+    };
+  }, [hasScoreForm, readOnly]);
   const hasEnteredScore = Object.values(scores).some((value) => isAnswered(value.value));
   const completedCriteria = payload?.rubric.criteria.filter((criterion) => isAnswered(scores[criterion.id]?.value)).length ?? 0;
   const configuredCriteria = useMemo<ConfiguredCriterion[]>(() => payload?.rubric.criteria.map((criterion) => ({
@@ -229,7 +285,7 @@ export function JudgeScoreForm({ entryId }: { entryId: string }) {
         <div className="score-sheet-heading"><div><span className="eyebrow">ĐÁNH GIÁ</span><h2>Tiêu chí chấm</h2></div><span className="score-criteria-count">{payload.rubric.criteria.length} mục</span></div>
         <form className="score-form" onSubmit={submit}>
           {payload.rubric.criteria.map((criterion, index) => <JudgeCriterion key={criterion.id} criterion={criterion} index={index} state={scores[criterion.id]} readOnly={readOnly} onValue={(value) => updateValue(criterion.id, value)} onComment={(value) => updateComment(criterion.id, value)} />)}
-          <div className={`score-footer${readOnly ? '' : ' score-footer--mobile-dock'}`}><div className="score-total"><span>Điểm tạm tính</span><strong>{currentTotal === null ? '—' : currentTotal.toFixed(payload.round.roundingPrecision)}</strong>{currentTotal !== null && <span className="score-total-maximum">/ {maximumTotal.toFixed(payload.round.roundingPrecision)}</span>}{currentEvaluation?.outcome === 'FAIL' && <span className="score-outcome-fail">Không đạt điều kiện bắt buộc</span>}<span className={`score-save-state${saving ? ' is-saving' : saved ? ' is-saved' : changed ? ' is-changed' : ''}`} role="status">{saving ? 'Đang lưu…' : saved ? `Đã lưu lúc ${formatSavedTime(savedAt)}` : changed ? 'Đang lưu thay đổi…' : readOnly ? 'Đã nộp' : 'Tự động lưu'}</span></div><div className="table-actions">{!readOnly && <><button className="button secondary-button score-save-button" type="button" onClick={() => void persist(false)} disabled={saving}>Lưu</button><button className="button primary-button" type="submit" disabled={saving}>{saving ? 'Đang gửi…' : 'Nộp phiếu'}</button></>}{readOnly && <StatusPill value="SUBMITTED" />}</div></div>
+          <div ref={scoreFooter} className={`score-footer${readOnly ? '' : ' score-footer--mobile-dock'}`}><div className="score-total"><span>{payload.scoreSheet?.status === 'SUBMITTED' ? 'Điểm đã nộp' : 'Điểm tạm tính'}</span><strong>{currentTotal === null ? '—' : currentTotal.toFixed(payload.round.roundingPrecision)}</strong>{currentTotal !== null && <span className="score-total-maximum">/ {maximumTotal.toFixed(payload.round.roundingPrecision)}</span>}{currentEvaluation?.outcome === 'FAIL' && <span className="score-outcome-fail">Không đạt điều kiện bắt buộc</span>}{!readOnly && <span className={`score-save-state${saving ? ' is-saving' : saved ? ' is-saved' : changed ? ' is-changed' : ''}`} role="status">{saving ? 'Đang lưu…' : saved ? `Đã lưu lúc ${formatSavedTime(savedAt)}` : changed ? 'Đang lưu thay đổi…' : 'Tự động lưu'}</span>}</div><div className="table-actions">{!readOnly && <><button className="button secondary-button score-save-button" type="button" onClick={() => void persist(false)} disabled={saving}>Lưu</button><button className="button primary-button" type="submit" disabled={saving}>{saving ? 'Đang gửi…' : 'Nộp phiếu'}</button></>}{readOnly && <StatusPill value={payload.scoreSheet?.status === 'SUBMITTED' ? 'SUBMITTED' : 'LOCKED'} />}</div></div>
         </form>
       </section>
     </div>

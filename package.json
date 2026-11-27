@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "prisma generate && next build",
+    "dev": "next dev --webpack --port 3000",
+    "build": "prisma generate && next build --webpack",
     "start": "next start",
     "test:e2e": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/e2e-check.ps1",
     "test:scoring": "node --experimental-strip-types --test tests/scoring.test.mjs",

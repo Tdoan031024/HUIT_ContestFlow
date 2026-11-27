@@ -12,6 +12,7 @@ const links: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Tổng quan', icon: 'home' },
   { href: '/competitions', label: 'Cuộc thi', icon: 'trophy' },
   { href: '/judges', label: 'Giám khảo', icon: 'users' },
+  { href: '/attendance', label: 'Điểm danh', icon: 'calendar' },
   { href: '/judge', label: 'Chấm thi', icon: 'clipboard' },
   { href: '/results', label: 'Kết quả', icon: 'chart' },
 ];
@@ -23,9 +24,12 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
   const [busy, setBusy] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarToggleRef = useRef<HTMLButtonElement>(null);
-  const visibleLinks = links.filter((item) => item.href === '/judge' ? user.systemRole === 'JUDGE' : item.href === '/competitions' || item.href === '/judges' ? user.systemRole === 'ADMIN' : true);
+  const visibleLinks = links.filter((item) => item.href === '/judge' ? user.systemRole === 'JUDGE' : item.href === '/competitions' || item.href === '/judges' || item.href === '/attendance' ? user.systemRole === 'ADMIN' : true);
   const section = renderPathname === '/competitions/new' ? 'new' : renderPathname.startsWith('/competitions/') ? renderPathname.split('/')[3] ?? 'overview' : '';
-  const currentLabel = links.find((item) => item.href === renderPathname)?.label ?? (renderPathname.startsWith('/judge/') ? 'Chấm điểm' : section ? sectionLabel(section) : 'Tổng quan');
+  const currentLabel = links.find((item) => item.href === renderPathname)?.label
+    ?? (renderPathname.startsWith('/judge/') ? 'Chấm điểm'
+      : renderPathname.startsWith('/attendance/') ? 'Chi tiết sự kiện'
+      : section ? sectionLabel(section) : 'Tổng quan');
   const isActive = (href: string) => href === '/' ? renderPathname === '/' : renderPathname === href || renderPathname.startsWith(`${href}/`);
   const mobileMode = renderPathname.startsWith('/judge/') ? 'score' : renderPathname.startsWith('/competitions/') && renderPathname !== '/competitions/new' ? 'detail' : 'workspace';
 

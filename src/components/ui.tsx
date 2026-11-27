@@ -26,14 +26,17 @@ export function StatusPill({ value }: { value: string }) {
   return <span className={`status-pill status-${value.toLowerCase()}`}><i />{map[value] ?? value}</span>;
 }
 
+const dateFormatter = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 export function formatDate(value?: string | Date | null) {
   if (!value) return 'Chưa thiết lập';
-  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value));
+  return dateFormatter.format(new Date(value));
 }
 
 export function formatDateTime(value?: string | Date | null) {
   if (!value) return '—';
-  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return dateTimeFormatter.format(new Date(value));
 }
 
 export function SectionCard({ title, subtitle, action, children }: { title: string; subtitle?: string; action?: ReactNode; children: ReactNode }) {

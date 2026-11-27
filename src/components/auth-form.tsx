@@ -94,11 +94,11 @@ function AuthProductPreview() {
           <span>Chấm độc lập theo tiêu chí</span>
         </div>
         <div className="preview-criterion-row">
-          <div className="preview-criterion-name"><span>Tiêu chí</span><i /><i /></div>
-          <div className="preview-score-field"><span>Điểm</span><i /></div>
+          <div className="preview-criterion-name"><span>Tiêu chí</span><strong>Tính khả thi</strong><small>Thang điểm 0–10</small></div>
+          <div className="preview-score-field"><span>Điểm</span><strong>8 / 10</strong></div>
         </div>
-        <div className="preview-comment-field"><span>Nhận xét</span><i /><i /></div>
-        <div className="preview-form-actions"><span>Lưu bản nháp</span><strong>Nộp phiếu chấm</strong></div>
+        <div className="preview-comment-field"><span>Nhận xét</span><p>Kế hoạch triển khai rõ ràng, có mốc kiểm thử.</p></div>
+        <div className="preview-form-actions"><span>Đã lưu bản nháp</span><strong>Nộp phiếu chấm</strong></div>
       </div>
     </div>
   );
