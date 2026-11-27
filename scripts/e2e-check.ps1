@@ -284,8 +284,8 @@ try {
 
   if ($databaseUri.AbsolutePath -match '^/huit_contestflow_codex_e2e_[a-f0-9]{8}$') {
     $now = [DateTime]::UtcNow
-    $start = $now.AddMinutes(-5).ToString('o')
-    $end = $now.AddMinutes(45).ToString('o')
+    $start = $now.AddMinutes(-50).ToString('o')
+    $end = $now.AddMinutes(-5).ToString('o')
     $attendance = (Invoke-Api -Path '/api/attendance' -Method POST -Session $adminSession -Body @{
       name = "E2E Attendance $suffix"; venue = 'Test Hall'; expectedAttendees = 12
       eventStartsAt = $start; eventEndsAt = $end; checkInStartsAt = $start; checkInEndsAt = $end
@@ -298,10 +298,12 @@ try {
     Expect-Status -Path $attendancePath -Method GET -Session $judgeBSession -Expected 403
     Expect-Status -Path "$publicPath/queue" -Method POST -Expected 409
     Invoke-Api -Path $attendancePath -Method PATCH -Session $adminSession -Body @{ action = 'OPEN' } | Out-Null
+    $publicEvent = (Invoke-Api -Path $publicPath).event
+    Assert-True ($publicEvent.acceptingCheckins -eq $true) 'Public status accepts check-ins after the legacy window when Admin opens attendance.'
     $queueHeaders = Join-Path ([System.IO.Path]::GetTempPath()) "hcf-attendance-$suffix.headers"
     try {
       $joinStatus = & curl.exe --silent --show-error --max-time 20 --dump-header $queueHeaders --output NUL --write-out '%{http_code}' --request POST "$BaseUrl$publicPath/queue"
-      Assert-True ($joinStatus -eq '201') 'A participant joins an open event.'
+      Assert-True ($joinStatus -eq '201') 'A participant joins an open event after its legacy check-in window.'
       $cookieLine = Get-Content -LiteralPath $queueHeaders | Where-Object { $_ -match '^Set-Cookie:' } | Select-Object -Last 1
       Assert-True ([bool]$cookieLine) 'Joining issues a queue cookie.'
       $pair = (($cookieLine -replace '^[^:]+:\s*', '').Split(';')[0]).Split('=', 2)

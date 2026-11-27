@@ -5,7 +5,7 @@ import { Icon } from '@/components/icons';
 
 type ParticipantEvent = {
   code: string; name: string; description: string | null; venue: string;
-  eventStartsAt: string; checkInStartsAt: string; checkInEndsAt: string; status: string;
+  eventStartsAt: string; status: string;
   locationRequired: boolean; photoRequired: boolean;
   customFields: Array<{ key: string; label: string; required: boolean; type: 'text' | 'email' | 'tel' }>;
 };
@@ -41,17 +41,11 @@ export function AttendanceParticipant({ event }: { event: ParticipantEvent }) {
   const [cameraError, setCameraError] = useState('');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
-  const [clock, setClock] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const idempotencyRef = useRef<string | null>(null);
   const pollDelayRef = useRef(5000);
 
-  const accepting = event.status === 'OPEN' && clock >= new Date(event.checkInStartsAt).getTime() && clock <= new Date(event.checkInEndsAt).getTime();
-
-  useEffect(() => {
-    const update = () => setClock(Date.now());
-    update(); const timer = window.setInterval(update, 20_000); return () => window.clearInterval(timer);
-  }, []);
+  const accepting = event.status === 'OPEN';
 
   useEffect(() => {
     const sync = () => setOffline(!navigator.onLine);
@@ -206,16 +200,15 @@ export function AttendanceParticipant({ event }: { event: ParticipantEvent }) {
     finally { setBusy(false); }
   }
 
-  const closed = event.status === 'CLOSED' || event.status === 'COMPLETED' || event.status === 'ARCHIVED' || Date.now() > new Date(event.checkInEndsAt).getTime();
   const showForm = status === 'ACTIVE';
 
   return <main className="attendance-public-shell">
     <header className="attendance-public-header"><span className="attendance-public-brand"><span aria-hidden="true">CF</span> ContestFlow</span><span>Điểm danh sự kiện</span></header>
     <section className="attendance-public-main">
-      <div className="attendance-public-kicker"><span className={status === 'ACTIVE' ? 'is-live' : ''} />{status === 'ACTIVE' ? 'ĐÃ ĐẾN LƯỢT' : status === 'WAITING' ? 'ĐANG XẾP HÀNG' : 'SỰ KIỆN'}</div>
+      <div className="attendance-public-kicker"><span className={accepting ? 'is-live' : ''} />{status === 'ACTIVE' ? 'ĐÃ ĐẾN LƯỢT' : status === 'WAITING' ? 'ĐANG XẾP HÀNG' : accepting ? 'ĐANG MỞ ĐIỂM DANH' : 'CHƯA NHẬN ĐIỂM DANH'}</div>
       <h1>{event.name}</h1>
       {event.description && <p className="attendance-public-description">{event.description}</p>}
-      <div className="attendance-public-meta"><span><Icon name="calendar" size={16} /> {dateTime(event.eventStartsAt)}</span><span><Icon name="users" size={16} /> {event.venue}</span><span><Icon name="clock" size={16} /> Điểm danh {dateTime(event.checkInStartsAt)} – {dateTime(event.checkInEndsAt)}</span></div>
+      <div className="attendance-public-meta"><span><Icon name="calendar" size={16} /> {dateTime(event.eventStartsAt)}</span><span><Icon name="users" size={16} /> {event.venue}</span></div>
 
       {offline && <div className="attendance-public-alert is-error" role="status">Mất kết nối mạng. Các thao tác cần mạng sẽ chưa được gửi.</div>}
       {error && <div className="attendance-public-alert is-error" role="alert">{error}</div>}
@@ -242,9 +235,9 @@ export function AttendanceParticipant({ event }: { event: ParticipantEvent }) {
         : status === 'WAITING' ? <div className="attendance-wait-state"><div className="attendance-queue-number">{position ?? '—'}</div><h2>Đang chờ đến lượt</h2><p>Vị trí của bạn trong hàng đợi. Trang sẽ tự cập nhật và giữ lượt nếu bạn tải lại.</p><div className="attendance-queue-progress"><span /></div><small>Không cần tải lại trang. Thời gian chờ chưa thể ước tính chính xác.</small></div>
         : <div className="attendance-intro-state">
           <div className="attendance-steps-preview"><span><i>1</i> Vào hàng đợi</span><b>→</b><span><i>2</i> Xác minh thông tin</span><b>→</b><span><i>3</i> Hoàn tất</span></div>
-          <p>{closed ? 'Sự kiện chưa mở hoặc đã kết thúc nhận điểm danh.' : accepting ? 'Xếp hàng chỉ mất một bước. Khi đến lượt, bạn sẽ cần hoàn tất thông tin trong vài phút.' : `Điểm danh mở từ ${dateTime(event.checkInStartsAt)} đến ${dateTime(event.checkInEndsAt)}.`}</p>
+          <p>{accepting ? 'Vào hàng đợi để lấy lượt xác nhận có mặt.' : event.status === 'DRAFT' ? 'Ban tổ chức chưa mở điểm danh.' : 'Ban tổ chức đã đóng điểm danh.'}</p>
           {status === 'EXPIRED' && <div className="attendance-public-alert is-error">Lượt chờ đã hết hạn. Bạn có thể vào hàng đợi lại.</div>}
-          <button className="button primary-button attendance-submit" type="button" onClick={() => void joinQueue()} disabled={!queueReady || !accepting || busy || offline}>{busy ? 'Đang kết nối…' : status === 'EXPIRED' ? 'Vào hàng đợi lại' : 'Bắt đầu điểm danh'}</button>
+          {!accepting ? <button className="button secondary-button attendance-submit" type="button" onClick={() => window.location.reload()}>Cập nhật trạng thái</button> : <button className="button primary-button attendance-submit" type="button" onClick={() => void joinQueue()} disabled={!queueReady || !accepting || busy || offline}>{busy ? 'Đang kết nối…' : status === 'EXPIRED' ? 'Vào hàng đợi lại' : 'Bắt đầu điểm danh'}</button>}
         </div>}
       <footer className="attendance-public-footer">HUIT ContestFlow · Bảo vệ thông tin người tham gia</footer>
     </section>

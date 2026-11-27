@@ -3,6 +3,7 @@
 ## Phạm vi đã triển khai
 
 - Admin tạo, cấu hình, mở, đóng, hoàn tất, lưu trữ và xóa sự kiện; từng sự kiện có liên kết công khai và mã QR.
+- Trạng thái mở hoặc đóng do Admin điều khiển. Lịch sự kiện chỉ để hiển thị và không tự động đóng điểm danh. Lượt đã cấp vẫn có thời hạn riêng.
 - Người tham gia vào hàng đợi, giữ lượt bằng cookie HttpOnly, làm mới trang vẫn khôi phục trạng thái; chỉ lượt được cấp slot mới vào biểu mẫu.
 - Xác minh thông tin, vị trí ở phía máy chủ, ảnh chụp từ camera và trường tùy chỉnh; bản ghi dùng khóa duy nhất và khóa idempotency.
 - Admin tra cứu theo trang, xem ảnh riêng tư, xem lý do ngoại lệ, đọc nhật ký thao tác, theo dõi lượt chờ/lượt lỗi và xuất CSV UTF-8.

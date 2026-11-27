@@ -11,8 +11,7 @@ export default async function AttendanceParticipantPage({ params }: { params: Pr
   if (!event || event.status === 'ARCHIVED') notFound();
   return <AttendanceParticipant event={{
     code, name: event.name, description: event.description, venue: event.venue,
-    eventStartsAt: event.eventStartsAt.toISOString(), checkInStartsAt: event.checkInStartsAt.toISOString(),
-    checkInEndsAt: event.checkInEndsAt.toISOString(), status: event.status,
+    eventStartsAt: event.eventStartsAt.toISOString(), status: event.status,
     locationRequired: event.locationRequired, photoRequired: event.photoRequired,
     customFields: Array.isArray(event.customFields) ? event.customFields as Array<{ key: string; label: string; required: boolean; type: 'text' | 'email' | 'tel' }> : [],
   }} />;

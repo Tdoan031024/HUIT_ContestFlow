@@ -21,7 +21,6 @@ export async function POST(request: Request, { params }: Context) {
   if (!event || event.status === 'ARCHIVED') return Response.json({ error: 'Không tìm thấy sự kiện.' }, { status: 404 });
   const now = new Date();
   if (event.status !== 'OPEN') return Response.json({ error: 'Điểm danh hiện chưa mở.' }, { status: 409 });
-  if (now < event.checkInStartsAt || now > event.checkInEndsAt) return Response.json({ error: 'Hiện chưa đến khung giờ điểm danh.' }, { status: 409 });
   const retryAfter = await consumeAttendanceRateLimit(queueRateLimitKey(code, request), 3000, 5 * 60 * 1000);
   if (retryAfter) return Response.json({ error: 'Đang có nhiều lượt yêu cầu. Hãy thử lại sau.' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(retryAfter / 1000)) } });
   const oldToken = await getAttendanceToken(code);
@@ -63,7 +62,7 @@ export async function GET(_request: Request, { params }: Context) {
   if (!ticket || ticket.eventId !== event.id) return Response.json({ status: 'NONE' }, { headers: { 'Cache-Control': 'private, no-store' } });
   let current = await prisma.attendanceQueueTicket.findUnique({ where: { id: ticket.id }, select: { id: true, status: true, activeUntil: true, createdAt: true, checkedInAt: true } });
   if (!current) return Response.json({ status: 'NONE' }, { headers: { 'Cache-Control': 'private, no-store' } });
-  if (event.status !== 'OPEN' || new Date() > event.checkInEndsAt) {
+  if (event.status !== 'OPEN') {
     if (current.status === 'WAITING' || current.status === 'ACTIVE') {
       await prisma.attendanceQueueTicket.updateMany({ where: { id: current.id, status: { in: ['WAITING', 'ACTIVE'] } }, data: { status: 'EXPIRED', activeUntil: null } });
       await prisma.attendanceCapacitySlot.updateMany({ where: { ticketId: current.id }, data: { ticketId: null } });

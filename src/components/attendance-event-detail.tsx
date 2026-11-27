@@ -1,5 +1,7 @@
 'use client';
 
+import { AttendanceLocationPicker } from '@/components/attendance-location-picker';
+
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Dialog, Notice, PageHeader } from '@/components/ui';
@@ -81,7 +83,10 @@ export function AttendanceEventDetail({ eventId }: { eventId: string }) {
       const recordData = await recordResponse.json() as { records: AttendanceRecord[]; total: number; page: number; pageCount: number };
       const auditData = await auditResponse.json() as { events: AttendanceAudit[] };
       if (controller.signal.aborted) return;
-      setEvent(eventData.event);
+      setEvent({
+        ...eventData.event,
+        customFields: Array.isArray(eventData.event.customFields) ? eventData.event.customFields : [],
+      });
       setRecords(recordData.records);
       setTotal(recordData.total);
       setPage(recordData.page);
@@ -140,11 +145,15 @@ export function AttendanceEventDetail({ eventId }: { eventId: string }) {
     const form = new FormData(formEvent.currentTarget);
     const latitude = String(form.get('latitude') ?? '').trim();
     const longitude = String(form.get('longitude') ?? '').trim();
+    if (form.get('locationRequired') === 'on' && (!latitude || !longitude)) {
+      setEditError('Chọn vị trí trên bản đồ hoặc tắt xác minh vị trí.');
+      return;
+    }
     const customFields = parseCustomFields(String(form.get('customFieldLabels') ?? ''));
     const data = {
       name: String(form.get('name') ?? ''), description: String(form.get('description') ?? ''), venue: String(form.get('venue') ?? ''),
       eventStartsAt: new Date(String(form.get('eventStartsAt'))).toISOString(), eventEndsAt: new Date(String(form.get('eventEndsAt'))).toISOString(),
-      checkInStartsAt: new Date(String(form.get('checkInStartsAt'))).toISOString(), checkInEndsAt: new Date(String(form.get('checkInEndsAt'))).toISOString(),
+      checkInStartsAt: new Date(String(form.get('eventStartsAt'))).toISOString(), checkInEndsAt: new Date(String(form.get('eventEndsAt'))).toISOString(),
       latitude: latitude ? Number(latitude) : null, longitude: longitude ? Number(longitude) : null,
       geofenceRadiusMeters: Number(form.get('geofenceRadiusMeters')), locationRequired: form.get('locationRequired') === 'on',
       photoRequired: form.get('photoRequired') === 'on', expectedAttendees: Number(form.get('expectedAttendees')),
@@ -217,15 +226,18 @@ export function AttendanceEventDetail({ eventId }: { eventId: string }) {
         <div className="attendance-toolbar-actions">
           {(event.status === 'DRAFT' || event.status === 'CLOSED') && <button className="button primary-button small-button" type="button" disabled={busy} onClick={() => void changeStatus('OPEN')}>Mở điểm danh</button>}
           {event.status === 'OPEN' && <button className="button secondary-button small-button" type="button" disabled={busy} onClick={() => void changeStatus('CLOSE')}>Đóng điểm danh</button>}
+          {(event.status === 'DRAFT' || event.status === 'CLOSED') && (
+            <button className="button secondary-button small-button" type="button" disabled={busy} onClick={() => { setEditError(''); setEditOpen(true); }}>Sửa sự kiện</button>
+          )}
           <button className="button secondary-button small-button attendance-more-toggle" type="button" aria-expanded={moreActionsOpen} aria-controls="attendance-more-actions" onClick={() => setMoreActionsOpen((open) => !open)}>
             Thao tác khác <Icon name="chevron-down" size={16} />
           </button>
         </div>
       </div>
+      {event.status === 'OPEN' && <p className="attendance-edit-hint">Đóng điểm danh trước khi sửa sự kiện. Sau khi lưu, bạn có thể mở lại.</p>}
       <div id="attendance-more-actions" className="attendance-more-actions" hidden={!moreActionsOpen}>
         {event.status !== 'ARCHIVED' && <div className="attendance-secondary-actions">
           {event.status === 'CLOSED' && <button className="button secondary-button small-button" type="button" disabled={busy} onClick={() => void changeStatus('COMPLETE')}>Hoàn tất sự kiện</button>}
-          {(event.status === 'DRAFT' || event.status === 'CLOSED') && <button className="button secondary-button small-button" type="button" onClick={() => { setEditError(''); setEditOpen(true); }}>Sửa cấu hình</button>}
           {event.status !== 'OPEN' && <button className="button secondary-button small-button" type="button" disabled={busy} onClick={() => void changeStatus('ARCHIVE')}>Lưu trữ</button>}
           <button className="button secondary-button small-button" type="button" onClick={() => { setManualError(''); setManualOpen(true); }}>Điểm danh ngoại lệ</button>
         </div>}
@@ -242,7 +254,7 @@ export function AttendanceEventDetail({ eventId }: { eventId: string }) {
           <div className="attendance-metric"><span className="attendance-metric-label">Lượt chưa thành công</span><strong>{event.failedAttempts.toLocaleString('vi-VN')}</strong><small>Các lần gửi bị từ chối khi xác minh</small></div>
           <div className="attendance-metric"><span className="attendance-metric-label">Đang chờ</span><strong>{event.queue.waiting ?? 0}</strong><small>Vị trí sẽ cập nhật trong luồng chờ</small></div>
           <div className="attendance-metric"><span className="attendance-metric-label">Đang xử lý</span><strong>{event.queue.active ?? 0}</strong><small>Giới hạn {event.maxActiveCheckins} lượt song song</small></div>
-          <div className="attendance-metric"><span className="attendance-metric-label">Thời gian điểm danh</span><strong className="attendance-date-metric">{formatDate(event.checkInStartsAt)}</strong><small>đến {formatDate(event.checkInEndsAt)}</small></div>
+          <div className="attendance-metric"><span className="attendance-metric-label">Lịch sự kiện</span><strong className="attendance-date-metric">{formatDate(event.eventStartsAt)}</strong><small>đến {formatDate(event.eventEndsAt)}</small></div>
         </section>
 
         <section className="attendance-workspace" aria-labelledby="attendance-records-title">
@@ -282,18 +294,17 @@ export function AttendanceEventDetail({ eventId }: { eventId: string }) {
       </aside>
     </div>
 
-    <Dialog open={editOpen} title="Sửa cấu hình sự kiện" description="Thay đổi được phép khi sự kiện ở trạng thái nháp hoặc đã đóng." onClose={() => setEditOpen(false)}>
+    <Dialog open={editOpen} title="Sửa cấu hình sự kiện" description="Thay đổi được phép khi sự kiện ở trạng thái nháp hoặc đã đóng." onClose={() => setEditOpen(false)} className="attendance-modal">
       <form className="attendance-create-form" onSubmit={saveSettings}>
         <label className="field-label">Tên sự kiện<input className="field-input" name="name" defaultValue={event.name} required maxLength={180} /></label>
         <label className="field-label">Mô tả<textarea className="field-textarea" name="description" defaultValue={event.description ?? ''} rows={2} maxLength={5000} /></label>
         <label className="field-label">Địa điểm<input className="field-input" name="venue" defaultValue={event.venue} required maxLength={240} /></label>
         <div className="attendance-form-pair"><label className="field-label">Sự kiện bắt đầu<input className="field-input" name="eventStartsAt" type="datetime-local" defaultValue={localInput(event.eventStartsAt)} required /></label><label className="field-label">Sự kiện kết thúc<input className="field-input" name="eventEndsAt" type="datetime-local" defaultValue={localInput(event.eventEndsAt)} required /></label></div>
-        <div className="attendance-form-pair"><label className="field-label">Mở điểm danh<input className="field-input" name="checkInStartsAt" type="datetime-local" defaultValue={localInput(event.checkInStartsAt)} required /></label><label className="field-label">Đóng điểm danh<input className="field-input" name="checkInEndsAt" type="datetime-local" defaultValue={localInput(event.checkInEndsAt)} required /></label></div>
-        <div className="attendance-form-pair"><label className="field-label">Vĩ độ<input className="field-input" name="latitude" type="number" step="any" defaultValue={event.latitude ?? ''} /></label><label className="field-label">Kinh độ<input className="field-input" name="longitude" type="number" step="any" defaultValue={event.longitude ?? ''} /></label></div>
-        <div className="attendance-form-pair"><label className="field-label">Bán kính (m)<input className="field-input" name="geofenceRadiusMeters" type="number" min="25" max="2000" defaultValue={event.geofenceRadiusMeters} required /></label><label className="field-label">Số người dự kiến<input className="field-input" name="expectedAttendees" type="number" min="0" max="100000" defaultValue={event.expectedAttendees} required /></label></div>
+        {editOpen && <AttendanceLocationPicker latitude={event.latitude} longitude={event.longitude} radius={event.geofenceRadiusMeters} required={event.locationRequired} />}
+        <label className="field-label">Số người dự kiến<input className="field-input" name="expectedAttendees" type="number" min="0" max="100000" defaultValue={event.expectedAttendees} required /></label>
         <div className="attendance-form-pair"><label className="field-label">Lượt song song<input className="field-input" name="maxActiveCheckins" type="number" min="1" max="250" defaultValue={event.maxActiveCheckins} required /></label><label className="field-label">Giới hạn hàng đợi<input className="field-input" name="maxQueueSize" type="number" min="10" max="50000" defaultValue={event.maxQueueSize} required /></label></div>
         <label className="field-label">Trường bổ sung <span className="field-help">Mỗi dòng: Tên | text/email/tel | required/optional</span><textarea className="field-textarea" name="customFieldLabels" rows={3} placeholder={'Mã lớp | text | required\nEmail liên hệ | email | optional'} defaultValue={event.customFields.map((field) => `${field.label} | ${field.type} | ${field.required ? 'required' : 'optional'}`).join('\n')} /></label>
-        <div className="attendance-check-options"><label><input type="checkbox" name="locationRequired" defaultChecked={event.locationRequired} /> Xác minh vị trí</label><label><input type="checkbox" name="photoRequired" defaultChecked={event.photoRequired} /> Ảnh chụp trực tiếp</label></div>
+        <div className="attendance-check-options"><label><input type="checkbox" name="photoRequired" defaultChecked={event.photoRequired} /> Ảnh chụp trực tiếp</label></div>
         {editError && <Notice tone="error">{editError}</Notice>}
         <div className="attendance-form-actions"><button className="button secondary-button" type="button" onClick={() => setEditOpen(false)}>Hủy</button><button className="button primary-button" type="submit">Lưu thay đổi</button></div>
       </form>

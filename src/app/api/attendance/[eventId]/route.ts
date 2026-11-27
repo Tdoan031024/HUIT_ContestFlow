@@ -26,7 +26,15 @@ export async function GET(_request: Request, { params }: Context) {
   if (!event) return Response.json({ error: 'Không tìm thấy sự kiện.' }, { status: 404 });
   const queueCounts = await prisma.attendanceQueueTicket.groupBy({ by: ['status'], where: { eventId }, _count: { _all: true } });
   const queue = Object.fromEntries(queueCounts.map((row) => [row.status.toLowerCase(), row._count._all]));
-  return Response.json({ event: { ...event, latitude: event.latitude == null ? null : Number(event.latitude), longitude: event.longitude == null ? null : Number(event.longitude), checkedIn: event._count.records, failedAttempts: event._count.failures, queue } });
+  return Response.json({ event: {
+    ...event,
+    customFields: Array.isArray(event.customFields) ? event.customFields : [],
+    latitude: event.latitude == null ? null : Number(event.latitude),
+    longitude: event.longitude == null ? null : Number(event.longitude),
+    checkedIn: event._count.records,
+    failedAttempts: event._count.failures,
+    queue,
+  } });
 }
 
 export async function PUT(request: Request, { params }: Context) {
@@ -84,10 +92,8 @@ export async function PATCH(request: Request, { params }: Context) {
   const event = await prisma.attendanceEvent.findUnique({ where: { id: eventId } });
   if (!event) return Response.json({ error: 'Không tìm thấy sự kiện.' }, { status: 404 });
   const action = parsed.data.action;
-  const now = new Date();
   if (action === 'OPEN') {
     if (event.status !== 'DRAFT' && event.status !== 'CLOSED') return Response.json({ error: 'Sự kiện không thể mở từ trạng thái hiện tại.' }, { status: 409 });
-    if (event.checkInEndsAt <= now) return Response.json({ error: 'Khung giờ điểm danh đã kết thúc.' }, { status: 400 });
     if (event.locationRequired && (event.latitude == null || event.longitude == null)) return Response.json({ error: 'Cần tọa độ địa điểm trước khi mở điểm danh.' }, { status: 400 });
   }
   if (action === 'COMPLETE' && event.status === 'OPEN') return Response.json({ error: 'Hãy đóng điểm danh trước khi hoàn tất sự kiện.' }, { status: 409 });

@@ -40,7 +40,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   if (ticket.status !== 'ACTIVE' || !ticket.activeUntil || ticket.activeUntil <= new Date()) return reject(409, 'QUEUE_EXPIRED', 'Lượt điểm danh đã hết hạn. Hãy vào lại hàng đợi.');
   if (ticket.event.status !== 'OPEN') return reject(409, 'EVENT_CLOSED', 'Sự kiện đã đóng điểm danh.');
   const now = new Date();
-  if (now < ticket.event.checkInStartsAt || now > ticket.event.checkInEndsAt) return reject(409, 'OUTSIDE_CHECKIN_WINDOW', 'Ngoài khung giờ điểm danh.');
   const retryAfter = await consumeAttendanceRateLimit(checkinRateLimitKey(code, request), 300, 60_000);
   if (retryAfter) return Response.json({ error: 'Có quá nhiều yêu cầu. Hãy thử lại sau.' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(retryAfter / 1000)) } });
   const bodyLength = Number(request.headers.get('content-length') ?? 0);
@@ -77,9 +76,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
     const record = await prisma.$transaction(async (tx) => {
       const freshTicket = await tx.attendanceQueueTicket.findUnique({ where: { id: ticket.id }, select: { status: true, activeUntil: true } });
       if (!freshTicket || freshTicket.status !== 'ACTIVE' || !freshTicket.activeUntil || freshTicket.activeUntil <= new Date()) throw new Error('TICKET_EXPIRED');
-      const freshEvent = await tx.attendanceEvent.findUnique({ where: { id: ticket.eventId }, select: { status: true, checkInStartsAt: true, checkInEndsAt: true } });
-      const commitTime = new Date();
-      if (!freshEvent || freshEvent.status !== 'OPEN' || commitTime < freshEvent.checkInStartsAt || commitTime > freshEvent.checkInEndsAt) throw new Error('EVENT_CLOSED');
+      const freshEvent = await tx.attendanceEvent.findUnique({ where: { id: ticket.eventId }, select: { status: true } });
+      if (!freshEvent || freshEvent.status !== 'OPEN') throw new Error('EVENT_CLOSED');
       const created = await tx.attendanceRecord.create({ data: {
         eventId: ticket.eventId, ticketId: ticket.id, idempotencyKey, identityHash,
         fullName: data.fullName, studentId: data.studentId || null, email: data.email || null,
